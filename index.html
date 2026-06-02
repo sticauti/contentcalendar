@@ -30,6 +30,10 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 .day-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9C9890; margin-bottom: 2px; }
 .day-date-input { font-size: 13px; font-weight: 500; color: #1C1A18; background: transparent; border: none; outline: none; width: 100%; font-family: "DM Sans", sans-serif; padding: 0; }
 .day-date-input::placeholder { color: #C8C4BE; font-weight: 400; }
+.day-notes-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #B8B4AE; margin-top: 8px; margin-bottom: 2px; }
+.day-notes-input { width: 100%; background: #F7F5F2; border: 1px solid #E8E4DE; border-radius: 5px; padding: 4px 7px; font-size: 11px; color: #1C1A18; font-family: "DM Sans", sans-serif; resize: none; line-height: 1.4; }
+.day-notes-input:focus { outline: none; border-color: #9B97E0; }
+.day-notes-input::placeholder { color: #C8C4BE; }
 
 .slots-wrap { padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
@@ -187,7 +191,9 @@ function buildCalendar() {
     var hdr = document.createElement('div');
     hdr.className = 'day-header';
     hdr.innerHTML = '<div class="day-name">' + DAYS[d] + '</div>' +
-      '<input class="day-date-input" type="text" placeholder="Date" oninput="updateSummary()">';
+      '<input class="day-date-input" type="text" placeholder="Date" oninput="updateSummary()">' +
+      '<div class="day-notes-label">Notes</div>' +
+      '<textarea class="day-notes-input" rows="2" placeholder="Daily notes, reminders…"></textarea>';
     col.appendChild(hdr);
 
     var wrap = document.createElement('div');
