@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create With Amber — Weekly Content Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "DM Sans", sans-serif; background: #F7F5F2; color: #1C1A18; padding: 16px 12px 60px; -webkit-text-size-adjust: 100%; }
+.page { max-width: 1100px; margin: 0 auto; }
+.eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #9C9890; margin-bottom: 4px; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.02em; }
+.subtitle { font-size: 13px; color: #9C9890; margin-bottom: 20px; }
+
+.toprow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+.weekwrap { display: flex; align-items: center; gap: 8px; }
+.weekwrap label { font-size: 12px; color: #9C9890; font-weight: 500; }
+.weekinput { font-size: 13px; border: 1px solid #D4CFC8; background: #fff; border-radius: 8px; padding: 6px 10px; color: #1C1A18; width: 180px; font-family: "DM Sans", sans-serif; }
+.weekinput:focus { outline: none; border-color: #8C8880; }
+.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.clearbtn { font-size: 12px; color: #9C9890; background: #fff; border: 1px solid #D4CFC8; border-radius: 20px; padding: 7px 14px; cursor: pointer; font-family: "DM Sans", sans-serif; }
+.clearbtn:hover { border-color: #8C8880; color: #1C1A18; }
+
+/* CALENDAR GRID */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+
+.day-col { background: #fff; border: 1px solid #E0DCD6; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+.day-header { padding: 10px 12px 8px; border-bottom: 1px solid #E8E4DE; }
+.day-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9C9890; margin-bottom: 2px; }
+.day-date-input { font-size: 13px; font-weight: 500; color: #1C1A18; background: transparent; border: none; outline: none; width: 100%; font-family: "DM Sans", sans-serif; padding: 0; }
+.day-date-input::placeholder { color: #C8C4BE; font-weight: 400; }
+
+.slots-wrap { padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+/* VIDEO SLOT */
+.video-slot { background: #F7F5F2; border: 1px solid #E8E4DE; border-radius: 8px; padding: 8px; position: relative; }
+.slot-num { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #B8B4AE; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+.slot-delete { background: none; border: none; cursor: pointer; color: #C8C4BE; font-size: 14px; line-height: 1; padding: 0; font-family: "DM Sans", sans-serif; }
+.slot-delete:hover { color: #A32D2D; }
+
+.field-group { margin-bottom: 5px; }
+.field-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #B8B4AE; margin-bottom: 2px; }
+.field-input {
+  width: 100%; background: #fff; border: 1px solid #E0DCD6; border-radius: 5px;
+  padding: 4px 7px; font-size: 11px; color: #1C1A18; font-family: "DM Sans", sans-serif;
+  resize: none; line-height: 1.4;
+}
+.field-input:focus { outline: none; border-color: #9B97E0; }
+.field-input::placeholder { color: #C8C4BE; }
+.field-input.posted { border-color: #5DCAA5; background: #F0FBF6; }
+
+
+.posted-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #E8E4DE; }
+.posted-check { width: 14px; height: 14px; accent-color: #085041; cursor: pointer; flex-shrink: 0; }
+.posted-label { font-size: 10px; color: #9C9890; cursor: pointer; user-select: none; }
+
+.add-video-btn {
+  margin: 0 8px 8px; padding: 7px; background: transparent; border: 1px dashed #D4CFC8;
+  border-radius: 7px; font-size: 11px; color: #B8B4AE; cursor: pointer;
+  font-family: "DM Sans", sans-serif; width: calc(100% - 16px); text-align: center;
+  transition: all 0.12s;
+}
+.add-video-btn:hover { border-color: #9B97E0; color: #3C3489; background: #EEEDFE; }
+
+/* SUMMARY BAR */
+.summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+.scard { background: #fff; border: 1px solid #E0DCD6; border-radius: 8px; padding: 10px 12px; }
+.scard-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #9C9890; margin-bottom: 4px; }
+.scard-val { font-size: 22px; font-weight: 600; color: #1C1A18; letter-spacing: -0.02em; }
+.scard-sub { font-size: 10px; color: #B8B4AE; margin-top: 1px; }
+
+.download-wrap { margin-top: 20px; text-align: center; }
+.download-btn { font-family: "DM Sans", sans-serif; font-size: 15px; font-weight: 600; background: #1C1A18; color: #fff; border: none; border-radius: 24px; padding: 13px 32px; cursor: pointer; min-height: 48px; -webkit-tap-highlight-color: transparent; letter-spacing: -0.01em; }
+.download-btn:hover { background: #3d3a38; }
+.download-hint { font-size: 11px; color: #B8B4AE; margin-top: 8px; }
+
+footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; }
+
+@media (max-width: 900px) { .cal-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 600px) { .cal-grid { grid-template-columns: repeat(2, 1fr); } .summary-bar { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 380px) { .cal-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="eyebrow">Create With Amber</p>
+<h1>Weekly Content Calendar</h1>
+<p class="subtitle">TikTok Shop — plan your videos, track your posts, stay consistent.</p>
+
+<div class="toprow">
+  <div class="weekwrap">
+    <label for="wk">Week of:</label>
+    <input class="weekinput" type="text" id="wk" placeholder="e.g. June 2, 2026">
+  </div>
+  <div class="top-actions">
+    <button class="clearbtn" onclick="clearAll()">Clear all</button>
+  </div>
+</div>
+
+<div class="cal-grid" id="calGrid"></div>
+
+<div class="summary-bar" id="summaryBar">
+  <div class="scard"><div class="scard-label">Videos planned</div><div class="scard-val" id="sum-planned">0</div><div class="scard-sub">across the week</div></div>
+  <div class="scard"><div class="scard-label">Posted</div><div class="scard-val" id="sum-posted">0</div><div class="scard-sub">marked as done</div></div>
+  <div class="scard"><div class="scard-label">Remaining</div><div class="scard-val" id="sum-remaining">0</div><div class="scard-sub">still to post</div></div>
+  <div class="scard"><div class="scard-label">Completion</div><div class="scard-val" id="sum-pct">0%</div><div class="scard-sub">of planned videos</div></div>
+</div>
+
+<div class="download-wrap">
+  <button class="download-btn" id="downloadBtn">Download my calendar as image</button>
+  <p class="download-hint">Saves your filled-in calendar as a JPEG to your device.</p>
+</div>
+
+<footer>Made for Create With Amber — plan it, post it, own it.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+var slotCounts = [0,0,0,0,0,0,0];
+
+function makeSlot(dayIdx, slotNum) {
+  slotCounts[dayIdx]++;
+  var n = slotCounts[dayIdx];
+  var div = document.createElement('div');
+  div.className = 'video-slot';
+  div.setAttribute('data-day', dayIdx);
+
+  div.innerHTML =
+    '<div class="slot-num">Video ' + n +
+      '<button class="slot-delete" title="Remove this slot" onclick="removeSlot(this)">&#x2715;</button>' +
+    '</div>' +
+    '<div class="field-group">' +
+      '<div class="field-label">Product</div>' +
+      '<input class="field-input" type="text" placeholder="Product name" oninput="updateSummary()">' +
+    '</div>' +
+    '<div class="field-group">' +
+      '<div class="field-label">Hook idea</div>' +
+      '<textarea class="field-input" rows="2" placeholder="Opening line or hook…" oninput="updateSummary()"></textarea>' +
+    '</div>' +
+
+    '<div class="field-group">' +
+      '<div class="field-label">Notes</div>' +
+      '<textarea class="field-input" rows="2" placeholder="Any extra notes…" oninput="updateSummary()"></textarea>' +
+    '</div>' +
+    '<div class="posted-row">' +
+      '<input type="checkbox" class="posted-check" id="posted-' + dayIdx + '-' + n + '" onchange="togglePosted(this);updateSummary()">' +
+      '<label class="posted-label" for="posted-' + dayIdx + '-' + n + '">Marked as posted</label>' +
+    '</div>';
+
+  return div;
+}
+
+function removeSlot(btn) {
+  var slot = btn.closest('.video-slot');
+  var wrap = slot.parentNode;
+  slot.remove();
+  // Renumber remaining slots
+  var remaining = wrap.querySelectorAll('.video-slot');
+  for (var i = 0; i < remaining.length; i++) {
+    var numEl = remaining[i].querySelector('.slot-num');
+    numEl.childNodes[0].textContent = 'Video ' + (i + 1) + ' ';
+  }
+  updateSummary();
+}
+
+function togglePosted(cb) {
+  var slot = cb.closest('.video-slot');
+  var inputs = slot.querySelectorAll('.field-input');
+  for (var i = 0; i < inputs.length; i++) {
+    if (cb.checked) inputs[i].classList.add('posted');
+    else inputs[i].classList.remove('posted');
+  }
+}
+
+function buildCalendar() {
+  var grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  for (var d = 0; d < 7; d++) {
+    slotCounts[d] = 0;
+    var col = document.createElement('div');
+    col.className = 'day-col';
+    col.setAttribute('data-day-idx', d);
+
+    var hdr = document.createElement('div');
+    hdr.className = 'day-header';
+    hdr.innerHTML = '<div class="day-name">' + DAYS[d] + '</div>' +
+      '<input class="day-date-input" type="text" placeholder="Date" oninput="updateSummary()">';
+    col.appendChild(hdr);
+
+    var wrap = document.createElement('div');
+    wrap.className = 'slots-wrap';
+    wrap.setAttribute('data-slots', d);
+
+    // 3 default slots
+    for (var s = 0; s < 3; s++) {
+      wrap.appendChild(makeSlot(d, s));
+    }
+    col.appendChild(wrap);
+
+    var addBtn = document.createElement('button');
+    addBtn.className = 'add-video-btn';
+    addBtn.textContent = '+ Add video';
+    (function(dayIdx, w) {
+      addBtn.addEventListener('click', function() {
+        w.appendChild(makeSlot(dayIdx, w.querySelectorAll('.video-slot').length));
+        updateSummary();
+      });
+    })(d, wrap);
+    col.appendChild(addBtn);
+
+    grid.appendChild(col);
+  }
+  updateSummary();
+}
+
+function updateSummary() {
+  var slots = document.querySelectorAll('.video-slot');
+  var planned = slots.length;
+  var posted = document.querySelectorAll('.posted-check:checked').length;
+  var remaining = planned - posted;
+  var pct = planned > 0 ? Math.round((posted / planned) * 100) : 0;
+  document.getElementById('sum-planned').textContent = planned;
+  document.getElementById('sum-posted').textContent = posted;
+  document.getElementById('sum-remaining').textContent = remaining;
+  document.getElementById('sum-pct').textContent = pct + '%';
+}
+
+function clearAll() {
+  if (!confirm('Clear the entire calendar?')) return;
+  buildCalendar();
+  document.getElementById('wk').value = '';
+}
+
+// Download as image
+document.getElementById('downloadBtn').addEventListener('click', function() {
+  var btn = this;
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  var target = document.querySelector('.page');
+  html2canvas(target, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#F7F5F2',
+    logging: false
+  }).then(function(canvas) {
+    var wk = document.getElementById('wk').value.trim();
+    var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
+    var link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/jpeg', 0.92);
+    link.click();
+    btn.textContent = 'Download my calendar as image';
+    btn.disabled = false;
+  }).catch(function() {
+    btn.textContent = 'Download my calendar as image';
+    btn.disabled = false;
+    alert('Could not save. Try taking a screenshot instead.');
+  });
+});
+
+buildCalendar();
+</script>
+</body>
+</html>
