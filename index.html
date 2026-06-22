@@ -49,6 +49,7 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
   width: 100%; background: #fff; border: 1px solid #E0DCD6; border-radius: 5px;
   padding: 4px 7px; font-size: 11px; color: #1C1A18; font-family: "DM Sans", sans-serif;
   resize: none; line-height: 1.4; overflow: hidden; display: block; min-height: 36px;
+  word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap;
 }
 .field-input:focus { outline: none; border-color: #9B97E0; }
 .field-input::placeholder { color: #C8C4BE; }
@@ -447,20 +448,24 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
   // causes the title text to appear to shift down in the exported image.
   requestAnimationFrame(function () {
     requestAnimationFrame(function () {
+      btn.textContent = 'Rendering...';
+
       // html2canvas can hang indefinitely if it stalls trying to fetch
       // the cross-origin Google Fonts stylesheet (a known issue on some
       // browsers/networks) — its promise never resolves OR rejects, so
       // without a timeout the button would be stuck on "Saving..."
-      // forever with no way to recover. Race it against a 12-second
-      // timeout so the user always gets their button back.
+      // forever with no way to recover. Race it against an 8-second
+      // timeout so the user always gets their button back and sees
+      // exactly where things stalled.
       var captureTimeout = new Promise(function (_, reject) {
-        setTimeout(function () { reject(new Error('timeout')); }, 12000);
+        setTimeout(function () { reject(new Error('timeout')); }, 8000);
       });
 
       Promise.race([
         html2canvas(target, {
           scale: 2,
-          useCORS: true,
+          useCORS: false,
+          allowTaint: true,
           backgroundColor: '#F7F5F2',
           logging: false,
           windowWidth: target.scrollWidth,
@@ -468,6 +473,7 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
         }),
         captureTimeout
       ]).then(function(canvas) {
+        btn.textContent = 'Encoding...';
         var wk = document.getElementById('wk').value.trim();
         var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
         var link = document.createElement('a');
@@ -476,10 +482,13 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
         link.click();
         btn.textContent = 'Download my calendar as image';
         btn.disabled = false;
-      }).catch(function() {
+      }).catch(function(err) {
         btn.textContent = 'Download my calendar as image';
         btn.disabled = false;
-        showMessageModal('Could not save the image — your network may be slow, or this browser may be blocking the save. Try taking a screenshot instead.');
+        var reason = (err && err.message === 'timeout')
+          ? 'The image took too long to render (timed out after 8 seconds).'
+          : 'Could not save the image. Your network may be slow, or this browser may be blocking the save.';
+        showMessageModal(reason + ' Try taking a screenshot instead.');
       });
     });
   });
