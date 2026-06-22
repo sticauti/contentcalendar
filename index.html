@@ -729,8 +729,9 @@ footer {
 <div class="sticky-header">
   <div class="toprow">
     <div class="weekwrap">
-      <label for="wk">Week of</label>
-      <input class="weekinput" type="text" id="wk" placeholder="e.g. June 2, 2026" oninput="updateDayDates();saveState()">
+      <label for="wkPicker">Week of</label>
+      <input class="weekinput" type="date" id="wkPicker" onchange="onWeekPickerChange()">
+      <input type="hidden" id="wk">
     </div>
     <div class="top-right">
       <div class="view-toggle" id="viewToggle">
@@ -866,6 +867,30 @@ function attachAutoGrow(el) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+function syncPickerToWeek() {
+  var wkVal = document.getElementById('wk').value.trim();
+  var picker = document.getElementById('wkPicker');
+  if (!wkVal) return;
+  var d = new Date(wkVal);
+  if (isNaN(d.getTime())) return;
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  picker.value = y + '-' + m + '-' + day;
+}
+
+function onWeekPickerChange() {
+  var picker = document.getElementById('wkPicker');
+  if (!picker.value) return;
+  var parts = picker.value.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  var dow = d.getDay();
+  var diff = dow === 1 ? 0 : (dow === 0 ? -6 : 1 - dow);
+  d.setDate(d.getDate() + diff);
+  var newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  navigateToWeek(newDate, null);
+}
+
 function nextMondayStr() {
   var today = new Date(), day = today.getDay();
   var diff  = day === 1 ? 0 : (day === 0 ? 1 : 8 - day);
@@ -1325,6 +1350,7 @@ function buildCalendar(savedState) {
   grid.innerHTML = '';
   slotCounts = [0,0,0,0,0,0,0];
   document.getElementById('wk').value = (savedState && savedState.week) ? savedState.week : nextMondayStr();
+  syncPickerToWeek();
 
   for (var d = 0; d < 7; d++) {
     var savedDay = savedState && savedState.days && savedState.days[d];
@@ -1564,6 +1590,20 @@ function buildMonthView() {
       badge.textContent = data.posted + '/' + data.total;
       cell.appendChild(badge);
     }
+    (function(dayNum) {
+      cell.style.cursor = 'pointer';
+      cell.addEventListener('click', function() {
+        var clicked = new Date(year, month, dayNum);
+        var dow = clicked.getDay();
+        var diff = dow === 1 ? 0 : (dow === 0 ? -6 : 1 - dow);
+        var monday = new Date(clicked); monday.setDate(clicked.getDate() + diff);
+        var weekStr = monday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        var dayIdx = (dow + 6) % 7; // Mon=0 … Sun=6
+        navigateToWeek(weekStr, null);
+        setView('daily');
+        setActiveDay(dayIdx);
+      });
+    })(day);
     grid.appendChild(cell);
   }
 }
