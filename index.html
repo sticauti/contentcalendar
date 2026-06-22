@@ -1485,7 +1485,7 @@ function getAllWeeks() {
 
 function saveAllWeeks(all) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch(e) {}
-  saveToCloud(all);
+  scheduleCloudSync();
 }
 
 function saveState() {
@@ -2393,26 +2393,27 @@ function manualSync() {
   var all = getAllWeeks();
   var cloudData = {};
   Object.keys(all).forEach(function(k) { if (k.indexOf('__') !== 0) cloudData[k] = all[k]; });
-  alert('Attempting save. User: ' + currentUser.uid + '\nWeeks to save: ' + Object.keys(cloudData).join(', ') || '(none)');
   fbDb.collection('calendars').doc(currentUser.uid)
     .set({ weeks: cloudData })
-    .then(function() {
-      btn.textContent = '☁ Sync'; btn.disabled = false;
-      alert('✓ Saved to cloud successfully!');
-    })
-    .catch(function(e) {
-      btn.textContent = '☁ Sync'; btn.disabled = false;
-      alert('✗ Save failed: ' + e.code + '\n' + e.message);
-    });
+    .then(function() { btn.textContent = '☁ Save'; btn.disabled = false; alert('✓ Saved to cloud!'); })
+    .catch(function(e) { btn.textContent = '☁ Save'; btn.disabled = false; alert('✗ Failed: ' + e.code + '\n' + e.message); });
 }
 
-function saveToCloud(weeksData) {
+var cloudSyncTimer = null;
+
+function scheduleCloudSync() {
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(pushToCloud, 3000);
+}
+
+function pushToCloud() {
   if (!currentUser) return;
-  // Strip __default__ key — Firestore rejects field names starting with __
+  var all = getAllWeeks();
   var cloudData = {};
-  Object.keys(weeksData).forEach(function(k) {
-    if (k.indexOf('__') !== 0) cloudData[k] = weeksData[k];
+  Object.keys(all).forEach(function(k) {
+    if (k.indexOf('__') !== 0) cloudData[k] = all[k];
   });
+  if (Object.keys(cloudData).length === 0) return; // never push empty data
   setSyncStatus('saving');
   fbDb.collection('calendars').doc(currentUser.uid)
     .set({ weeks: cloudData })
@@ -2507,6 +2508,12 @@ function authSignOut() {
     }
   });
 })();
+
+// Sync to Firestore when user leaves the page
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') pushToCloud();
+});
+window.addEventListener('pagehide', pushToCloud);
 
 // Wire picker change listener via JS (not inline onchange) so it can be removed safely
 document.getElementById('wkPicker').addEventListener('change', onWeekPickerChange);
