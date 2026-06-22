@@ -159,6 +159,16 @@ h1 {
   transition: all 0.15s; box-shadow: var(--shadow-sm);
 }
 .clearbtn:hover { border-color: var(--danger); color: var(--danger); background: #FFF5F5; }
+.movewkbtn {
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  background: var(--accent-2); border: 1.5px solid var(--accent-3);
+  border-radius: var(--radius-md); padding: 7px 11px;
+  cursor: pointer; font-family: "DM Sans", sans-serif;
+  transition: all 0.15s; white-space: nowrap;
+}
+.movewkbtn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+@media (max-width: 520px) { .movewkbtn { padding: 7px 8px; font-size: 11px; } }
+@media (max-width: 420px) { .movewkbtn { padding: 6px 7px; font-size: 10px; } }
 .nextwkbtn {
   font-size: 12px; font-weight: 600; color: var(--accent);
   background: var(--accent-2); border: 1.5px solid var(--accent-3);
@@ -797,6 +807,7 @@ footer {
         <button class="nextwkbtn" onclick="prevWeek()">←</button>
         <button class="nextwkbtn" onclick="nextWeek()">→</button>
         <button class="clearbtn" id="clearBtn" onclick="clearCurrent()">Clear day</button>
+        <button class="movewkbtn" id="moveWkBtn" onclick="moveUnpostedToNextWeek()" style="display:none">Move unposted →</button>
       </div>
     </div>
   </div>
@@ -1025,6 +1036,8 @@ function applyViewToColumns() {
   var cb = document.getElementById('clearBtn');
   cb.textContent     = currentView === 'daily' ? 'Clear day' : 'Clear week';
   cb.style.display   = currentView === 'monthly' ? 'none' : '';
+  var mb = document.getElementById('moveWkBtn');
+  if (mb) mb.style.display = currentView === 'weekly' ? '' : 'none';
 }
 
 function setView(view) {
@@ -1623,39 +1636,58 @@ function nextWeek() {
   // If next week already has saved data, just navigate there
   if (loadWeekData(newDate)) { navigateToWeek(newDate, null); return; }
 
-  // Next week is empty — offer to carry forward unposted videos
+  navigateToWeek(newDate, null);
+}
+
+function moveUnpostedToNextWeek() {
+  var cur = document.getElementById('wk').value.trim();
+  if (!cur) return;
+  var d = new Date(cur);
+  if (isNaN(d.getTime())) return;
+  d.setDate(d.getDate() + 7);
+  var nextWeekStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
   var unpostedByDay = [], total = 0;
-  for (var d = 0; d < 7; d++) {
-    var u = getDayData(d).videos.filter(function(v) { return !v.posted && (v.product || v.hook || v.notes); });
+  for (var i = 0; i < 7; i++) {
+    var u = getDayData(i).videos.filter(function(v) { return !v.posted && (v.product || v.hook || v.notes); });
     unpostedByDay.push(u); total += u.length;
   }
-  if (total > 0) {
-    var ubd = unpostedByDay;
-    var fromWeekStr = document.getElementById('wk').value.trim() || '__default__';
-    showModal({
-      message: 'Week of ' + newDate + '\n\n' + total + ' unposted video' + (total !== 1 ? 's' : '') + ' can carry forward.',
-      buttons: [
-        { label: 'Cancel' },
-        { label: 'Start fresh',   style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { navigateToWeek(newDate, null); } },
-        { label: 'Carry forward', style: { background: '#D06B38', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x, fws) { return function() {
-          navigateToWeek(newDate, x);
-          // Remove the carried (unposted) videos from the source week
-          try {
-            var all = getAllWeeks();
-            if (all[fws] && all[fws].days) {
-              all[fws].days = all[fws].days.map(function(day) {
-                if (!day) return day;
-                return { notes: day.notes || '', videos: (day.videos || []).filter(function(v) { return v.posted; }) };
-              });
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-            }
-          } catch(e) {}
-        }; })(ubd, fromWeekStr) }
-      ]
-    });
-  } else {
-    navigateToWeek(newDate, null);
+  if (!total) {
+    showModal({ message: 'No unposted videos to move.', buttons: [{ label: 'OK' }] });
+    return;
   }
+
+  showModal({
+    message: 'Move ' + total + ' unposted video' + (total !== 1 ? 's' : '') + ' to the week of ' + nextWeekStr + '?',
+    buttons: [
+      { label: 'Cancel' },
+      { label: 'Move →', style: { background: '#D06B38', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
+        var fromWeekStr = document.getElementById('wk').value.trim() || '__default__';
+        // Merge into next week's storage
+        var all = getAllWeeks();
+        var nextData = all[nextWeekStr] || { days: DAYS.map(function() { return { notes: '', videos: [] }; }) };
+        unpostedByDay.forEach(function(dayVids, di) {
+          dayVids.forEach(function(v) {
+            nextData.days[di].videos.push(Object.assign({}, v, { posted: false }));
+          });
+        });
+        all[nextWeekStr] = nextData;
+        // Remove unposted from current week
+        if (all[fromWeekStr] && all[fromWeekStr].days) {
+          all[fromWeekStr].days = all[fromWeekStr].days.map(function(day) {
+            if (!day) return day;
+            return { notes: day.notes || '', videos: (day.videos || []).filter(function(v) { return v.posted; }) };
+          });
+        }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch(e) {}
+        // Rebuild current week from storage so removed slots disappear
+        var updatedCur = all[fromWeekStr];
+        buildCalendar({ week: fromWeekStr, days: updatedCur ? updatedCur.days : null });
+        updateSummary();
+        if (navigator.vibrate) navigator.vibrate(40);
+      }}
+    ]
+  });
 }
 
 // ── Month view ────────────────────────────────────────────────────────────────
