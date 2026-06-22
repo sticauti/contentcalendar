@@ -897,6 +897,7 @@ footer {
   <div class="header-user">
     <span class="header-email" id="headerEmail"></span>
     <span id="syncStatus" style="font-size:11px;font-weight:600;"></span>
+    <button class="signout-btn" onclick="manualSync()" id="manualSyncBtn">☁ Sync</button>
     <button class="signout-btn" onclick="authSignOut()">Sign out</button>
   </div>
   </div>
@@ -2359,6 +2360,26 @@ function setSyncStatus(state) {
   if (state === 'saving') { el.textContent = '↑ Syncing…'; el.style.color = 'var(--text-3)'; }
   else if (state === 'saved') { el.textContent = '✓ Synced'; el.style.color = '#4CAF50'; }
   else if (state === 'error') { el.textContent = '⚠ Sync failed'; el.style.color = 'var(--danger)'; }
+}
+
+function manualSync() {
+  var btn = document.getElementById('manualSyncBtn');
+  btn.textContent = '↑ Saving…'; btn.disabled = true;
+  if (!currentUser) { alert('Not logged in.'); btn.textContent = '☁ Sync'; btn.disabled = false; return; }
+  var all = getAllWeeks();
+  var cloudData = {};
+  Object.keys(all).forEach(function(k) { if (k.indexOf('__') !== 0) cloudData[k] = all[k]; });
+  alert('Attempting save. User: ' + currentUser.uid + '\nWeeks to save: ' + Object.keys(cloudData).join(', ') || '(none)');
+  fbDb.collection('calendars').doc(currentUser.uid)
+    .set({ weeks: cloudData })
+    .then(function() {
+      btn.textContent = '☁ Sync'; btn.disabled = false;
+      alert('✓ Saved to cloud successfully!');
+    })
+    .catch(function(e) {
+      btn.textContent = '☁ Sync'; btn.disabled = false;
+      alert('✗ Save failed: ' + e.code + '\n' + e.message);
+    });
 }
 
 function saveToCloud(weeksData) {
