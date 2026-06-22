@@ -909,7 +909,7 @@ footer {
   <div class="toprow">
     <div class="weekwrap">
       <label for="wkPicker">Week of</label>
-      <input class="weekinput" type="date" id="wkPicker" onchange="onWeekPickerChange()">
+      <input class="weekinput" type="date" id="wkPicker">
       <input type="hidden" id="wk">
     </div>
     <div class="top-right">
@@ -1059,13 +1059,13 @@ function syncPickerToWeek() {
   var y = d.getFullYear();
   var m = String(d.getMonth() + 1).padStart(2, '0');
   var day = String(d.getDate()).padStart(2, '0');
-  suppressPickerChange = true;
+  // Remove listener before setting value so iOS doesn't fire change event
+  picker.removeEventListener('change', onWeekPickerChange);
   picker.value = y + '-' + m + '-' + day;
-  suppressPickerChange = false;
+  setTimeout(function() { picker.addEventListener('change', onWeekPickerChange); }, 0);
 }
 
 function onWeekPickerChange() {
-  if (suppressPickerChange) return;
   var picker = document.getElementById('wkPicker');
   if (!picker.value) return;
   var parts = picker.value.split('-');
@@ -1454,6 +1454,7 @@ function togglePosted(cb) {
 // ── Data ─────────────────────────────────────────────────────────────────────
 function getDayData(dayIdx) {
   var col    = document.querySelector('.day-col[data-day-idx="' + dayIdx + '"]');
+  if (!col) return { notes: '', videos: [] };
   var videos = [];
   col.querySelectorAll('.video-slot').forEach(function(slot) {
     var inputs = slot.querySelectorAll('.field-input');
@@ -2380,7 +2381,7 @@ function manualLoad() {
       if (keys.length === 0) { alert('Document exists in Firestore but weeks data is empty.'); return; }
       alert('Found ' + keys.length + ' week(s) in Firestore:\n' + keys.join('\n') + '\n\nLoading now...');
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(weeks)); } catch(e) {}
-      buildCalendar(loadInitialState());
+      setTimeout(function() { buildCalendar(loadInitialState()); }, 0);
     })
     .catch(function(e) { btn.textContent = '☁ Load'; btn.disabled = false; alert('Load error: ' + e.code + '\n' + e.message); });
 }
@@ -2487,6 +2488,9 @@ function authSignOut() {
     ]
   });
 }
+
+// Wire picker change listener via JS (not inline onchange) so it can be removed safely
+document.getElementById('wkPicker').addEventListener('change', onWeekPickerChange);
 
 // ── App startup gated on auth ─────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(function(user) {
