@@ -13,6 +13,9 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 /* ─── Reset ─────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -774,10 +777,115 @@ footer {
 .hs-btn:hover { filter: brightness(1.08); }
 .hs-skip { margin-top: 12px; font-size: 11px; color: var(--text-3); cursor: pointer; }
 .hs-skip:hover { color: var(--text-2); }
+/* ─── Auth overlay ───────────────────────────────── */
+#authOverlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+#appLoading {
+  position: fixed; inset: 0; z-index: 8999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.loading-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent);
+  animation: ldPulse 1s ease-in-out infinite;
+}
+@keyframes ldPulse { 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
+
+.auth-card {
+  background: var(--surface); border-radius: 20px;
+  padding: 32px 28px; width: 100%; max-width: 380px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.auth-brand {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 700; color: var(--accent);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px;
+}
+.auth-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+.auth-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.auth-sub   { font-size: 13px; color: var(--text-3); line-height: 1.5; margin-bottom: 4px; }
+.auth-fields { display: flex; flex-direction: column; gap: 10px; }
+.auth-input {
+  width: 100%; padding: 12px 14px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: var(--surface-sub);
+  font-size: 15px; font-family: "DM Sans", sans-serif; color: var(--text);
+  outline: none; transition: border-color 0.15s;
+}
+.auth-input:focus { border-color: var(--accent); }
+.auth-error {
+  font-size: 12px; color: var(--danger); background: #FFF5F5;
+  border: 1px solid #FFCDD2; border-radius: 8px;
+  padding: 8px 12px; line-height: 1.4;
+}
+.auth-btn {
+  width: 100%; padding: 13px; border-radius: var(--radius-md);
+  border: none; font-size: 15px; font-weight: 700;
+  font-family: "DM Sans", sans-serif; cursor: pointer;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.auth-btn-primary  { background: var(--accent); color: #fff; }
+.auth-btn-primary:active  { opacity: 0.85; }
+.auth-btn-secondary { background: var(--surface-sub); color: var(--text-2); border: 1.5px solid var(--border); margin-top: -4px; }
+.auth-btn-secondary:active { opacity: 0.75; }
+.auth-forgot {
+  background: none; border: none; color: var(--text-3);
+  font-size: 12px; font-family: "DM Sans", sans-serif;
+  cursor: pointer; text-align: center; padding: 4px;
+  text-decoration: underline; -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Header user/signout ────────────────────────── */
+.header-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 20px 12px; flex-wrap: wrap;
+}
+.header-email { font-size: 11px; color: var(--text-3); }
+.signout-btn {
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  background: var(--surface-sub); border: 1.5px solid var(--border);
+  border-radius: 999px; padding: 4px 10px; cursor: pointer;
+  font-family: "DM Sans", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.signout-btn:hover { border-color: var(--danger); color: var(--danger); }
 </style>
 </head>
 <body>
-<div class="page view-daily">
+
+<!-- ── Auth overlay ───────────────────────────── -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-dot"></div>
+      <span>Create With Amber</span>
+    </div>
+    <h2 class="auth-title">Content Calendar</h2>
+    <p class="auth-sub">Sign in to sync your calendar across all devices.</p>
+    <div class="auth-fields">
+      <input type="email" id="authEmail" class="auth-input" placeholder="Email address" autocomplete="email">
+      <input type="password" id="authPassword" class="auth-input" placeholder="Password" autocomplete="current-password">
+    </div>
+    <div id="authError" class="auth-error" style="display:none"></div>
+    <button class="auth-btn auth-btn-primary" onclick="authSignIn()">Sign In</button>
+    <button class="auth-btn auth-btn-secondary" onclick="authCreate()">Create Account</button>
+    <button class="auth-forgot" onclick="authForgot()">Forgot password?</button>
+  </div>
+</div>
+
+<!-- ── App loading screen ─────────────────────── -->
+<div id="appLoading">
+  <div class="loading-dot"></div>
+</div>
+
+<div class="page view-daily" id="appPage" style="display:none">
 
 <!-- ── App header ─────────────────────────────── -->
 <div class="app-header">
@@ -785,6 +893,10 @@ footer {
     <div class="eyebrow"><span class="eyebrow-dot"></span>Create With Amber</div>
     <h1>Content Calendar</h1>
     <p class="subtitle">TikTok Shop — plan your videos, track your posts, stay consistent.</p>
+  </div>
+  <div class="header-user">
+    <span class="header-email" id="headerEmail"></span>
+    <button class="signout-btn" onclick="authSignOut()">Sign out</button>
   </div>
   </div>
 </div>
@@ -885,7 +997,7 @@ footer {
 <!-- ── Bottom ─────────────────────────────────── -->
 <div class="autosave-note">
   <span class="autosave-icon">✦</span>
-  Saves automatically on this device. Add to your Home Screen for one-tap access.
+  Syncs automatically to your account across all devices.
 </div>
 
 <div class="download-wrap">
@@ -1363,13 +1475,16 @@ function getAllWeeks() {
   try { var r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
 }
 
+function saveAllWeeks(all) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch(e) {}
+  saveToCloud(all);
+}
+
 function saveState() {
   var weekStr = document.getElementById('wk').value.trim() || '__default__';
-  try {
-    var all = getAllWeeks();
-    all[weekStr] = { days: serializeDays() };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch(e) {}
+  var all = getAllWeeks();
+  all[weekStr] = { days: serializeDays() };
+  saveAllWeeks(all);
 }
 
 function loadWeekData(weekStr) {
@@ -1385,7 +1500,7 @@ function loadInitialState() {
       var old = JSON.parse(legacy);
       if (old && old.week) {
         var all = getAllWeeks();
-        if (!all[old.week]) { all[old.week] = { days: old.days }; localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); }
+        if (!all[old.week]) { all[old.week] = { days: old.days }; saveAllWeeks(all); }
       }
       localStorage.removeItem(LEGACY_KEY);
     }
@@ -1592,7 +1707,7 @@ function clearCurrent() {
         { label: 'Cancel' },
         { label: 'Clear week', style: { background: var_danger(), color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
           var weekStr = document.getElementById('wk').value.trim() || '__default__';
-          try { var all = getAllWeeks(); delete all[weekStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch(e) {}
+          var all = getAllWeeks(); delete all[weekStr]; saveAllWeeks(all);
           activeDayIdx = 0;
           buildCalendar({ week: weekStr, days: null });
           // intentionally NOT calling saveState() — empty placeholder slots should not be persisted
@@ -1679,7 +1794,7 @@ function moveUnpostedToNextWeek() {
             return { notes: day.notes || '', videos: (day.videos || []).filter(function(v) { return v.posted; }) };
           });
         }
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch(e) {}
+        saveAllWeeks(all);
         // Rebuild current week from storage so removed slots disappear
         var updatedCur = all[fromWeekStr];
         buildCalendar({ week: fromWeekStr, days: updatedCur ? updatedCur.days : null });
@@ -2223,8 +2338,114 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
   });
 });
 
-buildCalendar(loadInitialState());
-showHomeScreenPrompt();
+// ── Firebase ──────────────────────────────────────────────────────────────────
+var firebaseConfig = {
+  apiKey:            "AIzaSyAg9QKOrTTiYGA76pKwH87khyo5aQwk4a8",
+  authDomain:        "content-calendar-d1223.firebaseapp.com",
+  projectId:         "content-calendar-d1223",
+  storageBucket:     "content-calendar-d1223.firebasestorage.app",
+  messagingSenderId: "939727919958",
+  appId:             "1:939727919958:web:64a858ea216cd0416554f7"
+};
+firebase.initializeApp(firebaseConfig);
+var fbAuth = firebase.auth();
+var fbDb   = firebase.firestore();
+var currentUser = null;
+
+function saveToCloud(weeksData) {
+  if (!currentUser) return;
+  fbDb.collection('calendars').doc(currentUser.uid)
+    .set({ weeks: weeksData })
+    .catch(function(e) { console.warn('Cloud save failed:', e.message); });
+}
+
+function loadFromCloud(callback) {
+  if (!currentUser) { callback(null); return; }
+  fbDb.collection('calendars').doc(currentUser.uid).get()
+    .then(function(doc) { callback(doc.exists ? (doc.data().weeks || null) : null); })
+    .catch(function() { callback(null); });
+}
+
+function showAuthError(msg) {
+  var el = document.getElementById('authError');
+  el.textContent = msg; el.style.display = 'block';
+}
+function clearAuthError() { document.getElementById('authError').style.display = 'none'; }
+
+function authSignIn() {
+  clearAuthError();
+  var email = document.getElementById('authEmail').value.trim();
+  var pass  = document.getElementById('authPassword').value;
+  if (!email || !pass) { showAuthError('Please enter your email and password.'); return; }
+  fbAuth.signInWithEmailAndPassword(email, pass)
+    .catch(function(e) {
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+        showAuthError('Incorrect email or password.');
+      } else {
+        showAuthError(e.message);
+      }
+    });
+}
+
+function authCreate() {
+  clearAuthError();
+  var email = document.getElementById('authEmail').value.trim();
+  var pass  = document.getElementById('authPassword').value;
+  if (!email || !pass) { showAuthError('Please enter an email and password.'); return; }
+  if (pass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  fbAuth.createUserWithEmailAndPassword(email, pass)
+    .catch(function(e) {
+      if (e.code === 'auth/email-already-in-use') {
+        showAuthError('An account with this email already exists. Try signing in.');
+      } else {
+        showAuthError(e.message);
+      }
+    });
+}
+
+function authForgot() {
+  var email = document.getElementById('authEmail').value.trim();
+  if (!email) { showAuthError('Enter your email address above first.'); return; }
+  fbAuth.sendPasswordResetEmail(email)
+    .then(function() { showAuthError('Reset email sent — check your inbox.'); document.getElementById('authError').style.color = 'green'; })
+    .catch(function(e) { showAuthError(e.message); });
+}
+
+function authSignOut() {
+  showModal({
+    message: 'Sign out of your account?',
+    buttons: [
+      { label: 'Cancel' },
+      { label: 'Sign out', style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
+        fbAuth.signOut();
+      }}
+    ]
+  });
+}
+
+// ── App startup gated on auth ─────────────────────────────────────────────────
+fbAuth.onAuthStateChanged(function(user) {
+  if (user) {
+    currentUser = user;
+    document.getElementById('authOverlay').style.display = 'none';
+    document.getElementById('headerEmail').textContent = user.email;
+    // Load from cloud, merge into localStorage, then build
+    loadFromCloud(function(cloudWeeks) {
+      if (cloudWeeks) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudWeeks)); } catch(e) {}
+      }
+      document.getElementById('appLoading').style.display = 'none';
+      document.getElementById('appPage').style.display = '';
+      buildCalendar(loadInitialState());
+      showHomeScreenPrompt();
+    });
+  } else {
+    currentUser = null;
+    document.getElementById('appLoading').style.display = 'none';
+    document.getElementById('authOverlay').style.display = 'flex';
+    document.getElementById('appPage').style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
