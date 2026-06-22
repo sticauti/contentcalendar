@@ -332,6 +332,33 @@ input.field-input { white-space: normal; min-height: 34px; }
 .posted-label { font-size: 10px; color: var(--text-2); cursor: pointer; user-select: none; font-weight: 500; }
 
 /* Add button */
+/* ─── Move-to-day bottom sheet ──────────────────── */
+.move-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 900; }
+.move-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 901;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  padding: 20px 16px 32px; box-shadow: 0 -6px 40px rgba(0,0,0,0.18);
+  animation: slideUp 0.22s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.move-sheet-title { font-size: 13px; font-weight: 700; color: var(--text-3); text-align: center; margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+.move-sheet-video { font-size: 14px; font-weight: 600; color: var(--text-1); text-align: center; margin-bottom: 18px; }
+.move-sheet-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 16px; }
+.move-day-btn {
+  padding: 10px 2px; border-radius: 10px; border: 1.5px solid var(--border);
+  background: var(--surface-sub); font-size: 11px; font-weight: 700;
+  color: var(--text-1); cursor: pointer; text-align: center; line-height: 1.3;
+  -webkit-tap-highlight-color: transparent; transition: all 0.12s;
+}
+.move-day-btn span { display: block; font-size: 9px; font-weight: 500; color: var(--text-3); margin-top: 2px; }
+.move-day-btn.current { opacity: 0.3; pointer-events: none; border-style: dashed; }
+.move-day-btn:not(.current):active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.move-sheet-cancel {
+  display: block; width: 100%; padding: 13px; border-radius: var(--radius-md);
+  border: none; background: var(--surface-sub); font-size: 14px; font-weight: 600;
+  color: var(--text-2); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+
 /* ─── Drag & drop (weekly view) ─────────────────── */
 .video-slot.dragging      { opacity: 0.35; }
 .slots-wrap.drag-over     { background: var(--accent-2); border-radius: var(--radius-md); outline: 2px dashed var(--accent); }
@@ -1215,6 +1242,20 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   attachAutoGrow(hookF.input);
   attachAutoGrow(notesF.input);
 
+  // Long-press → move sheet (mobile)
+  var pressTimer = null;
+  div.addEventListener('touchstart', function() {
+    if (currentView !== 'weekly') return;
+    pressTimer = setTimeout(function() {
+      pressTimer = null;
+      if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+      showMoveSheet(div, dayIdx);
+    }, 600);
+  }, { passive: true });
+  div.addEventListener('touchmove',   function() { clearTimeout(pressTimer); pressTimer = null; }, { passive: true });
+  div.addEventListener('touchend',    function() { clearTimeout(pressTimer); pressTimer = null; }, { passive: true });
+  div.addEventListener('touchcancel', function() { clearTimeout(pressTimer); pressTimer = null; }, { passive: true });
+
   div.setAttribute('draggable', 'true');
   div.addEventListener('dragstart', function(e) {
     if (currentView !== 'weekly') { e.preventDefault(); return; }
@@ -1457,9 +1498,15 @@ function buildCalendar(savedState) {
         if (currentView === 'weekly') {
           setView('daily');
           setActiveDay(di);
-        } else {
-          w.appendChild(makeSlot(di, w.querySelectorAll('.video-slot').length));
+          var newSlot = makeSlot(di, w.querySelectorAll('.video-slot').length);
+          w.appendChild(newSlot);
           updateSummary(); saveState();
+          setTimeout(function() { newSlot.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+        } else {
+          var newSlot = makeSlot(di, w.querySelectorAll('.video-slot').length);
+          w.appendChild(newSlot);
+          updateSummary(); saveState();
+          setTimeout(function() { newSlot.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
         }
       });
     })(d, wrap);
@@ -1666,6 +1713,68 @@ function buildMonthView() {
 }
 
 // ── Overview ──────────────────────────────────────────────────────────────────
+// ── Move-to-day sheet ──────────────────────────────────────────────────────────
+function moveSlotToDay(slot, fromDayIdx, toDayIdx) {
+  var inputs = slot.querySelectorAll('.field-input');
+  var platSel = slot.querySelector('.plat-select');
+  var cbEl = slot.querySelector('.posted-check');
+  var videoData = {
+    product:  inputs[0] ? inputs[0].value : '',
+    hook:     inputs[1] ? inputs[1].value : '',
+    notes:    inputs[2] ? inputs[2].value : '',
+    platform: platSel ? platSel.value : 'tt',
+    posted:   cbEl ? cbEl.checked : false,
+    starred:  slot.classList.contains('slot-starred'),
+    type:     slot.getAttribute('data-type') || 'product'
+  };
+  var srcWrap = slot.closest('.slots-wrap');
+  srcWrap.removeChild(slot);
+  slotCounts[fromDayIdx] = Math.max(0, slotCounts[fromDayIdx] - 1);
+  var targetWrap = document.querySelector('.slots-wrap[data-slots="' + toDayIdx + '"]');
+  if (targetWrap) {
+    targetWrap.appendChild(makeSlot(toDayIdx, targetWrap.querySelectorAll('.video-slot').length, videoData));
+  }
+  updateSummary(); saveState();
+  if (navigator.vibrate) navigator.vibrate(40);
+}
+
+function showMoveSheet(slot, fromDayIdx) {
+  var inputs = slot.querySelectorAll('.field-input');
+  var title = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'This video';
+
+  var overlay = document.createElement('div'); overlay.className = 'move-overlay';
+  var sheet = document.createElement('div');   sheet.className = 'move-sheet';
+
+  var lbl = document.createElement('div'); lbl.className = 'move-sheet-title'; lbl.textContent = 'Move to…';
+  var vid = document.createElement('div'); vid.className = 'move-sheet-video'; vid.textContent = title;
+  sheet.appendChild(lbl); sheet.appendChild(vid);
+
+  var grid = document.createElement('div'); grid.className = 'move-sheet-days';
+  var FULL = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  DAYS.forEach(function(_, i) {
+    var btn = document.createElement('button');
+    btn.className = 'move-day-btn' + (i === fromDayIdx ? ' current' : '');
+    btn.innerHTML = FULL[i];
+    btn.addEventListener('click', function() {
+      close(); moveSlotToDay(slot, fromDayIdx, i);
+    });
+    grid.appendChild(btn);
+  });
+  sheet.appendChild(grid);
+
+  var cancelBtn = document.createElement('button'); cancelBtn.className = 'move-sheet-cancel'; cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', close);
+  sheet.appendChild(cancelBtn);
+
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (sheet.parentNode)   sheet.parentNode.removeChild(sheet);
+  }
+  overlay.addEventListener('click', close);
+  document.body.appendChild(overlay);
+  document.body.appendChild(sheet);
+}
+
 function toggleOverview() {
   document.getElementById('overviewSection').classList.toggle('ov-open');
 }
