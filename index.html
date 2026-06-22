@@ -121,7 +121,6 @@ footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; 
 <footer>Made for Create With Amber — plan it, post it, own it.</footer>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 var slotCounts = [0,0,0,0,0,0,0];
@@ -425,74 +424,388 @@ function showMessageModal(message) {
   document.body.appendChild(overlay);
 }
 
+// ===== DOWNLOAD AS IMAGE =====
+// Instead of snapshotting the live DOM (which is what html2canvas does,
+// and which kept failing in different ways depending on font loading,
+// cross-origin CSS, and textarea height quirks across browsers), we
+// draw the calendar from scratch onto a <canvas> using the actual field
+// values. This gives full, reliable control over text wrapping and box
+// height — no dependency on browser-specific textarea/scrollHeight
+// behavior, no external stylesheet fetch, nothing that can hang.
+
+function wrapText(ctx, text, maxWidth) {
+  // Splits text into an array of lines that each fit within maxWidth,
+  // breaking on spaces first and falling back to a hard character break
+  // for any single "word" (e.g. a long URL) that's wider than the box
+  // on its own — the exact case that broke the old approach silently.
+  if (!text) return [];
+  var paragraphs = text.split('\n');
+  var lines = [];
+  for (var p = 0; p < paragraphs.length; p++) {
+    var words = paragraphs[p].split(' ');
+    var current = '';
+    for (var i = 0; i < words.length; i++) {
+      var word = words[i];
+      var test = current ? current + ' ' + word : word;
+      if (ctx.measureText(test).width <= maxWidth) {
+        current = test;
+      } else {
+        if (current) lines.push(current);
+        // If the word itself is too wide (long URL, no spaces), hard-break it.
+        if (ctx.measureText(word).width > maxWidth) {
+          var chunk = '';
+          for (var c = 0; c < word.length; c++) {
+            var testChunk = chunk + word[c];
+            if (ctx.measureText(testChunk).width > maxWidth && chunk) {
+              lines.push(chunk);
+              chunk = word[c];
+            } else {
+              chunk = testChunk;
+            }
+          }
+          current = chunk;
+        } else {
+          current = word;
+        }
+      }
+    }
+    if (current) lines.push(current);
+    if (paragraphs[p] === '') lines.push('');
+  }
+  return lines;
+}
+
+function getDayData(dayIdx) {
+  var col = document.querySelector('.day-col[data-day-idx="' + dayIdx + '"]');
+  var date = col.querySelector('.day-date-input').value || '';
+  var dayNotes = col.querySelector('.day-notes-input').value || '';
+  var slots = col.querySelectorAll('.video-slot');
+  var videos = [];
+  for (var i = 0; i < slots.length; i++) {
+    var inputs = slots[i].querySelectorAll('.field-input');
+    var posted = slots[i].querySelector('.posted-check').checked;
+    videos.push({
+      product: inputs[0].value || '',
+      hook: inputs[1].value || '',
+      notes: inputs[2].value || '',
+      posted: posted
+    });
+  }
+  return { date: date, dayNotes: dayNotes, videos: videos };
+}
+
+function drawCalendarImage() {
+  var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  var COL_W = 340, GAP = 18, PAD = 36;
+  var FONT = '"DM Sans", sans-serif';
+  var COLOR_INK = '#1C1A18', COLOR_MUTE = '#9C9890', COLOR_LIGHT_MUTE = '#B8B4AE';
+  var COLOR_BG = '#F7F5F2', COLOR_CARD = '#fff', COLOR_BORDER = '#E0DCD6', COLOR_SLOT_BG = '#F7F5F2';
+  var COLOR_GREEN_BORDER = '#5DCAA5', COLOR_GREEN_BG = '#F0FBF6';
+  var SCALE = 2;
+
+  // Pass 1: measure how tall each day column needs to be, using a
+  // scratch canvas context for text measurement before we know the
+  // final canvas height.
+  var scratch = document.createElement('canvas').getContext('2d');
+  var weekVal = document.getElementById('wk').value.trim();
+
+  var dayLayouts = [];
+  var maxColHeight = 0;
+
+  for (var d = 0; d < 7; d++) {
+    var data = getDayData(d);
+    var y = 0;
+    var blocks = [];
+
+    y += 14; // top pad
+    blocks.push({ type: 'dayname', text: DAYS[d].toUpperCase(), y: y });
+    y += 16;
+    blocks.push({ type: 'date', text: data.date || 'Date', placeholder: !data.date, y: y });
+    y += 20;
+    blocks.push({ type: 'label', text: 'NOTES', y: y });
+    y += 13;
+    scratch.font = '11px ' + FONT;
+    var dayNotesLines = wrapText(scratch, data.dayNotes || 'Daily notes, reminders…', COL_W - 24 - 14);
+    var dayNotesBoxH = Math.max(36, dayNotesLines.length * 15 + 8);
+    blocks.push({ type: 'notesbox', lines: dayNotesLines, y: y, h: dayNotesBoxH, placeholder: !data.dayNotes });
+    y += dayNotesBoxH + 14;
+
+    for (var v = 0; v < data.videos.length; v++) {
+      var vid = data.videos[v];
+      var slotY = y;
+      var sy = 10;
+      sy += 12; // "VIDEO N" label row
+
+      sy += 11; sy += 2;
+      scratch.font = '11px ' + FONT;
+      var prodLines = wrapText(scratch, vid.product || 'Product name', COL_W - 24 - 14);
+      var prodH = Math.max(22, prodLines.length * 15 + 6);
+      sy += prodH + 5;
+
+      sy += 11; sy += 2;
+      var hookLines = wrapText(scratch, vid.hook || 'Opening line or hook…', COL_W - 24 - 14);
+      var hookH = Math.max(22, hookLines.length * 15 + 6);
+      sy += hookH + 5;
+
+      sy += 11; sy += 2;
+      var notesLines = wrapText(scratch, vid.notes || 'Any extra notes…', COL_W - 24 - 14);
+      var notesH = Math.max(22, notesLines.length * 15 + 6);
+      sy += notesH + 5;
+
+      sy += 10; // posted row divider gap
+      sy += 16; // checkbox row
+      sy += 8;
+
+      blocks.push({
+        type: 'video', y: slotY, h: sy, num: v + 1,
+        product: { lines: prodLines, h: prodH, placeholder: !vid.product },
+        hook: { lines: hookLines, h: hookH, placeholder: !vid.hook },
+        notes: { lines: notesLines, h: notesH, placeholder: !vid.notes },
+        posted: vid.posted
+      });
+      y += sy + 8;
+    }
+
+    y += 8; // bottom pad
+    dayLayouts.push({ blocks: blocks, height: y });
+    if (y > maxColHeight) maxColHeight = y;
+  }
+
+  var headerH = 110;
+  var summaryH = 90;
+  var footerH = 40;
+  var totalW = PAD * 2 + COL_W * 7 + GAP * 6;
+  var totalH = headerH + maxColHeight + summaryH + footerH + PAD;
+
+  var canvas = document.createElement('canvas');
+  canvas.width = totalW * SCALE;
+  canvas.height = totalH * SCALE;
+  var ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  // Background
+  ctx.fillStyle = COLOR_BG;
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  // Header
+  var hx = PAD, hy = 28;
+  ctx.fillStyle = COLOR_MUTE;
+  ctx.font = '600 11px ' + FONT;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('CREATE WITH AMBER', hx, hy);
+  hy += 28;
+  ctx.fillStyle = COLOR_INK;
+  ctx.font = '600 26px ' + FONT;
+  ctx.fillText('Weekly Content Calendar', hx, hy);
+  hy += 22;
+  ctx.fillStyle = COLOR_MUTE;
+  ctx.font = '400 13px ' + FONT;
+  ctx.fillText('TikTok Shop — plan your videos, track your posts, stay consistent.', hx, hy);
+  hy += 22;
+  ctx.font = '400 12px ' + FONT;
+  ctx.fillText('Week of: ' + (weekVal || '—'), hx, hy);
+
+  // Day columns
+  var startY = headerH;
+  for (var d = 0; d < 7; d++) {
+    var colX = PAD + d * (COL_W + GAP);
+    var layout = dayLayouts[d];
+
+    ctx.fillStyle = COLOR_CARD;
+    ctx.strokeStyle = COLOR_BORDER;
+    ctx.lineWidth = 1;
+    roundRect(ctx, colX, startY, COL_W, maxColHeight, 10);
+    ctx.fill(); ctx.stroke();
+
+    for (var b = 0; b < layout.blocks.length; b++) {
+      var block = layout.blocks[b];
+      var bx = colX + 14;
+      var by = startY + block.y;
+
+      if (block.type === 'dayname') {
+        ctx.fillStyle = COLOR_MUTE;
+        ctx.font = '600 11px ' + FONT;
+        ctx.fillText(block.text, bx, by);
+      } else if (block.type === 'date') {
+        ctx.fillStyle = block.placeholder ? '#C8C4BE' : COLOR_INK;
+        ctx.font = '500 14px ' + FONT;
+        ctx.fillText(block.text, bx, by);
+      } else if (block.type === 'label') {
+        ctx.fillStyle = COLOR_LIGHT_MUTE;
+        ctx.font = '600 9px ' + FONT;
+        ctx.fillText(block.text, bx, by);
+      } else if (block.type === 'notesbox') {
+        ctx.fillStyle = COLOR_SLOT_BG;
+        ctx.strokeStyle = '#E8E4DE';
+        roundRect(ctx, bx, by, COL_W - 28, block.h, 5);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = block.placeholder ? '#C8C4BE' : COLOR_INK;
+        ctx.font = '400 11px ' + FONT;
+        drawLines(ctx, block.lines, bx + 7, by + 16, 15);
+      } else if (block.type === 'video') {
+        var vx = bx - 6, vy = by, vw = COL_W - 16;
+        ctx.fillStyle = COLOR_SLOT_BG;
+        ctx.strokeStyle = '#E8E4DE';
+        roundRect(ctx, vx, vy, vw, block.h, 8);
+        ctx.fill(); ctx.stroke();
+
+        var cy = vy + 18;
+        ctx.fillStyle = COLOR_LIGHT_MUTE;
+        ctx.font = '600 9px ' + FONT;
+        ctx.fillText('VIDEO ' + block.num, vx + 8, cy);
+
+        cy += 16;
+        ctx.fillStyle = COLOR_LIGHT_MUTE;
+        ctx.font = '600 9px ' + FONT;
+        ctx.fillText('PRODUCT', vx + 8, cy);
+        cy += 11;
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = COLOR_BORDER;
+        roundRect(ctx, vx + 8, cy - 2, vw - 16, block.product.h, 5);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = block.product.placeholder ? '#C8C4BE' : COLOR_INK;
+        ctx.font = '400 11px ' + FONT;
+        drawLines(ctx, block.product.lines, vx + 15, cy + 12, 15);
+        cy += block.product.h + 7;
+
+        ctx.fillStyle = COLOR_LIGHT_MUTE;
+        ctx.font = '600 9px ' + FONT;
+        ctx.fillText('HOOK IDEA', vx + 8, cy);
+        cy += 11;
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = COLOR_BORDER;
+        roundRect(ctx, vx + 8, cy - 2, vw - 16, block.hook.h, 5);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = block.hook.placeholder ? '#C8C4BE' : COLOR_INK;
+        ctx.font = '400 11px ' + FONT;
+        drawLines(ctx, block.hook.lines, vx + 15, cy + 12, 15);
+        cy += block.hook.h + 7;
+
+        ctx.fillStyle = COLOR_LIGHT_MUTE;
+        ctx.font = '600 9px ' + FONT;
+        ctx.fillText('NOTES', vx + 8, cy);
+        cy += 11;
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = COLOR_BORDER;
+        roundRect(ctx, vx + 8, cy - 2, vw - 16, block.notes.h, 5);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = block.notes.placeholder ? '#C8C4BE' : COLOR_INK;
+        ctx.font = '400 11px ' + FONT;
+        drawLines(ctx, block.notes.lines, vx + 15, cy + 12, 15);
+        cy += block.notes.h + 10;
+
+        ctx.strokeStyle = '#E8E4DE';
+        ctx.beginPath();
+        ctx.moveTo(vx + 8, cy);
+        ctx.lineTo(vx + vw - 8, cy);
+        ctx.stroke();
+        cy += 14;
+
+        ctx.fillStyle = block.posted ? '#085041' : '#fff';
+        ctx.strokeStyle = block.posted ? '#085041' : COLOR_BORDER;
+        roundRect(ctx, vx + 8, cy - 10, 13, 13, 3);
+        ctx.fill(); ctx.stroke();
+        if (block.posted) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(vx + 11, cy - 4);
+          ctx.lineTo(vx + 13.5, cy - 1.5);
+          ctx.lineTo(vx + 18, cy - 8);
+          ctx.stroke();
+        }
+        ctx.fillStyle = COLOR_MUTE;
+        ctx.font = '400 10px ' + FONT;
+        ctx.fillText('Marked as posted', vx + 26, cy);
+      }
+    }
+  }
+
+  // Summary bar
+  var sumY = startY + maxColHeight + 24;
+  var sumCardW = (totalW - PAD * 2 - GAP * 3) / 4;
+  var slots = document.querySelectorAll('.video-slot');
+  var planned = slots.length;
+  var posted = document.querySelectorAll('.posted-check:checked').length;
+  var remaining = planned - posted;
+  var pct = planned > 0 ? Math.round((posted / planned) * 100) : 0;
+  var summary = [
+    { label: 'VIDEOS PLANNED', val: String(planned), sub: 'across the week' },
+    { label: 'POSTED', val: String(posted), sub: 'marked as done' },
+    { label: 'REMAINING', val: String(remaining), sub: 'still to post' },
+    { label: 'COMPLETION', val: pct + '%', sub: 'of planned videos' }
+  ];
+  for (var s = 0; s < 4; s++) {
+    var scx = PAD + s * (sumCardW + GAP);
+    ctx.fillStyle = COLOR_CARD;
+    ctx.strokeStyle = COLOR_BORDER;
+    roundRect(ctx, scx, sumY, sumCardW, summaryH, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = COLOR_MUTE;
+    ctx.font = '600 10px ' + FONT;
+    ctx.fillText(summary[s].label, scx + 12, sumY + 22);
+    ctx.fillStyle = COLOR_INK;
+    ctx.font = '600 24px ' + FONT;
+    ctx.fillText(summary[s].val, scx + 12, sumY + 52);
+    ctx.fillStyle = COLOR_LIGHT_MUTE;
+    ctx.font = '400 10px ' + FONT;
+    ctx.fillText(summary[s].sub, scx + 12, sumY + 68);
+  }
+
+  // Footer
+  ctx.fillStyle = COLOR_LIGHT_MUTE;
+  ctx.font = '400 11px ' + FONT;
+  ctx.textAlign = 'center';
+  ctx.fillText('Made for Create With Amber — plan it, post it, own it.', totalW / 2, sumY + summaryH + 26);
+  ctx.textAlign = 'left';
+
+  return canvas;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawLines(ctx, lines, x, y, lineHeight) {
+  for (var i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], x, y + i * lineHeight);
+  }
+}
+
 // Download as image
 document.getElementById('downloadBtn').addEventListener('click', function() {
   var btn = this;
-  btn.textContent = 'Saving...';
+  btn.textContent = 'Rendering...';
   btn.disabled = true;
 
-  var target = document.querySelector('.page');
-
-  // Re-run autoGrow on every textarea right before capture. This guards
-  // against any text that was pasted in or changed without firing the
-  // 'input' event (e.g. programmatic changes), so the box is guaranteed
-  // to be full height at the moment html2canvas reads the DOM.
-  var allAreas = target.querySelectorAll('textarea');
-  for (var i = 0; i < allAreas.length; i++) {
-    autoGrow(allAreas[i]);
-  }
-
-  // Wait one frame so the browser has actually applied the height changes
-  // and the web font has settled, THEN capture. Without this delay,
-  // html2canvas can grab a layout pass that's mid-reflow, which is what
-  // causes the title text to appear to shift down in the exported image.
+  // requestAnimationFrame just to let the button label paint before
+  // the (synchronous) drawing work runs.
   requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      btn.textContent = 'Rendering...';
-
-      // html2canvas can hang indefinitely if it stalls trying to fetch
-      // the cross-origin Google Fonts stylesheet (a known issue on some
-      // browsers/networks) — its promise never resolves OR rejects, so
-      // without a timeout the button would be stuck on "Saving..."
-      // forever with no way to recover. Race it against an 8-second
-      // timeout so the user always gets their button back and sees
-      // exactly where things stalled.
-      var captureTimeout = new Promise(function (_, reject) {
-        setTimeout(function () { reject(new Error('timeout')); }, 8000);
-      });
-
-      Promise.race([
-        html2canvas(target, {
-          scale: 2,
-          useCORS: false,
-          allowTaint: true,
-          backgroundColor: '#F7F5F2',
-          logging: false,
-          windowWidth: target.scrollWidth,
-          windowHeight: target.scrollHeight
-        }),
-        captureTimeout
-      ]).then(function(canvas) {
-        btn.textContent = 'Encoding...';
-        var wk = document.getElementById('wk').value.trim();
-        var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
-        var link = document.createElement('a');
-        link.download = filename;
-        link.href = canvas.toDataURL('image/jpeg', 0.92);
-        link.click();
-        btn.textContent = 'Download my calendar as image';
-        btn.disabled = false;
-      }).catch(function(err) {
-        btn.textContent = 'Download my calendar as image';
-        btn.disabled = false;
-        var reason = (err && err.message === 'timeout')
-          ? 'The image took too long to render (timed out after 8 seconds).'
-          : 'Could not save the image. Your network may be slow, or this browser may be blocking the save.';
-        showMessageModal(reason + ' Try taking a screenshot instead.');
-      });
-    });
+    try {
+      var canvas = drawCalendarImage();
+      var wk = document.getElementById('wk').value.trim();
+      var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
+      var link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/jpeg', 0.92);
+      link.click();
+      btn.textContent = 'Download my calendar as image';
+      btn.disabled = false;
+    } catch (err) {
+      btn.textContent = 'Download my calendar as image';
+      btn.disabled = false;
+      showMessageModal('Could not save the image. Please try again, or take a screenshot instead.');
+    }
   });
 });
+
+buildCalendar();
 
 buildCalendar();
 </script>
