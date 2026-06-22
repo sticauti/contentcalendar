@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Create With Amber — Weekly Content Calendar (v6)</title>
+
+<!-- PWA: lets people "Add to Home Screen" with a proper icon and
+     full-screen app-like view instead of just bookmarking a browser tab. -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1C1A18">
+
+<!-- iOS-specific home screen tags (Safari doesn't fully support the
+     standard manifest yet, so these are needed in addition to it) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CWA Calendar">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -79,6 +92,7 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 .download-btn { font-family: "DM Sans", sans-serif; font-size: 15px; font-weight: 600; background: #1C1A18; color: #fff; border: none; border-radius: 24px; padding: 13px 32px; cursor: pointer; min-height: 48px; -webkit-tap-highlight-color: transparent; letter-spacing: -0.01em; }
 .download-btn:hover { background: #3d3a38; }
 .download-hint { font-size: 11px; color: #B8B4AE; margin-top: 8px; }
+.autosave-note { font-size: 12px; color: #3C3489; background: #EEEDFE; border: 1px solid #D7D4F5; border-radius: 10px; padding: 10px 14px; margin-top: 16px; text-align: center; line-height: 1.5; }
 
 footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; }
 
@@ -97,7 +111,7 @@ footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; 
 <div class="toprow">
   <div class="weekwrap">
     <label for="wk">Week of:</label>
-    <input class="weekinput" type="text" id="wk" placeholder="e.g. June 2, 2026">
+    <input class="weekinput" type="text" id="wk" placeholder="e.g. June 2, 2026" oninput="saveState()">
   </div>
   <div class="top-actions">
     <button class="clearbtn" onclick="clearAll()">Clear all</button>
@@ -112,6 +126,8 @@ footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; 
   <div class="scard"><div class="scard-label">Remaining</div><div class="scard-val" id="sum-remaining">0</div><div class="scard-sub">still to post</div></div>
   <div class="scard"><div class="scard-label">Completion</div><div class="scard-val" id="sum-pct">0%</div><div class="scard-sub">of planned videos</div></div>
 </div>
+
+<div class="autosave-note" id="autosaveNote">✓ Your calendar saves automatically on this device — come back anytime to keep editing. 📱 Add this page to your Home Screen for one-tap access.</div>
 
 <div class="download-wrap">
   <button class="download-btn" id="downloadBtn">SAVE MY CALENDAR NOW (v6)</button>
@@ -166,7 +182,7 @@ function attachAutoGrow(el) {
   el.addEventListener('input', function () { autoGrow(el); });
 }
 
-function makeSlot(dayIdx, slotNum) {
+function makeSlot(dayIdx, slotNum, savedVideo) {
   slotCounts[dayIdx]++;
   var n = slotCounts[dayIdx];
   var div = document.createElement('div');
@@ -179,21 +195,33 @@ function makeSlot(dayIdx, slotNum) {
     '</div>' +
     '<div class="field-group">' +
       '<div class="field-label">Product</div>' +
-      '<input class="field-input" type="text" placeholder="Product name" oninput="updateSummary()">' +
+      '<input class="field-input" type="text" placeholder="Product name" oninput="updateSummary();saveState()">' +
     '</div>' +
     '<div class="field-group">' +
       '<div class="field-label">Hook idea</div>' +
-      '<textarea class="field-input" rows="2" placeholder="Opening line or hook…" oninput="updateSummary()"></textarea>' +
+      '<textarea class="field-input" rows="2" placeholder="Opening line or hook…" oninput="updateSummary();saveState()"></textarea>' +
     '</div>' +
 
     '<div class="field-group">' +
       '<div class="field-label">Notes</div>' +
-      '<textarea class="field-input" rows="2" placeholder="Any extra notes…" oninput="updateSummary()"></textarea>' +
+      '<textarea class="field-input" rows="2" placeholder="Any extra notes…" oninput="updateSummary();saveState()"></textarea>' +
     '</div>' +
     '<div class="posted-row">' +
-      '<input type="checkbox" class="posted-check" id="posted-' + dayIdx + '-' + n + '" onchange="togglePosted(this);updateSummary()">' +
+      '<input type="checkbox" class="posted-check" id="posted-' + dayIdx + '-' + n + '" onchange="togglePosted(this);updateSummary();saveState()">' +
       '<label class="posted-label" for="posted-' + dayIdx + '-' + n + '">Marked as posted</label>' +
     '</div>';
+
+  if (savedVideo) {
+    var inputs = div.querySelectorAll('.field-input');
+    inputs[0].value = savedVideo.product || '';
+    inputs[1].value = savedVideo.hook || '';
+    inputs[2].value = savedVideo.notes || '';
+    if (savedVideo.posted) {
+      var cb = div.querySelector('.posted-check');
+      cb.checked = true;
+      togglePosted(cb);
+    }
+  }
 
   // Wire up auto-grow for the two textareas in this slot
   var areas = div.querySelectorAll('textarea.field-input');
@@ -215,6 +243,7 @@ function removeSlot(btn) {
     numEl.childNodes[0].textContent = 'Video ' + (i + 1) + ' ';
   }
   updateSummary();
+  saveState();
 }
 
 function togglePosted(cb) {
@@ -226,11 +255,64 @@ function togglePosted(cb) {
   }
 }
 
-function buildCalendar() {
+var STORAGE_KEY = 'cwa_content_calendar_v1';
+
+// ===== PERSISTENCE =====
+// Saves the entire calendar (week label + every day's date, notes, and
+// videos) into localStorage as one JSON blob. Runs on every input via
+// event delegation, so nothing needs to be wired up per-field.
+
+function serializeState() {
+  var state = { week: document.getElementById('wk').value, days: [] };
+  for (var d = 0; d < 7; d++) {
+    var col = document.querySelector('.day-col[data-day-idx="' + d + '"]');
+    var date = col.querySelector('.day-date-input').value;
+    var dayNotes = col.querySelector('.day-notes-input').value;
+    var slots = col.querySelectorAll('.video-slot');
+    var videos = [];
+    for (var i = 0; i < slots.length; i++) {
+      var inputs = slots[i].querySelectorAll('.field-input');
+      videos.push({
+        product: inputs[0].value,
+        hook: inputs[1].value,
+        notes: inputs[2].value,
+        posted: slots[i].querySelector('.posted-check').checked
+      });
+    }
+    state.days.push({ date: date, notes: dayNotes, videos: videos });
+  }
+  return state;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
+  } catch (e) {
+    // localStorage can throw in rare cases (private browsing limits,
+    // storage full, etc.) — fail silently rather than breaking the page.
+  }
+}
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function buildCalendar(savedState) {
   var grid = document.getElementById('calGrid');
   grid.innerHTML = '';
+
+  if (savedState && savedState.week) {
+    document.getElementById('wk').value = savedState.week;
+  }
+
   for (var d = 0; d < 7; d++) {
     slotCounts[d] = 0;
+    var savedDay = savedState && savedState.days && savedState.days[d];
     var col = document.createElement('div');
     col.className = 'day-col';
     col.setAttribute('data-day-idx', d);
@@ -238,22 +320,29 @@ function buildCalendar() {
     var hdr = document.createElement('div');
     hdr.className = 'day-header';
     hdr.innerHTML = '<div class="day-name">' + DAYS[d] + '</div>' +
-      '<input class="day-date-input" type="text" placeholder="Date" oninput="updateSummary()">' +
+      '<input class="day-date-input" type="text" placeholder="Date" oninput="updateSummary();saveState()">' +
       '<div class="day-notes-label">Notes</div>' +
       '<textarea class="day-notes-input" rows="2" placeholder="Daily notes, reminders…"></textarea>';
     col.appendChild(hdr);
 
+    if (savedDay) {
+      hdr.querySelector('.day-date-input').value = savedDay.date || '';
+      hdr.querySelector('.day-notes-input').value = savedDay.notes || '';
+    }
+
     // Auto-grow the daily notes textarea too
     var dayNotesArea = hdr.querySelector('.day-notes-input');
     attachAutoGrow(dayNotesArea);
+    dayNotesArea.addEventListener('input', saveState);
 
     var wrap = document.createElement('div');
     wrap.className = 'slots-wrap';
     wrap.setAttribute('data-slots', d);
 
-    // 3 default slots
-    for (var s = 0; s < 3; s++) {
-      wrap.appendChild(makeSlot(d, s));
+    var videoCount = (savedDay && savedDay.videos && savedDay.videos.length) || 3;
+    for (var s = 0; s < videoCount; s++) {
+      var savedVideo = savedDay && savedDay.videos && savedDay.videos[s];
+      wrap.appendChild(makeSlot(d, s, savedVideo));
     }
     col.appendChild(wrap);
 
@@ -264,6 +353,7 @@ function buildCalendar() {
       addBtn.addEventListener('click', function() {
         w.appendChild(makeSlot(dayIdx, w.querySelectorAll('.video-slot').length));
         updateSummary();
+        saveState();
       });
     })(d, wrap);
     col.appendChild(addBtn);
@@ -287,8 +377,10 @@ function updateSummary() {
 
 function clearAll() {
   showConfirmModal('Clear the entire calendar?', function () {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     buildCalendar();
     document.getElementById('wk').value = '';
+    saveState();
   });
 }
 
@@ -835,7 +927,7 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
   });
 });
 
-buildCalendar();
+buildCalendar(loadState());
 </script>
 </body>
 </html>
