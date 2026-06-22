@@ -332,6 +332,12 @@ input.field-input { white-space: normal; min-height: 34px; }
 .posted-label { font-size: 10px; color: var(--text-2); cursor: pointer; user-select: none; font-weight: 500; }
 
 /* Add button */
+/* ─── Drag & drop (weekly view) ─────────────────── */
+.video-slot.dragging      { opacity: 0.35; }
+.slots-wrap.drag-over     { background: var(--accent-2); border-radius: var(--radius-md); outline: 2px dashed var(--accent); }
+.compact-slots .video-slot { cursor: grab; }
+.compact-slots .video-slot:active { cursor: grabbing; }
+
 .add-video-btn {
   margin: 0 10px 10px; padding: 10px;
   background: transparent; border: 1.5px dashed rgba(26,24,20,0.15);
@@ -848,6 +854,7 @@ var PLAT_ICONS = {
 };
 
 var slotCounts   = [0,0,0,0,0,0,0];
+var draggedSlot  = null;
 var activeDayIdx = 0;
 var currentView  = 'daily';
 var STORAGE_KEY  = 'cwa_calendar_v2';
@@ -1207,6 +1214,20 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
 
   attachAutoGrow(hookF.input);
   attachAutoGrow(notesF.input);
+
+  div.setAttribute('draggable', 'true');
+  div.addEventListener('dragstart', function(e) {
+    if (currentView !== 'weekly') { e.preventDefault(); return; }
+    draggedSlot = div;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(dayIdx));
+    setTimeout(function() { div.classList.add('dragging'); }, 0);
+  });
+  div.addEventListener('dragend', function() {
+    div.classList.remove('dragging');
+    document.querySelectorAll('.slots-wrap').forEach(function(w) { w.classList.remove('drag-over'); });
+  });
+
   return div;
 }
 
@@ -1384,10 +1405,47 @@ function buildCalendar(savedState) {
     wrap.className = 'slots-wrap';
     wrap.setAttribute('data-slots', d);
     var savedVideos = savedDay && savedDay.videos;
-    var count = savedVideos ? savedVideos.length : 1;
+    var count = savedVideos ? savedVideos.length : 0;
     for (var s = 0; s < count; s++) {
-      wrap.appendChild(makeSlot(d, s, savedVideos && savedVideos[s]));
+      wrap.appendChild(makeSlot(d, s, savedVideos[s]));
     }
+    (function(di, w) {
+      w.addEventListener('dragover', function(e) {
+        if (!draggedSlot) return;
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+        w.classList.add('drag-over');
+      });
+      w.addEventListener('dragleave', function(e) {
+        if (!w.contains(e.relatedTarget)) w.classList.remove('drag-over');
+      });
+      w.addEventListener('drop', function(e) {
+        e.preventDefault();
+        w.classList.remove('drag-over');
+        if (!draggedSlot || draggedSlot.closest('.slots-wrap') === w) { draggedSlot = null; return; }
+        var srcWrap = draggedSlot.closest('.slots-wrap');
+        var srcDayIdx = parseInt(srcWrap.getAttribute('data-slots'));
+        // read data from dragged slot
+        var inputs = draggedSlot.querySelectorAll('.field-input');
+        var platSel = draggedSlot.querySelector('.plat-select');
+        var cbEl = draggedSlot.querySelector('.posted-check');
+        var videoData = {
+          product:  inputs[0] ? inputs[0].value : '',
+          hook:     inputs[1] ? inputs[1].value : '',
+          notes:    inputs[2] ? inputs[2].value : '',
+          platform: platSel ? platSel.value : 'tt',
+          posted:   cbEl ? cbEl.checked : false,
+          starred:  draggedSlot.classList.contains('slot-starred'),
+          type:     draggedSlot.getAttribute('data-type') || 'product'
+        };
+        // remove from source
+        srcWrap.removeChild(draggedSlot);
+        slotCounts[srcDayIdx] = Math.max(0, slotCounts[srcDayIdx] - 1);
+        draggedSlot = null;
+        // add to target
+        w.appendChild(makeSlot(di, w.querySelectorAll('.video-slot').length, videoData));
+        updateSummary(); saveState();
+      });
+    })(d, wrap);
     col.appendChild(wrap);
 
     var addBtn = document.createElement('button');
@@ -1432,7 +1490,6 @@ function clearCurrent() {
           var wrap = col.querySelector('.slots-wrap');
           wrap.innerHTML = '';
           slotCounts[activeDayIdx] = 0;
-          wrap.appendChild(makeSlot(activeDayIdx, 0, null));
           updateSummary(); saveState();
         }}
       ]
@@ -1666,7 +1723,8 @@ function buildOverview() {
       if (dayDate >= today) return;
       day.videos.forEach(function(v) {
         if (v.posted) return;
-        var item = { name: v.product || 'Untitled', day: DAY_SHORT[d], starred: !!v.starred };
+        if (!v.product && !v.hook && !v.notes) return;
+        var item = { name: v.product || v.hook || 'Untitled', day: DAY_SHORT[d], starred: !!v.starred };
         overdueItems.push(item);
         if (v.starred) dealItems.push(item);
       });
