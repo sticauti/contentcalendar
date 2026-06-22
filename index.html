@@ -2447,7 +2447,7 @@ fbAuth.onAuthStateChanged(function(user) {
     document.getElementById('headerEmail').textContent = user.email;
     // Load from cloud, merge into localStorage, then build
     loadFromCloud(function(cloudWeeks) {
-      if (cloudWeeks) {
+      if (cloudWeeks && Object.keys(cloudWeeks).length > 0) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudWeeks)); } catch(e) {}
       }
       document.getElementById('appLoading').style.display = 'none';
