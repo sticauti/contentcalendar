@@ -591,7 +591,9 @@ footer {
 }
 .compact-slots .compact-title { display: block; }
 .compact-slots .field-group   { display: none; }
-.compact-slots .type-toggle   { display: none; }
+.compact-slots .type-toggle      { display: none; }
+.compact-slots .brand-deal-btn   { pointer-events: none; opacity: 0.5; }
+.compact-slots .slot-delete      { display: none; }
 
 /* ─── Starred slot ───────────────────────────── */
 .video-slot.slot-starred {
@@ -1326,8 +1328,13 @@ function buildCalendar(savedState) {
     addBtn.textContent = '+ Add video';
     (function(di, w) {
       addBtn.addEventListener('click', function() {
-        w.appendChild(makeSlot(di, w.querySelectorAll('.video-slot').length));
-        updateSummary(); saveState();
+        if (currentView === 'weekly') {
+          setView('daily');
+          setActiveDay(di);
+        } else {
+          w.appendChild(makeSlot(di, w.querySelectorAll('.video-slot').length));
+          updateSummary(); saveState();
+        }
       });
     })(d, wrap);
     col.appendChild(addBtn);
