@@ -896,6 +896,7 @@ footer {
   </div>
   <div class="header-user">
     <span class="header-email" id="headerEmail"></span>
+    <span id="syncStatus" style="font-size:11px;font-weight:600;"></span>
     <button class="signout-btn" onclick="authSignOut()">Sign out</button>
   </div>
   </div>
@@ -2352,11 +2353,26 @@ var fbAuth = firebase.auth();
 var fbDb   = firebase.firestore();
 var currentUser = null;
 
+function setSyncStatus(state) {
+  var el = document.getElementById('syncStatus');
+  if (!el) return;
+  if (state === 'saving') { el.textContent = '↑ Syncing…'; el.style.color = 'var(--text-3)'; }
+  else if (state === 'saved') { el.textContent = '✓ Synced'; el.style.color = '#4CAF50'; }
+  else if (state === 'error') { el.textContent = '⚠ Sync failed'; el.style.color = 'var(--danger)'; }
+}
+
 function saveToCloud(weeksData) {
   if (!currentUser) return;
+  // Strip __default__ key — Firestore rejects field names starting with __
+  var cloudData = {};
+  Object.keys(weeksData).forEach(function(k) {
+    if (k.indexOf('__') !== 0) cloudData[k] = weeksData[k];
+  });
+  setSyncStatus('saving');
   fbDb.collection('calendars').doc(currentUser.uid)
-    .set({ weeks: weeksData })
-    .catch(function(e) { console.warn('Cloud save failed:', e.message); });
+    .set({ weeks: cloudData })
+    .then(function() { setSyncStatus('saved'); })
+    .catch(function(e) { console.error('Cloud save failed:', e); setSyncStatus('error'); });
 }
 
 function loadFromCloud(callback) {
