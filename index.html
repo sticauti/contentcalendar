@@ -756,7 +756,7 @@ function drawCalendarImage() {
   ctx.fillStyle = COLOR_LIGHT_MUTE;
   ctx.font = '400 11px ' + FONT;
   ctx.textAlign = 'center';
-  ctx.fillText('Made for Create With Amber — plan it, post it, own it.', totalW / 2, sumY + summaryH + 26);
+  ctx.fillText('Yeah Dawg - Made for Create With Amber — plan it, post it, own it.', totalW / 2, sumY + summaryH + 26);
   ctx.textAlign = 'left';
 
   return canvas;
@@ -795,10 +795,10 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
       link.download = filename;
       link.href = canvas.toDataURL('image/jpeg', 0.92);
       link.click();
-      btn.textContent = 'Download my calendar as image file';
+      btn.textContent = 'Download my calendar as image';
       btn.disabled = false;
     } catch (err) {
-      btn.textContent = 'Download my calendar as image file';
+      btn.textContent = 'Download my calendar as image';
       btn.disabled = false;
       showMessageModal('Could not save the image. Please try again, or take a screenshot instead.');
     }
