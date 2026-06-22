@@ -469,7 +469,8 @@ footer {
         <button class="view-btn" data-view="weekly" onclick="setView('weekly')">Week</button>
       </div>
       <div class="action-btns">
-        <button class="nextwkbtn" onclick="nextWeek()">Next week →</button>
+        <button class="nextwkbtn" onclick="prevWeek()">← Prev</button>
+        <button class="nextwkbtn" onclick="nextWeek()">Next →</button>
         <button class="clearbtn" id="clearBtn" onclick="clearCurrent()">Clear day</button>
       </div>
     </div>
@@ -888,6 +889,22 @@ function clearCurrent() {
   }
 }
 function var_danger() { return '#B33030'; }
+
+function prevWeek() {
+  var cur = document.getElementById('wk').value.trim(), newDate = '';
+  if (cur) {
+    var d = new Date(cur);
+    if (!isNaN(d.getTime())) { d.setDate(d.getDate() - 7); newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+  }
+  if (!newDate) return;
+  showModal({
+    message: 'Go back to the week of ' + newDate + '?\n\nThis will clear your current week.',
+    buttons: [
+      { label: 'Cancel' },
+      { label: 'Go back', style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } }
+    ]
+  });
+}
 
 function nextWeek() {
   var cur = document.getElementById('wk').value.trim(), newDate = '';
