@@ -795,10 +795,10 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
       link.download = filename;
       link.href = canvas.toDataURL('image/jpeg', 0.92);
       link.click();
-      btn.textContent = 'Download my calendar as image';
+      btn.textContent = 'Download my calendar as image file';
       btn.disabled = false;
     } catch (err) {
-      btn.textContent = 'Download my calendar as image';
+      btn.textContent = 'Download my calendar as image file';
       btn.disabled = false;
       showMessageModal('Could not save the image. Please try again, or take a screenshot instead.');
     }
