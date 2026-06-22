@@ -296,6 +296,13 @@ function clearAll() {
 // no-ops in many in-app browsers (TikTok, Instagram, etc.), so we
 // build our own lightweight version instead of relying on it.
 function showConfirmModal(message, onConfirm) {
+  // iOS Safari has a known bug where a `position: fixed` element that's
+  // injected into a tall, scrollable page can render anchored far down
+  // the document instead of pinned to the current viewport — which is
+  // exactly the "have to scroll way down to see it" symptom. Scrolling
+  // to the top before inserting the modal sidesteps this reliably.
+  window.scrollTo(0, 0);
+
   var overlay = document.createElement('div');
   overlay.style.position = 'fixed';
   overlay.style.top = 0;
@@ -373,6 +380,8 @@ function showConfirmModal(message, onConfirm) {
 // Single-button message modal — replacement for window.alert(), which
 // has the same in-app-browser reliability problem as window.confirm().
 function showMessageModal(message) {
+  window.scrollTo(0, 0);
+
   var overlay = document.createElement('div');
   overlay.style.position = 'fixed';
   overlay.style.top = 0;
@@ -791,12 +800,33 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
       var canvas = drawCalendarImage();
       var wk = document.getElementById('wk').value.trim();
       var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
-      var link = document.createElement('a');
-      link.download = filename;
-      link.href = canvas.toDataURL('image/jpeg', 0.92);
-      link.click();
-      btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
-      btn.disabled = false;
+
+      // Use toBlob + an object URL instead of toDataURL. A data: URL is
+      // treated as a navigation to inline content, and privacy-hardened
+      // browsers (Firefox Focus, and some others) actively block/interrupt
+      // that kind of navigation — which is exactly the "Frame load
+      // interrupted" error. An object URL is just a reference to a
+      // same-origin Blob, not a data-URL navigation, so it isn't subject
+      // to that guard and downloads normally everywhere.
+      canvas.toBlob(function (blob) {
+        if (!blob) {
+          btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
+          btn.disabled = false;
+          showMessageModal('Could not save the image. Please try again, or take a screenshot instead.');
+          return;
+        }
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // Release the object URL shortly after triggering the download.
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
+        btn.disabled = false;
+      }, 'image/jpeg', 0.92);
     } catch (err) {
       btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
       btn.disabled = false;
@@ -804,8 +834,6 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
     }
   });
 });
-
-buildCalendar();
 
 buildCalendar();
 </script>
