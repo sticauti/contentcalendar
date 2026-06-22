@@ -518,9 +518,19 @@ footer {
   .weekinput { width: 155px; }
   h1 { font-size: 24px; }
 }
+@media (max-width: 520px) {
+  .nextwkbtn { padding: 7px 10px; font-size: 11px; }
+  .clearbtn  { padding: 7px 10px; font-size: 11px; }
+  .weekinput { width: 140px; font-size: 12px; }
+}
 @media (max-width: 420px) {
-  .nextwkbtn { display: none; }
-  .page { padding: 0 14px; }
+  .page { padding: 0 12px; }
+  .nextwkbtn { padding: 6px 9px; font-size: 11px; }
+  .clearbtn  { padding: 6px 9px; font-size: 11px; }
+  .weekwrap label { display: none; }
+  .weekinput { width: 148px; }
+  .action-btns { gap: 4px; }
+  .top-right   { gap: 6px; }
 }
 
 /* ─── Platform buttons ───────────────────────── */
@@ -594,6 +604,24 @@ footer {
 .compact-slots .type-toggle      { display: none; }
 .compact-slots .brand-deal-btn   { pointer-events: none; opacity: 0.5; }
 .compact-slots .slot-delete      { display: none; }
+
+/* ─── Compact check button (week view) ──────── */
+.compact-check {
+  display: none; width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface);
+  cursor: pointer; flex-shrink: 0;
+  align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.18s; margin-left: auto;
+}
+.compact-check.cc-done {
+  border-color: var(--success); background: var(--success); color: #fff;
+}
+.compact-slots .compact-check { display: flex; }
+.compact-slots .slot-posted .compact-title {
+  text-decoration: line-through; opacity: 0.55;
+}
 
 /* ─── Starred slot ───────────────────────────── */
 .video-slot.slot-starred {
@@ -711,8 +739,8 @@ footer {
         <button class="view-btn"        data-view="monthly" onclick="setView('monthly')">Month</button>
       </div>
       <div class="action-btns">
-        <button class="nextwkbtn" onclick="prevWeek()">← Prev</button>
-        <button class="nextwkbtn" onclick="nextWeek()">Next →</button>
+        <button class="nextwkbtn" onclick="prevWeek()">←</button>
+        <button class="nextwkbtn" onclick="nextWeek()">→</button>
         <button class="clearbtn" id="clearBtn" onclick="clearCurrent()">Clear day</button>
       </div>
     </div>
@@ -1002,8 +1030,14 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   delBtn.innerHTML = '&#x2715;';
   delBtn.addEventListener('click', function() { removeSlot(delBtn); });
 
+  var compactCheck = document.createElement('button');
+  compactCheck.className = 'compact-check';
+  compactCheck.setAttribute('type', 'button');
+  compactCheck.textContent = '✓';
+
   header.appendChild(left);
   header.appendChild(starBtn);
+  header.appendChild(compactCheck);
   header.appendChild(delBtn);
   div.appendChild(header);
 
@@ -1106,8 +1140,16 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   cbWrap.className = 'posted-check-wrap'; cbWrap.setAttribute('for', cbId);
   var cb = document.createElement('input');
   cb.type = 'checkbox'; cb.className = 'posted-check'; cb.id = cbId;
+  function syncCompactCheck() {
+    compactCheck.classList.toggle('cc-done', cb.checked);
+  }
   cb.addEventListener('change', function() {
-    togglePosted(cb); updateSummary(); saveState();
+    togglePosted(cb); syncCompactCheck(); updateSummary(); saveState();
+    if (navigator.vibrate) navigator.vibrate(40);
+  });
+  compactCheck.addEventListener('click', function() {
+    cb.checked = !cb.checked;
+    togglePosted(cb); syncCompactCheck(); updateSummary(); saveState();
     if (navigator.vibrate) navigator.vibrate(40);
   });
   cbWrap.appendChild(cb);
@@ -1121,7 +1163,7 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
     productF.input.value = savedVideo.product || '';
     hookF.input.value    = savedVideo.hook    || '';
     notesF.input.value   = savedVideo.notes   || '';
-    if (savedVideo.posted) { cb.checked = true; togglePosted(cb); }
+    if (savedVideo.posted) { cb.checked = true; togglePosted(cb); syncCompactCheck(); }
     if (savedVideo.starred) {
       div.classList.add('slot-starred');
       starBtn.classList.add('starred');
