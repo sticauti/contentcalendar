@@ -426,9 +426,12 @@ footer {
 
 .view-weekly .day-col { display: flex; }
 .view-weekly .day-tabs-wrap { display: none; }
-.view-weekly .cal-grid { max-width: none; grid-template-columns: repeat(7, 1fr); }
-@media (max-width: 1060px) { .view-weekly .cal-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 640px)  { .view-weekly .cal-grid { grid-template-columns: repeat(2, 1fr); } }
+.view-weekly .cal-grid {
+  max-width: none;
+  grid-template-columns: repeat(7, minmax(200px, 1fr));
+  overflow-x: auto;
+}
+.view-weekly { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 640px) {
@@ -443,16 +446,17 @@ footer {
 
 /* ─── Platform buttons ───────────────────────── */
 .platform-row {
-  display: flex; gap: 5px; margin-bottom: 9px; flex-wrap: wrap;
+  display: flex; gap: 4px; margin-bottom: 9px;
+  flex-wrap: wrap; min-width: 0; overflow: hidden;
 }
 .plat-btn {
-  width: 30px; height: 30px; border-radius: 8px;
+  width: 26px; height: 26px; border-radius: 7px;
   border: 1.5px solid var(--border); background: var(--surface-sub);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   -webkit-tap-highlight-color: transparent; transition: all 0.15s;
   padding: 0; flex-shrink: 0;
 }
-.plat-btn svg { width: 14px; height: 14px; display: block; fill: var(--text-3); transition: fill 0.15s; }
+.plat-btn svg { width: 12px; height: 12px; display: block; fill: var(--text-3); transition: fill 0.15s; }
 .plat-btn.active-tt { background: #010101; border-color: #010101; }
 .plat-btn.active-tt svg { fill: #fff; }
 .plat-btn.active-ig { background: linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); border-color: #e6683c; }
@@ -563,7 +567,7 @@ footer {
 </style>
 </head>
 <body>
-<div class="page">
+<div class="page view-daily">
 
 <!-- ── App header ─────────────────────────────── -->
 <div class="app-header">
