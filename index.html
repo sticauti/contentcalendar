@@ -16,7 +16,7 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 .toprow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
 .weekwrap { display: flex; align-items: center; gap: 8px; }
 .weekwrap label { font-size: 12px; color: #9C9890; font-weight: 500; }
-.weekinput { font-size: 13px; border: 1px solid #D4CFC8; background: #fff; border-radius: 8px; padding: 6px 10px; color: #1C1A18; width: 180px; font-family: "DM Sans", sans-serif; }
+.weekinput { font-size: 13px; border: 1px solid #D4CFC8; background: #fff; border-radius: 8px; padding: 6px 10px; color: #1C1A18; width: 180px; font-family: "DM Sans", sans-serif; line-height: 1.4; }
 .weekinput:focus { outline: none; border-color: #8C8880; }
 .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .clearbtn { font-size: 12px; color: #9C9890; background: #fff; border: 1px solid #D4CFC8; border-radius: 20px; padding: 7px 14px; cursor: pointer; font-family: "DM Sans", sans-serif; }
@@ -27,11 +27,11 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 
 .day-col { background: #fff; border: 1px solid #E0DCD6; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
 .day-header { padding: 10px 12px 8px; border-bottom: 1px solid #E8E4DE; }
-.day-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9C9890; margin-bottom: 2px; }
-.day-date-input { font-size: 13px; font-weight: 500; color: #1C1A18; background: transparent; border: none; outline: none; width: 100%; font-family: "DM Sans", sans-serif; padding: 0; }
+.day-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #9C9890; margin-bottom: 2px; line-height: 1.3; }
+.day-date-input { font-size: 13px; font-weight: 500; color: #1C1A18; background: transparent; border: none; outline: none; width: 100%; font-family: "DM Sans", sans-serif; padding: 0; line-height: 1.4; display: block; }
 .day-date-input::placeholder { color: #C8C4BE; font-weight: 400; }
-.day-notes-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #B8B4AE; margin-top: 8px; margin-bottom: 2px; }
-.day-notes-input { width: 100%; background: #F7F5F2; border: 1px solid #E8E4DE; border-radius: 5px; padding: 4px 7px; font-size: 11px; color: #1C1A18; font-family: "DM Sans", sans-serif; resize: none; line-height: 1.4; }
+.day-notes-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #B8B4AE; margin-top: 8px; margin-bottom: 2px; line-height: 1.3; }
+.day-notes-input { width: 100%; background: #F7F5F2; border: 1px solid #E8E4DE; border-radius: 5px; padding: 4px 7px; font-size: 11px; color: #1C1A18; font-family: "DM Sans", sans-serif; resize: none; line-height: 1.4; overflow: hidden; display: block; min-height: 36px; }
 .day-notes-input:focus { outline: none; border-color: #9B97E0; }
 .day-notes-input::placeholder { color: #C8C4BE; }
 
@@ -39,16 +39,16 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 
 /* VIDEO SLOT */
 .video-slot { background: #F7F5F2; border: 1px solid #E8E4DE; border-radius: 8px; padding: 8px; position: relative; }
-.slot-num { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #B8B4AE; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+.slot-num { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #B8B4AE; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; line-height: 1.3; }
 .slot-delete { background: none; border: none; cursor: pointer; color: #C8C4BE; font-size: 14px; line-height: 1; padding: 0; font-family: "DM Sans", sans-serif; }
 .slot-delete:hover { color: #A32D2D; }
 
 .field-group { margin-bottom: 5px; }
-.field-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #B8B4AE; margin-bottom: 2px; }
+.field-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #B8B4AE; margin-bottom: 2px; line-height: 1.3; }
 .field-input {
   width: 100%; background: #fff; border: 1px solid #E0DCD6; border-radius: 5px;
   padding: 4px 7px; font-size: 11px; color: #1C1A18; font-family: "DM Sans", sans-serif;
-  resize: none; line-height: 1.4;
+  resize: none; line-height: 1.4; overflow: hidden; display: block; min-height: 36px;
 }
 .field-input:focus { outline: none; border-color: #9B97E0; }
 .field-input::placeholder { color: #C8C4BE; }
@@ -125,6 +125,27 @@ footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; 
 var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 var slotCounts = [0,0,0,0,0,0,0];
 
+// Auto-grow any textarea that has the autogrow behavior applied.
+// This makes the ACTUAL DOM element tall enough to fit its content, so
+// html2canvas (which just snapshots the DOM as-is) captures full text
+// instead of a clipped 2-row box.
+//
+// MIN_GROW_HEIGHT is the floor: boxes never get shorter than this, even
+// when empty, so they stay big enough to tap/click. They only grow taller
+// than this floor, never shrink below it.
+var MIN_GROW_HEIGHT = 36;
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  var needed = Math.max(el.scrollHeight, MIN_GROW_HEIGHT);
+  el.style.height = needed + 'px';
+}
+
+function attachAutoGrow(el) {
+  autoGrow(el);
+  el.addEventListener('input', function () { autoGrow(el); });
+}
+
 function makeSlot(dayIdx, slotNum) {
   slotCounts[dayIdx]++;
   var n = slotCounts[dayIdx];
@@ -153,6 +174,12 @@ function makeSlot(dayIdx, slotNum) {
       '<input type="checkbox" class="posted-check" id="posted-' + dayIdx + '-' + n + '" onchange="togglePosted(this);updateSummary()">' +
       '<label class="posted-label" for="posted-' + dayIdx + '-' + n + '">Marked as posted</label>' +
     '</div>';
+
+  // Wire up auto-grow for the two textareas in this slot
+  var areas = div.querySelectorAll('textarea.field-input');
+  for (var i = 0; i < areas.length; i++) {
+    attachAutoGrow(areas[i]);
+  }
 
   return div;
 }
@@ -196,6 +223,10 @@ function buildCalendar() {
       '<textarea class="day-notes-input" rows="2" placeholder="Daily notes, reminders…"></textarea>';
     col.appendChild(hdr);
 
+    // Auto-grow the daily notes textarea too
+    var dayNotesArea = hdr.querySelector('.day-notes-input');
+    attachAutoGrow(dayNotesArea);
+
     var wrap = document.createElement('div');
     wrap.className = 'slots-wrap';
     wrap.setAttribute('data-slots', d);
@@ -235,9 +266,88 @@ function updateSummary() {
 }
 
 function clearAll() {
-  if (!confirm('Clear the entire calendar?')) return;
-  buildCalendar();
-  document.getElementById('wk').value = '';
+  showConfirmModal('Clear the entire calendar?', function () {
+    buildCalendar();
+    document.getElementById('wk').value = '';
+  });
+}
+
+// Custom confirm modal — window.confirm() is blocked or silently
+// no-ops in many in-app browsers (TikTok, Instagram, etc.), so we
+// build our own lightweight version instead of relying on it.
+function showConfirmModal(message, onConfirm) {
+  var overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.right = 0;
+  overlay.style.bottom = 0;
+  overlay.style.background = 'rgba(28,26,24,0.45)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = 9999;
+  overlay.style.padding = '20px';
+
+  var box = document.createElement('div');
+  box.style.background = '#fff';
+  box.style.borderRadius = '14px';
+  box.style.padding = '22px 20px';
+  box.style.maxWidth = '320px';
+  box.style.width = '100%';
+  box.style.textAlign = 'center';
+  box.style.fontFamily = '"DM Sans", sans-serif';
+
+  var msg = document.createElement('p');
+  msg.textContent = message;
+  msg.style.fontSize = '14px';
+  msg.style.color = '#1C1A18';
+  msg.style.marginBottom = '16px';
+  msg.style.lineHeight = '1.4';
+  box.appendChild(msg);
+
+  var btnRow = document.createElement('div');
+  btnRow.style.display = 'flex';
+  btnRow.style.gap = '8px';
+  btnRow.style.justifyContent = 'center';
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.flex = '1';
+  cancelBtn.style.padding = '10px';
+  cancelBtn.style.borderRadius = '20px';
+  cancelBtn.style.border = '1px solid #D4CFC8';
+  cancelBtn.style.background = '#fff';
+  cancelBtn.style.color = '#1C1A18';
+  cancelBtn.style.fontSize = '13px';
+  cancelBtn.style.fontFamily = '"DM Sans", sans-serif';
+  cancelBtn.style.cursor = 'pointer';
+  cancelBtn.addEventListener('click', function () {
+    document.body.removeChild(overlay);
+  });
+
+  var confirmBtn = document.createElement('button');
+  confirmBtn.textContent = 'Clear';
+  confirmBtn.style.flex = '1';
+  confirmBtn.style.padding = '10px';
+  confirmBtn.style.borderRadius = '20px';
+  confirmBtn.style.border = 'none';
+  confirmBtn.style.background = '#A32D2D';
+  confirmBtn.style.color = '#fff';
+  confirmBtn.style.fontSize = '13px';
+  confirmBtn.style.fontFamily = '"DM Sans", sans-serif';
+  confirmBtn.style.fontWeight = '600';
+  confirmBtn.style.cursor = 'pointer';
+  confirmBtn.addEventListener('click', function () {
+    document.body.removeChild(overlay);
+    onConfirm();
+  });
+
+  btnRow.appendChild(cancelBtn);
+  btnRow.appendChild(confirmBtn);
+  box.appendChild(btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
 }
 
 // Download as image
@@ -245,25 +355,46 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
   var btn = this;
   btn.textContent = 'Saving...';
   btn.disabled = true;
+
   var target = document.querySelector('.page');
-  html2canvas(target, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: '#F7F5F2',
-    logging: false
-  }).then(function(canvas) {
-    var wk = document.getElementById('wk').value.trim();
-    var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
-    var link = document.createElement('a');
-    link.download = filename;
-    link.href = canvas.toDataURL('image/jpeg', 0.92);
-    link.click();
-    btn.textContent = 'Download my calendar as image';
-    btn.disabled = false;
-  }).catch(function() {
-    btn.textContent = 'Download my calendar as image';
-    btn.disabled = false;
-    alert('Could not save. Try taking a screenshot instead.');
+
+  // Re-run autoGrow on every textarea right before capture. This guards
+  // against any text that was pasted in or changed without firing the
+  // 'input' event (e.g. programmatic changes), so the box is guaranteed
+  // to be full height at the moment html2canvas reads the DOM.
+  var allAreas = target.querySelectorAll('textarea');
+  for (var i = 0; i < allAreas.length; i++) {
+    autoGrow(allAreas[i]);
+  }
+
+  // Wait one frame so the browser has actually applied the height changes
+  // and the web font has settled, THEN capture. Without this delay,
+  // html2canvas can grab a layout pass that's mid-reflow, which is what
+  // causes the title text to appear to shift down in the exported image.
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#F7F5F2',
+        logging: false,
+        windowWidth: target.scrollWidth,
+        windowHeight: target.scrollHeight
+      }).then(function(canvas) {
+        var wk = document.getElementById('wk').value.trim();
+        var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
+        var link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+        btn.textContent = 'Download my calendar as image';
+        btn.disabled = false;
+      }).catch(function() {
+        btn.textContent = 'Download my calendar as image';
+        btn.disabled = false;
+        alert('Could not save. Try taking a screenshot instead.');
+      });
+    });
   });
 });
 
