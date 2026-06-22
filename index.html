@@ -27,9 +27,11 @@
   --text:          #1A1816;
   --text-2:        #6B675F;
   --text-3:        #ABA69D;
-  --accent:        #6460CC;
-  --accent-2:      #EEEDFC;
-  --accent-3:      #C9C7F0;
+  --accent:        #D06B38;
+  --accent-2:      #FEF1E8;
+  --accent-3:      #F5C4A4;
+  --star:          #F5B820;
+  --star-2:        #FFFBF0;
   --success:       #1F9467;
   --success-2:     #E6F7F0;
   --success-3:     #A3D9C3;
@@ -127,7 +129,7 @@ h1 {
 }
 .weekinput:focus {
   outline: none; border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(100,96,204,0.15);
+  box-shadow: 0 0 0 3px rgba(208,107,56,0.15);
 }
 .top-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
@@ -238,7 +240,7 @@ h1 {
 .day-notes-input:focus {
   outline: none; background: var(--surface);
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(100,96,204,0.12);
+  box-shadow: 0 0 0 3px rgba(208,107,56,0.12);
 }
 .day-notes-input::placeholder { color: var(--text-3); }
 
@@ -254,7 +256,7 @@ h1 {
   position: relative;
   transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
 }
-.video-slot:focus-within { border-color: rgba(100,96,204,0.3); border-left-color: var(--accent); background: var(--surface); box-shadow: var(--shadow-sm); }
+.video-slot:focus-within { border-color: rgba(208,107,56,0.3); border-left-color: var(--accent); background: var(--surface); box-shadow: var(--shadow-sm); }
 .video-slot.slot-posted { border-left-color: var(--success); background: #FAFDF9; border-color: rgba(31,148,103,0.2); }
 
 .slot-header {
@@ -438,6 +440,126 @@ footer {
   .nextwkbtn { display: none; }
   .page { padding: 0 14px; }
 }
+
+/* ─── Platform buttons ───────────────────────── */
+.platform-row {
+  display: flex; gap: 5px; margin-bottom: 9px; flex-wrap: wrap;
+}
+.plat-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--surface-sub);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+  padding: 0; flex-shrink: 0;
+}
+.plat-btn svg { width: 14px; height: 14px; display: block; fill: var(--text-3); transition: fill 0.15s; }
+.plat-btn.active-tt { background: #010101; border-color: #010101; }
+.plat-btn.active-tt svg { fill: #fff; }
+.plat-btn.active-ig { background: linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); border-color: #e6683c; }
+.plat-btn.active-ig svg { fill: #fff; }
+.plat-btn.active-yt { background: #FF0000; border-color: #FF0000; }
+.plat-btn.active-yt svg { fill: #fff; }
+.plat-btn.active-fb { background: #1877F2; border-color: #1877F2; }
+.plat-btn.active-fb svg { fill: #fff; }
+
+/* ─── Star button ────────────────────────────── */
+.star-btn {
+  background: none; border: none; cursor: pointer; color: var(--text-3);
+  font-size: 15px; line-height: 1; padding: 0 4px;
+  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 28px; min-height: 28px; margin-right: 2px;
+}
+.star-btn:hover { color: var(--star); }
+.star-btn.starred { color: var(--star); }
+
+/* ─── Starred slot ───────────────────────────── */
+.video-slot.slot-starred {
+  background: var(--star-2);
+  border-left-color: var(--star);
+  border-color: rgba(245,184,32,0.4);
+}
+.video-slot.slot-starred .slot-num-badge { background: var(--star); color: #fff; }
+.video-slot.slot-starred .slot-label     { color: #9A6E00; }
+
+/* ─── Overview section ───────────────────────── */
+.overview-section {
+  margin-top: 18px; background: var(--surface);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden;
+}
+.overview-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 20px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.overview-title { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+.overview-chevron { color: var(--text-3); font-size: 11px; transition: transform 0.22s; display: inline-block; }
+.overview-section.ov-open .overview-chevron { transform: rotate(180deg); }
+.overview-body { display: none; padding: 6px 16px 18px; border-top: 1px solid var(--border-light); }
+.overview-section.ov-open .overview-body { display: block; }
+.ov-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 14px; }
+@media (min-width: 600px) { .ov-cards { grid-template-columns: repeat(4,1fr); } }
+.ov-card {
+  border-radius: var(--radius-md); padding: 14px 14px 12px;
+  border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s;
+}
+.ov-card:hover { transform: translateY(-1px); }
+.ov-card-lbl  { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
+.ov-card-num  { font-size: 30px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+.ov-card-sub  { font-size: 10px; margin-top: 4px; font-weight: 400; }
+.ov-card.ov-overdue  { background: #FFF5F5; border-color: rgba(179,48,48,0.2); }
+.ov-card.ov-overdue  .ov-card-lbl,.ov-card.ov-overdue .ov-card-num,.ov-card.ov-overdue .ov-card-sub { color: var(--danger); }
+.ov-card.ov-today    { background: var(--accent-2); border-color: rgba(208,107,56,0.2); }
+.ov-card.ov-today    .ov-card-lbl,.ov-card.ov-today .ov-card-num,.ov-card.ov-today .ov-card-sub { color: var(--accent); }
+.ov-card.ov-upcoming { background: var(--success-2); border-color: rgba(31,148,103,0.2); }
+.ov-card.ov-upcoming .ov-card-lbl,.ov-card.ov-upcoming .ov-card-num,.ov-card.ov-upcoming .ov-card-sub { color: var(--success); }
+.ov-card.ov-deals    { background: var(--star-2); border-color: rgba(245,184,32,0.4); }
+.ov-card.ov-deals    .ov-card-lbl,.ov-card.ov-deals .ov-card-num,.ov-card.ov-deals .ov-card-sub { color: #9A6E00; }
+.ov-list { display: none; }
+.ov-list.ov-visible  { display: block; }
+.ov-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  background: var(--surface-sub); margin-bottom: 5px;
+  font-size: 12px; color: var(--text);
+}
+.ov-item-day  { font-size: 9px; font-weight: 800; color: var(--text-3); text-transform: uppercase; min-width: 24px; }
+.ov-item-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-item-star { font-size: 12px; color: var(--star); flex-shrink: 0; }
+.ov-empty     { font-size: 12px; color: var(--text-3); padding: 4px 0 6px; text-align: center; }
+
+/* ─── Home screen banner ─────────────────────── */
+.hs-overlay {
+  position: fixed; inset: 0; background: rgba(26,24,20,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; padding: 20px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.hs-box {
+  background: #fff; border-radius: 24px; padding: 28px 26px 24px;
+  max-width: 360px; width: 100%; text-align: center;
+  box-shadow: 0 16px 60px rgba(26,24,20,0.25), 0 2px 8px rgba(26,24,20,0.1);
+  font-family: "DM Sans", sans-serif;
+}
+.hs-emoji { font-size: 36px; margin-bottom: 12px; }
+.hs-title { font-size: 18px; font-weight: 700; color: #1A1816; margin-bottom: 8px; letter-spacing: -0.02em; }
+.hs-desc  { font-size: 13px; color: #6B675F; line-height: 1.6; margin-bottom: 20px; }
+.hs-steps {
+  background: #F7F4F0; border-radius: 14px; padding: 16px 18px;
+  text-align: left; margin-bottom: 20px;
+}
+.hs-step  { font-size: 12px; color: #1A1816; line-height: 1.7; }
+.hs-step strong { color: var(--accent); }
+.hs-btn {
+  width: 100%; padding: 14px; border-radius: 999px;
+  background: var(--accent); color: #fff; border: none;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-family: "DM Sans", sans-serif; letter-spacing: 0.01em;
+  transition: all 0.15s;
+}
+.hs-btn:hover { filter: brightness(1.08); }
+.hs-skip { margin-top: 12px; font-size: 11px; color: var(--text-3); cursor: pointer; }
+.hs-skip:hover { color: var(--text-2); }
 </style>
 </head>
 <body>
@@ -450,9 +572,6 @@ footer {
     <h1>Content Calendar</h1>
     <p class="subtitle">TikTok Shop — plan your videos, track your posts, stay consistent.</p>
   </div>
-  <div class="header-credit">
-    <p class="credit-line">Created by <strong>Jerry</strong></p>
-    <a class="credit-handle" href="https://www.tiktok.com/@teachingtts" target="_blank" rel="noopener">@teachingtts</a>
   </div>
 </div>
 
@@ -507,6 +626,26 @@ footer {
   </div>
 </div>
 
+<!-- ── Overview dashboard ──────────────────────── -->
+<div class="overview-section ov-open" id="overviewSection">
+  <div class="overview-header" onclick="toggleOverview()">
+    <span class="overview-title">📊 Overview Dashboard</span>
+    <span class="overview-chevron">▾</span>
+  </div>
+  <div class="overview-body">
+    <div class="ov-cards" id="ovCards">
+      <div class="ov-card ov-overdue"  onclick="toggleOvList('ov-list-overdue')"><div class="ov-card-lbl">⚠️ Overdue</div><div class="ov-card-num" id="ov-num-overdue">0</div><div class="ov-card-sub">unposted past videos</div></div>
+      <div class="ov-card ov-today"    onclick="toggleOvList('ov-list-today')"  ><div class="ov-card-lbl">📌 Today</div><div class="ov-card-num" id="ov-num-today">0</div><div class="ov-card-sub">videos to post today</div></div>
+      <div class="ov-card ov-upcoming" onclick="toggleOvList('ov-list-upcoming')"><div class="ov-card-lbl">📅 Upcoming</div><div class="ov-card-num" id="ov-num-upcoming">0</div><div class="ov-card-sub">videos ahead this week</div></div>
+      <div class="ov-card ov-deals"    onclick="toggleOvList('ov-list-deals')"  ><div class="ov-card-lbl">⭐ Brand Deals</div><div class="ov-card-num" id="ov-num-deals">0</div><div class="ov-card-sub">starred videos</div></div>
+    </div>
+    <div class="ov-list" id="ov-list-overdue"></div>
+    <div class="ov-list" id="ov-list-today"></div>
+    <div class="ov-list" id="ov-list-upcoming"></div>
+    <div class="ov-list" id="ov-list-deals"></div>
+  </div>
+</div>
+
 <!-- ── Bottom ─────────────────────────────────── -->
 <div class="autosave-note">
   <span class="autosave-icon">✦</span>
@@ -529,6 +668,15 @@ footer {
 <script>
 var DAYS      = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 var DAY_SHORT = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+
+var PLAT_SVG = {
+  tt: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.13a8.16 8.16 0 004.77 1.52V7.21a4.85 4.85 0 01-1-.52z"/></svg>',
+  ig: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>',
+  yt: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+  fb: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>'
+};
+var PLAT_KEYS  = ['tt','ig','yt','fb'];
+var PLAT_LABEL = { tt:'TikTok', ig:'Instagram', yt:'YouTube', fb:'Facebook' };
 
 var slotCounts   = [0,0,0,0,0,0,0];
 var activeDayIdx = 0;
@@ -652,6 +800,18 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   left.appendChild(labelSpan);
   left.appendChild(postedBadge);
 
+  var starBtn = document.createElement('button');
+  starBtn.className = 'star-btn';
+  starBtn.title = 'Brand deal — mark as starred';
+  starBtn.setAttribute('type', 'button');
+  starBtn.textContent = '☆';
+  starBtn.addEventListener('click', function() {
+    var isStarred = div.classList.toggle('slot-starred');
+    starBtn.classList.toggle('starred', isStarred);
+    starBtn.textContent = isStarred ? '★' : '☆';
+    updateSummary(); buildOverview(); saveState();
+  });
+
   var delBtn = document.createElement('button');
   delBtn.className = 'slot-delete';
   delBtn.title = 'Remove slot';
@@ -660,8 +820,31 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   delBtn.addEventListener('click', function() { removeSlot(delBtn); });
 
   header.appendChild(left);
+  header.appendChild(starBtn);
   header.appendChild(delBtn);
   div.appendChild(header);
+
+  // Platform row
+  var platRow = document.createElement('div');
+  platRow.className = 'platform-row';
+  PLAT_KEYS.forEach(function(key) {
+    var pb = document.createElement('button');
+    pb.className = 'plat-btn';
+    pb.setAttribute('type', 'button');
+    pb.setAttribute('data-plat', key);
+    pb.title = PLAT_LABEL[key];
+    pb.innerHTML = PLAT_SVG[key];
+    pb.addEventListener('click', function() {
+      var already = pb.classList.contains('active-' + key);
+      platRow.querySelectorAll('.plat-btn').forEach(function(b) {
+        b.classList.remove('active-tt','active-ig','active-yt','active-fb');
+      });
+      if (!already) pb.classList.add('active-' + key);
+      saveState();
+    });
+    platRow.appendChild(pb);
+  });
+  div.appendChild(platRow);
 
   // Fields
   function makeField(labelText, isTextarea, placeholder) {
@@ -708,6 +891,15 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
     hookF.input.value    = savedVideo.hook    || '';
     notesF.input.value   = savedVideo.notes   || '';
     if (savedVideo.posted) { cb.checked = true; togglePosted(cb); }
+    if (savedVideo.starred) {
+      div.classList.add('slot-starred');
+      starBtn.classList.add('starred');
+      starBtn.textContent = '★';
+    }
+    if (savedVideo.platform) {
+      var pb = platRow.querySelector('[data-plat="' + savedVideo.platform + '"]');
+      if (pb) pb.classList.add('active-' + savedVideo.platform);
+    }
   }
 
   attachAutoGrow(hookF.input);
@@ -737,7 +929,16 @@ function getDayData(dayIdx) {
   var videos = [];
   col.querySelectorAll('.video-slot').forEach(function(slot) {
     var inputs = slot.querySelectorAll('.field-input');
-    videos.push({ product: inputs[0].value, hook: inputs[1].value, notes: inputs[2].value, posted: slot.querySelector('.posted-check').checked });
+    var activePlat = slot.querySelector('.plat-btn[class*="active-"]');
+    var platform = activePlat ? activePlat.getAttribute('data-plat') : '';
+    videos.push({
+      product:  inputs[0].value,
+      hook:     inputs[1].value,
+      notes:    inputs[2].value,
+      posted:   slot.querySelector('.posted-check').checked,
+      starred:  slot.classList.contains('slot-starred'),
+      platform: platform
+    });
   });
   return { notes: col.querySelector('.day-notes-input').value, videos: videos };
 }
@@ -810,6 +1011,7 @@ function updateSummary() {
   document.getElementById('sum-posted').textContent    = posted;
   document.getElementById('sum-remaining').textContent = remaining;
   document.getElementById('sum-pct').textContent       = pct + '%';
+  buildOverview();
   if (isDay) {
     document.getElementById('lbl-planned').textContent   = 'Videos today';
     document.getElementById('sub-planned').textContent   = dayName;
@@ -979,12 +1181,128 @@ function nextWeek() {
       buttons: [
         { label: 'Cancel' },
         { label: 'Start fresh',   style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { navigateToWeek(newDate, null); } },
-        { label: 'Carry forward', style: { background: '#6460CC', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x) { return function() { navigateToWeek(newDate, x); }; })(ubd) }
+        { label: 'Carry forward', style: { background: '#D06B38', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x) { return function() { navigateToWeek(newDate, x); }; })(ubd) }
       ]
     });
   } else {
     navigateToWeek(newDate, null);
   }
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────────
+function toggleOverview() {
+  document.getElementById('overviewSection').classList.toggle('ov-open');
+}
+
+function toggleOvList(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var vis = el.classList.toggle('ov-visible');
+  // close siblings
+  ['ov-list-overdue','ov-list-today','ov-list-upcoming','ov-list-deals'].forEach(function(sid) {
+    if (sid !== id) { var s = document.getElementById(sid); if (s) s.classList.remove('ov-visible'); }
+  });
+  if (vis) el.classList.add('ov-visible'); else el.classList.remove('ov-visible');
+}
+
+function buildOverview() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var weekStr = document.getElementById('wk').value.trim();
+  var weekStart = weekStr ? new Date(weekStr) : null;
+  if (weekStart && isNaN(weekStart.getTime())) weekStart = null;
+
+  var overdueItems = [], todayItems = [], upcomingItems = [], dealItems = [];
+
+  // Scan current week DOM
+  if (weekStart) {
+    for (var d = 0; d < 7; d++) {
+      var dayDate = new Date(weekStart); dayDate.setDate(weekStart.getDate() + d); dayDate.setHours(0,0,0,0);
+      var col = document.querySelector('.day-col[data-day-idx="' + d + '"]');
+      if (!col) continue;
+      col.querySelectorAll('.video-slot').forEach(function(slot) {
+        if (slot.querySelector('.posted-check').checked) return;
+        var inputs = slot.querySelectorAll('.field-input');
+        var name = (inputs[0] && inputs[0].value.trim()) || 'Untitled';
+        var starred = slot.classList.contains('slot-starred');
+        var item = { name: name, day: DAY_SHORT[d], starred: starred };
+        if (starred) dealItems.push(item);
+        if (dayDate < today)                               overdueItems.push(item);
+        else if (dayDate.getTime() === today.getTime())    todayItems.push(item);
+        else                                               upcomingItems.push(item);
+      });
+    }
+  }
+
+  // Scan past weeks in storage for additional overdue + deals
+  var allWeeks = getAllWeeks();
+  Object.keys(allWeeks).forEach(function(k) {
+    if (k === weekStr || k === '__default__') return;
+    var wDate = new Date(k); if (isNaN(wDate.getTime())) return;
+    var weekData = allWeeks[k]; if (!weekData || !weekData.days) return;
+    weekData.days.forEach(function(day, d) {
+      if (!day || !day.videos) return;
+      var dayDate = new Date(wDate); dayDate.setDate(wDate.getDate() + d); dayDate.setHours(0,0,0,0);
+      if (dayDate >= today) return;
+      day.videos.forEach(function(v) {
+        if (v.posted) return;
+        var item = { name: v.product || 'Untitled', day: DAY_SHORT[d], starred: !!v.starred };
+        overdueItems.push(item);
+        if (v.starred) dealItems.push(item);
+      });
+    });
+  });
+
+  function setCard(idNum, idList, items) {
+    document.getElementById(idNum).textContent = items.length;
+    var el = document.getElementById(idList);
+    el.innerHTML = '';
+    if (!items.length) {
+      el.innerHTML = '<p class="ov-empty">Nothing here — great job!</p>';
+    } else {
+      items.slice(0, 8).forEach(function(it) {
+        var row = document.createElement('div'); row.className = 'ov-item';
+        row.innerHTML = '<span class="ov-item-day">' + it.day + '</span>' +
+          '<span class="ov-item-name">' + it.name.replace(/</g,'&lt;') + '</span>' +
+          (it.starred ? '<span class="ov-item-star">★</span>' : '');
+        el.appendChild(row);
+      });
+      if (items.length > 8) {
+        var more = document.createElement('p'); more.className = 'ov-empty';
+        more.textContent = '+ ' + (items.length - 8) + ' more';
+        el.appendChild(more);
+      }
+    }
+  }
+  setCard('ov-num-overdue',  'ov-list-overdue',  overdueItems);
+  setCard('ov-num-today',    'ov-list-today',    todayItems);
+  setCard('ov-num-upcoming', 'ov-list-upcoming', upcomingItems);
+  setCard('ov-num-deals',    'ov-list-deals',    dealItems);
+}
+
+// ── Home screen prompt ────────────────────────────────────────────────────────
+function showHomeScreenPrompt() {
+  if (localStorage.getItem('cwa_hs_v1')) return;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isAndroid = /android/i.test(navigator.userAgent);
+  var overlay = document.createElement('div'); overlay.className = 'hs-overlay';
+  var steps = isIOS
+    ? '📤 Tap the <strong>Share</strong> button at the bottom of Safari<br>➕ Then tap <strong>"Add to Home Screen"</strong>'
+    : isAndroid
+    ? '⋮ Tap the <strong>menu</strong> in your browser<br>➕ Then tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>'
+    : '⭐ Bookmark this page or add it to your home screen for quick access.';
+  overlay.innerHTML =
+    '<div class="hs-box">' +
+      '<div class="hs-emoji">📲</div>' +
+      '<div class="hs-title">Save to Your Home Screen</div>' +
+      '<p class="hs-desc">Before you start, add this to your home screen so your calendar always saves and stays easy to open.</p>' +
+      '<div class="hs-steps"><p class="hs-step">' + steps + '</p></div>' +
+      '<button class="hs-btn" id="hsDone">Got it — let me start!</button>' +
+      '<p class="hs-skip" id="hsSkip">Skip for now</p>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  function dismiss() { localStorage.setItem('cwa_hs_v1','1'); document.body.removeChild(overlay); }
+  document.getElementById('hsDone').addEventListener('click', dismiss);
+  document.getElementById('hsSkip').addEventListener('click', dismiss);
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -1103,7 +1421,7 @@ function drawCalendarImage() {
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, totalW, totalH);
 
   var hx = PAD, hy = 28;
-  ctx.fillStyle = '#6460CC'; ctx.font = '700 10px ' + FONT; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#D06B38'; ctx.font = '700 10px ' + FONT; ctx.textBaseline = 'alphabetic';
   ctx.fillText('CREATE WITH AMBER', hx, hy); hy += 28;
   ctx.fillStyle = C.ink; ctx.font = '700 26px ' + FONT; ctx.fillText('Content Calendar', hx, hy); hy += 22;
   ctx.fillStyle = C.mute; ctx.font = '400 13px ' + FONT; ctx.fillText('TikTok Shop — plan your videos, track your posts, stay consistent.', hx, hy); hy += 22;
@@ -1182,7 +1500,7 @@ function drawCalendarImage() {
     var scx = PAD + s * (sumCardW + GAP);
     ctx.fillStyle = C.card; ctx.strokeStyle = C.border;
     roundRect(ctx, scx, sumY, sumCardW, summaryH, 12); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#6460CC'; ctx.fillRect(scx, sumY, sumCardW, 3);
+    ctx.fillStyle = '#D06B38'; ctx.fillRect(scx, sumY, sumCardW, 3);
     ctx.fillStyle = C.mute;  ctx.font = '700 9px ' + FONT;  ctx.fillText(summary[s].label, scx + 14, sumY + 22);
     ctx.fillStyle = C.ink;   ctx.font = '700 24px ' + FONT; ctx.fillText(summary[s].val,   scx + 14, sumY + 52);
     ctx.fillStyle = C.light; ctx.font = '400 10px ' + FONT; ctx.fillText(summary[s].sub,   scx + 14, sumY + 68);
@@ -1241,6 +1559,7 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
 });
 
 buildCalendar(loadInitialState());
+showHomeScreenPrompt();
 </script>
 </body>
 </html>
