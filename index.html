@@ -6,297 +6,461 @@
 <title>Create With Amber — Weekly Content Calendar</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1C1A18">
+<meta name="theme-color" content="#19170F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CWA Calendar">
 <link rel="apple-touch-icon" href="icon-192.png">
 
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
+/* ─── Reset ─────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ─── Tokens ─────────────────────────────────────── */
+:root {
+  --bg:            #E9E5DF;
+  --surface:       #FFFFFF;
+  --surface-sub:   #F7F4F0;
+  --border:        rgba(26,24,20,0.09);
+  --border-light:  rgba(26,24,20,0.06);
+  --text:          #1A1816;
+  --text-2:        #6B675F;
+  --text-3:        #ABA69D;
+  --accent:        #6460CC;
+  --accent-2:      #EEEDFC;
+  --accent-3:      #C9C7F0;
+  --success:       #1F9467;
+  --success-2:     #E6F7F0;
+  --success-3:     #A3D9C3;
+  --danger:        #B33030;
+  --shadow-sm:     0 1px 2px rgba(26,24,20,0.05);
+  --shadow-md:     0 2px 8px rgba(26,24,20,0.07), 0 1px 2px rgba(26,24,20,0.05);
+  --shadow-lg:     0 4px 20px rgba(26,24,20,0.09), 0 1px 4px rgba(26,24,20,0.06);
+  --shadow-xl:     0 8px 40px rgba(26,24,20,0.13), 0 2px 8px rgba(26,24,20,0.07);
+  --radius-sm:     8px;
+  --radius-md:     12px;
+  --radius-lg:     18px;
+  --radius-xl:     24px;
+  --radius-full:   999px;
+}
+
+/* ─── Base ───────────────────────────────────────── */
 body {
   font-family: "DM Sans", sans-serif;
-  background: #F4F2EF;
-  color: #1C1A18;
-  padding: 20px 16px 80px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0 0 100px;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
-.page { max-width: 1160px; margin: 0 auto; }
 
-/* ── Header ── */
-.app-header { margin-bottom: 4px; }
+.page { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+
+/* ─── App header ─────────────────────────────────── */
+.app-header {
+  padding: 36px 0 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.header-brand {}
 .eyebrow {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: #A8A49C; margin-bottom: 6px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 8px;
+}
+.eyebrow-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
 }
 h1 {
-  font-size: 24px; font-weight: 600; letter-spacing: -0.03em;
-  color: #1C1A18; margin-bottom: 2px; line-height: 1.2;
+  font-size: 30px; font-weight: 700; letter-spacing: -0.04em;
+  color: var(--text); line-height: 1.1; margin-bottom: 6px;
 }
-.subtitle { font-size: 13px; color: #A8A49C; line-height: 1.5; margin-bottom: 0; }
+.subtitle {
+  font-size: 13px; color: var(--text-3); line-height: 1.5;
+  font-weight: 400;
+}
+.header-credit {
+  text-align: right;
+  flex-shrink: 0;
+}
+.credit-line {
+  font-size: 11px; color: var(--text-3); font-weight: 400; line-height: 1.6;
+}
+.credit-line strong { color: var(--text-2); font-weight: 600; }
+.credit-handle {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  color: var(--accent); letter-spacing: -0.01em;
+}
 
-/* ── Sticky bar ── */
+/* ─── Sticky bar ─────────────────────────────────── */
 .sticky-header {
-  position: sticky; top: 0; z-index: 50;
-  background: rgba(244,242,239,0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(28,26,24,0.07);
-  padding: 10px 0 8px;
-  margin-bottom: 2px;
+  position: sticky; top: 0; z-index: 60;
+  background: rgba(233,229,223,0.88);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px 0;
+  margin: 0 -20px 2px;
 }
-
 .toprow {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; flex-wrap: wrap;
+  gap: 10px; flex-wrap: wrap; padding-bottom: 10px;
 }
 .weekwrap { display: flex; align-items: center; gap: 8px; }
-.weekwrap label { font-size: 12px; color: #A8A49C; font-weight: 500; }
+.weekwrap label { font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: 0.02em; }
 .weekinput {
-  font-size: 13px; border: 1px solid #DDD9D2;
-  background: rgba(255,255,255,0.8); border-radius: 10px;
-  padding: 7px 11px; color: #1C1A18; width: 190px;
-  font-family: "DM Sans", sans-serif; line-height: 1.4;
-  transition: border-color 0.15s;
+  font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 7px 12px; color: var(--text);
+  width: 195px; font-family: "DM Sans", sans-serif;
+  line-height: 1.4; transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: var(--shadow-sm);
 }
-.weekinput:focus { outline: none; border-color: #9B97E0; background: #fff; }
-
+.weekinput:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(100,96,204,0.15);
+}
 .top-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 /* View toggle */
 .view-toggle {
-  display: flex; background: rgba(255,255,255,0.7);
-  border: 1px solid #DDD9D2; border-radius: 10px; padding: 3px;
+  display: flex; background: var(--surface);
+  border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  padding: 3px; box-shadow: var(--shadow-sm);
 }
 .view-btn {
-  font-size: 12px; font-weight: 500; padding: 5px 14px;
-  border-radius: 7px; border: none; background: transparent;
-  color: #A8A49C; cursor: pointer; font-family: "DM Sans", sans-serif;
-  transition: all 0.15s; white-space: nowrap;
+  font-size: 12px; font-weight: 600; padding: 5px 16px;
+  border-radius: var(--radius-sm); border: none; background: transparent;
+  color: var(--text-3); cursor: pointer; font-family: "DM Sans", sans-serif;
+  transition: all 0.15s; white-space: nowrap; letter-spacing: 0.01em;
 }
-.view-btn.active { background: #fff; color: #1C1A18; box-shadow: 0 1px 3px rgba(28,26,24,0.12); }
+.view-btn.active {
+  background: var(--text); color: #fff;
+  box-shadow: 0 1px 4px rgba(26,24,20,0.18);
+}
 
 .action-btns { display: flex; gap: 6px; }
 .clearbtn {
-  font-size: 12px; color: #A8A49C; background: rgba(255,255,255,0.7);
-  border: 1px solid #DDD9D2; border-radius: 10px; padding: 7px 13px;
-  cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.15s;
+  font-size: 12px; font-weight: 500; color: var(--text-2);
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 7px 14px;
+  cursor: pointer; font-family: "DM Sans", sans-serif;
+  transition: all 0.15s; box-shadow: var(--shadow-sm);
 }
-.clearbtn:hover { border-color: #9C9890; color: #1C1A18; background: #fff; }
+.clearbtn:hover { border-color: var(--danger); color: var(--danger); background: #FFF5F5; }
 .nextwkbtn {
-  font-size: 12px; color: #5550A8; background: rgba(237,237,254,0.8);
-  border: 1px solid #C8C5F0; border-radius: 10px; padding: 7px 13px;
-  cursor: pointer; font-family: "DM Sans", sans-serif; font-weight: 500; transition: all 0.15s;
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  background: var(--accent-2); border: 1.5px solid var(--accent-3);
+  border-radius: var(--radius-md); padding: 7px 14px;
+  cursor: pointer; font-family: "DM Sans", sans-serif;
+  transition: all 0.15s; box-shadow: var(--shadow-sm);
 }
-.nextwkbtn:hover { background: #DDDCFC; border-color: #9B97E0; }
+.nextwkbtn:hover { background: var(--accent-3); border-color: var(--accent); }
 
-/* ── Day tabs ── */
-.day-tabs-wrap {
-  margin-top: 8px;
-  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-}
+/* ─── Day tabs ───────────────────────────────────── */
+.day-tabs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .day-tabs-wrap::-webkit-scrollbar { display: none; }
-.day-tabs { display: flex; gap: 5px; padding-bottom: 2px; }
+.day-tabs { display: flex; gap: 5px; padding: 8px 0 10px; }
 .day-tab {
-  flex-shrink: 0; font-size: 11px; font-weight: 600; padding: 0 14px;
-  height: 34px; border-radius: 8px; border: 1px solid #DDD9D2;
-  background: rgba(255,255,255,0.7); color: #A8A49C; cursor: pointer;
-  font-family: "DM Sans", sans-serif; letter-spacing: 0.03em;
-  display: flex; align-items: center; justify-content: center;
-  -webkit-tap-highlight-color: transparent; transition: all 0.15s; white-space: nowrap;
+  flex-shrink: 0; font-size: 11px; font-weight: 700;
+  padding: 0 16px; height: 32px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--text-3); cursor: pointer; font-family: "DM Sans", sans-serif;
+  letter-spacing: 0.04em; display: flex; align-items: center;
+  -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+  white-space: nowrap; box-shadow: var(--shadow-sm);
 }
 .day-tab.active {
-  background: #1C1A18; color: #fff; border-color: #1C1A18;
-  box-shadow: 0 2px 6px rgba(28,26,24,0.2);
+  background: var(--text); color: #fff; border-color: var(--text);
+  box-shadow: 0 2px 8px rgba(26,24,20,0.22);
 }
 
-/* ── Calendar grid ── */
+/* ─── Grid ───────────────────────────────────────── */
 .cal-grid {
   display: grid; gap: 10px; margin-top: 14px;
   grid-template-columns: repeat(7, 1fr);
 }
 
-/* ── Day column ── */
+/* ─── Day card ───────────────────────────────────── */
 .day-col {
-  background: #fff; border-radius: 14px; overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
   display: flex; flex-direction: column;
-  box-shadow: 0 1px 2px rgba(28,26,24,0.04), 0 3px 10px rgba(28,26,24,0.05);
-  border: 1px solid rgba(28,26,24,0.06);
-  transition: box-shadow 0.2s;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.day-col:hover { box-shadow: 0 2px 4px rgba(28,26,24,0.06), 0 6px 16px rgba(28,26,24,0.07); }
+.day-col:hover { transform: translateY(-1px); box-shadow: var(--shadow-xl); }
 
-.day-header { padding: 12px 14px 10px; border-bottom: 1px solid #F0EDE8; }
+.day-header {
+  background: linear-gradient(160deg, #FDFCFA 0%, #F3EFE8 100%);
+  border-bottom: 1px solid var(--border-light);
+  padding: 14px 16px 12px;
+}
+.day-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .day-name {
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.1em; color: #A8A49C; margin-bottom: 3px; line-height: 1.3;
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--text-3);
+}
+.day-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0;
 }
 .day-date-input {
-  font-size: 14px; font-weight: 500; color: #1C1A18; background: transparent;
-  border: none; outline: none; width: 100%; font-family: "DM Sans", sans-serif;
-  padding: 0; line-height: 1.4; display: block;
+  font-size: 15px; font-weight: 600; color: var(--text);
+  background: transparent; border: none; outline: none;
+  width: 100%; font-family: "DM Sans", sans-serif;
+  padding: 0; line-height: 1.3; display: block;
+  letter-spacing: -0.02em;
 }
-.day-date-input::placeholder { color: #C8C4BE; font-weight: 400; }
-.day-notes-label {
-  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
-  color: #C4C0B8; margin-top: 10px; margin-bottom: 3px; line-height: 1.3;
+.day-date-input::placeholder { color: var(--text-3); font-weight: 400; font-size: 13px; }
+
+.notes-section { margin-top: 10px; }
+.section-label {
+  font-size: 8px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--text-3); margin-bottom: 4px;
 }
 .day-notes-input {
-  width: 100%; background: #F9F8F6; border: 1px solid #EDE9E3;
-  border-radius: 7px; padding: 5px 8px; font-size: 11px; color: #1C1A18;
-  font-family: "DM Sans", sans-serif; resize: none; line-height: 1.5;
-  overflow: hidden; display: block; min-height: 36px;
+  width: 100%; background: rgba(26,24,20,0.04);
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  padding: 6px 8px; font-size: 11px; font-weight: 400;
+  color: var(--text); font-family: "DM Sans", sans-serif;
+  resize: none; line-height: 1.5; overflow: hidden;
+  display: block; min-height: 34px; transition: all 0.15s;
 }
-.day-notes-input:focus { outline: none; border-color: #9B97E0; background: #fff; }
-.day-notes-input::placeholder { color: #C8C4BE; }
+.day-notes-input:hover { background: rgba(26,24,20,0.06); }
+.day-notes-input:focus {
+  outline: none; background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(100,96,204,0.12);
+}
+.day-notes-input::placeholder { color: var(--text-3); }
 
-/* ── Video slots ── */
-.slots-wrap { padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+/* ─── Slots ──────────────────────────────────────── */
+.slots-wrap { padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 7px; }
 
 .video-slot {
-  background: #F9F8F6; border: 1px solid #EDE9E3; border-radius: 10px;
-  padding: 10px; position: relative; transition: background 0.18s, border-color 0.18s;
+  background: var(--surface-sub);
+  border-radius: var(--radius-md);
+  border: 1.5px solid transparent;
+  border-left: 3px solid var(--border);
+  padding: 10px 10px 10px 11px;
+  position: relative;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
 }
-.video-slot.slot-posted { background: #F0FBF6; border-color: #5DCAA5; }
+.video-slot:focus-within { border-color: rgba(100,96,204,0.3); border-left-color: var(--accent); background: var(--surface); box-shadow: var(--shadow-sm); }
+.video-slot.slot-posted { border-left-color: var(--success); background: #FAFDF9; border-color: rgba(31,148,103,0.2); }
 
-.slot-num {
-  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em;
-  color: #C4C0B8; margin-bottom: 8px; display: flex; align-items: center;
-  justify-content: space-between; line-height: 1.3;
+.slot-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
 }
-.slot-num-label { display: flex; align-items: center; gap: 6px; }
+.slot-header-left { display: flex; align-items: center; gap: 7px; }
+.slot-num-badge {
+  width: 18px; height: 18px; border-radius: 5px;
+  background: var(--border); display: flex; align-items: center;
+  justify-content: center; font-size: 9px; font-weight: 800;
+  color: var(--text-3); flex-shrink: 0; transition: all 0.18s;
+  letter-spacing: 0;
+}
+.video-slot:focus-within .slot-num-badge { background: var(--accent); color: #fff; }
+.video-slot.slot-posted .slot-num-badge { background: var(--success); color: #fff; }
+
+.slot-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); }
 .slot-posted-badge {
-  display: none; font-size: 8px; font-weight: 600; letter-spacing: 0.06em;
-  color: #2A8C66; background: #D7F5E8; border-radius: 4px; padding: 2px 6px;
-  text-transform: uppercase;
+  display: none; font-size: 8px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--success); background: var(--success-2);
+  border-radius: 4px; padding: 2px 6px; text-transform: uppercase;
 }
 .slot-posted .slot-posted-badge { display: inline; }
-.slot-delete {
-  background: none; border: none; cursor: pointer; color: #C8C4BE; font-size: 14px;
-  line-height: 1; padding: 8px; margin: -6px -6px -6px 0; font-family: "DM Sans", sans-serif;
-  min-width: 44px; min-height: 36px; display: flex; align-items: center; justify-content: center;
-  -webkit-tap-highlight-color: transparent; border-radius: 6px; transition: all 0.12s;
-}
-.slot-delete:hover { color: #A32D2D; background: #FFF0F0; }
 
-.field-group { margin-bottom: 6px; }
+.slot-delete {
+  background: none; border: none; cursor: pointer; color: var(--text-3);
+  font-size: 13px; line-height: 1; padding: 6px; margin: -4px -4px -4px 0;
+  font-family: "DM Sans", sans-serif; min-width: 36px; min-height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; border-radius: var(--radius-sm);
+  transition: all 0.12s;
+}
+.slot-delete:hover { color: var(--danger); background: #FFF0F0; }
+
+/* Ghost inputs */
+.field-group { margin-bottom: 5px; }
 .field-label {
-  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
-  color: #C4C0B8; margin-bottom: 3px; line-height: 1.3;
+  font-size: 8px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-3); margin-bottom: 3px; line-height: 1.3;
 }
 .field-input {
-  width: 100%; background: #fff; border: 1px solid #E8E4DE; border-radius: 7px;
-  padding: 5px 8px; font-size: 11px; color: #1C1A18; font-family: "DM Sans", sans-serif;
-  resize: none; line-height: 1.5; overflow: hidden; display: block; min-height: 34px;
+  width: 100%; background: rgba(26,24,20,0.03);
+  border: 1.5px solid transparent; border-radius: var(--radius-sm);
+  padding: 5px 8px; font-size: 11px; font-weight: 400;
+  color: var(--text); font-family: "DM Sans", sans-serif;
+  resize: none; line-height: 1.5; overflow: hidden; display: block; min-height: 32px;
   word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.15s;
 }
-.field-input:focus { outline: none; border-color: #9B97E0; background: #FDFCFF; }
-.field-input::placeholder { color: #C8C4BE; }
-.field-input.posted { border-color: #5DCAA5; background: #F4FDF9; }
-input.field-input { white-space: normal; }
+.field-input:hover { background: rgba(26,24,20,0.06); }
+.field-input:focus {
+  outline: none; background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(100,96,204,0.1);
+}
+.field-input::placeholder { color: var(--text-3); }
+.field-input.posted { background: rgba(31,148,103,0.06); border-color: transparent; }
+input.field-input { white-space: normal; min-height: 34px; }
 
+/* Posted row */
 .posted-row {
-  display: flex; align-items: center; gap: 5px;
-  margin-top: 8px; padding-top: 8px; border-top: 1px solid #EDE9E3;
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--border-light);
 }
 .posted-check-wrap {
   display: flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; margin: -12px -4px -12px -12px;
+  width: 40px; height: 40px; margin: -10px -4px -10px -12px;
   cursor: pointer; flex-shrink: 0;
 }
-.posted-check { width: 16px; height: 16px; accent-color: #085041; cursor: pointer; }
-.posted-label { font-size: 10px; color: #A8A49C; cursor: pointer; user-select: none; }
+.posted-check { width: 15px; height: 15px; accent-color: var(--success); cursor: pointer; }
+.posted-label { font-size: 10px; color: var(--text-2); cursor: pointer; user-select: none; font-weight: 500; }
 
+/* Add button */
 .add-video-btn {
-  margin: 0 10px 10px; padding: 11px; background: transparent;
-  border: 1.5px dashed #DDD9D2; border-radius: 9px; font-size: 11px; color: #C4C0B8;
-  cursor: pointer; font-family: "DM Sans", sans-serif; width: calc(100% - 20px);
-  text-align: center; transition: all 0.15s; min-height: 42px;
-  -webkit-tap-highlight-color: transparent; font-weight: 500;
+  margin: 0 10px 10px; padding: 10px;
+  background: transparent; border: 1.5px dashed rgba(26,24,20,0.15);
+  border-radius: var(--radius-md); font-size: 11px; font-weight: 600;
+  color: var(--text-3); cursor: pointer; font-family: "DM Sans", sans-serif;
+  width: calc(100% - 20px); text-align: center; min-height: 40px;
+  -webkit-tap-highlight-color: transparent; transition: all 0.15s; letter-spacing: 0.01em;
 }
-.add-video-btn:hover { border-color: #9B97E0; color: #5550A8; background: #F5F4FF; }
+.add-video-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-2);
+}
 
-/* ── Summary bar ── */
-.summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+/* ─── Summary bar ────────────────────────────────── */
+.summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
 .scard {
-  background: #fff; border-radius: 12px; padding: 14px 16px;
-  box-shadow: 0 1px 2px rgba(28,26,24,0.04), 0 2px 8px rgba(28,26,24,0.04);
-  border: 1px solid rgba(28,26,24,0.05);
+  background: var(--surface); border-radius: var(--radius-lg);
+  padding: 18px 20px; box-shadow: var(--shadow-md);
+  position: relative; overflow: hidden;
+}
+.scard::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-3));
+  opacity: 0.5;
 }
 .scard-label {
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.08em; color: #A8A49C; margin-bottom: 6px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-3); margin-bottom: 8px;
 }
-.scard-val { font-size: 28px; font-weight: 600; color: #1C1A18; letter-spacing: -0.03em; line-height: 1; }
-.scard-sub { font-size: 10px; color: #C4C0B8; margin-top: 3px; }
+.scard-val {
+  font-size: 32px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.04em; line-height: 1;
+}
+.scard-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; font-weight: 400; }
 
-/* ── Bottom section ── */
-.download-wrap { margin-top: 22px; text-align: center; }
-.download-btn {
-  font-family: "DM Sans", sans-serif; font-size: 14px; font-weight: 600;
-  background: #1C1A18; color: #fff; border: none; border-radius: 28px;
-  padding: 14px 36px; cursor: pointer; min-height: 50px;
-  -webkit-tap-highlight-color: transparent; letter-spacing: 0.01em;
-  box-shadow: 0 2px 8px rgba(28,26,24,0.2); transition: all 0.15s;
-}
-.download-btn:hover { background: #2E2C2A; box-shadow: 0 4px 14px rgba(28,26,24,0.25); transform: translateY(-1px); }
-.download-btn:active { transform: translateY(0); }
-.download-hint { font-size: 11px; color: #C4C0B8; margin-top: 8px; }
-.download-msg {
-  font-size: 12px; color: #0A6644; background: #F0FBF6;
-  border: 1px solid #A3DFC3; border-radius: 10px; padding: 9px 16px;
-  margin-top: 12px; display: none; line-height: 1.5; max-width: 400px; margin-left: auto; margin-right: auto;
-}
+/* ─── Bottom ─────────────────────────────────────── */
 .autosave-note {
-  font-size: 12px; color: #5550A8; background: rgba(237,237,254,0.6);
-  border: 1px solid #C8C5F0; border-radius: 12px; padding: 11px 16px;
-  margin-top: 18px; text-align: center; line-height: 1.6;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--accent);
+  background: var(--accent-2); border: 1.5px solid var(--accent-3);
+  border-radius: var(--radius-lg); padding: 12px 18px;
+  margin-top: 20px; line-height: 1.5; font-weight: 500;
 }
-footer { margin-top: 32px; font-size: 11px; color: #C4C0B8; text-align: center; letter-spacing: 0.02em; }
+.autosave-icon { font-size: 14px; flex-shrink: 0; }
 
-/* ── View modes ── */
+.download-wrap { margin-top: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.download-btn {
+  font-family: "DM Sans", sans-serif; font-size: 14px; font-weight: 700;
+  background: var(--text); color: #fff; border: none;
+  border-radius: var(--radius-full); padding: 15px 42px;
+  cursor: pointer; letter-spacing: 0.01em;
+  box-shadow: 0 4px 16px rgba(26,24,20,0.25), 0 1px 3px rgba(26,24,20,0.12);
+  transition: all 0.18s; -webkit-tap-highlight-color: transparent;
+  position: relative; overflow: hidden;
+}
+.download-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+}
+.download-btn:hover {
+  background: #2E2B24;
+  box-shadow: 0 6px 24px rgba(26,24,20,0.3), 0 2px 6px rgba(26,24,20,0.15);
+  transform: translateY(-1px);
+}
+.download-btn:active { transform: translateY(0); }
+.download-hint { font-size: 11px; color: var(--text-3); text-align: center; }
+.download-msg {
+  font-size: 12px; color: var(--success); background: var(--success-2);
+  border: 1.5px solid var(--success-3); border-radius: var(--radius-md);
+  padding: 10px 18px; display: none; line-height: 1.5;
+  max-width: 380px; text-align: center; font-weight: 500;
+}
 
-/* DAILY: one day at a time */
+/* ─── Footer ─────────────────────────────────────── */
+footer {
+  margin-top: 40px; padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.footer-main { font-size: 11px; color: var(--text-3); letter-spacing: 0.02em; }
+.footer-credit {
+  font-size: 11px; color: var(--text-3);
+}
+.footer-credit a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.footer-credit a:hover { text-decoration: underline; }
+
+/* ─── View modes ─────────────────────────────────── */
 .view-daily .day-col { display: none; }
 .view-daily .day-col.active { display: flex; }
-.view-daily .cal-grid {
-  grid-template-columns: 1fr;
-  max-width: 560px;
-  margin-left: auto; margin-right: auto;
-}
+.view-daily .cal-grid { grid-template-columns: 1fr; max-width: 580px; margin-left: auto; margin-right: auto; }
 .view-daily .day-tabs-wrap { display: block; }
 
-/* WEEKLY: all days */
 .view-weekly .day-col { display: flex; }
 .view-weekly .day-tabs-wrap { display: none; }
 .view-weekly .cal-grid { max-width: none; grid-template-columns: repeat(7, 1fr); }
-@media (max-width: 1040px) { .view-weekly .cal-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 620px)  { .view-weekly .cal-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1060px) { .view-weekly .cal-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 640px)  { .view-weekly .cal-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* ── Responsive ── */
-@media (max-width: 620px) {
+/* ─── Responsive ─────────────────────────────────── */
+@media (max-width: 640px) {
   .summary-bar { grid-template-columns: repeat(2, 1fr); }
   .weekinput { width: 155px; }
+  h1 { font-size: 24px; }
+  .header-credit { display: none; }
 }
-@media (max-width: 400px) {
-  .toprow { gap: 8px; }
-  .top-right { gap: 6px; }
-  .nextwkbtn { display: none; } /* too cramped — accessible via keyboard still */
+@media (max-width: 420px) {
+  .nextwkbtn { display: none; }
+  .page { padding: 0 14px; }
 }
 </style>
 </head>
 <body>
 <div class="page">
 
+<!-- ── App header ─────────────────────────────── -->
 <div class="app-header">
-  <p class="eyebrow">Create With Amber</p>
-  <h1>Weekly Content Calendar</h1>
-  <p class="subtitle">TikTok Shop — plan your videos, track your posts, stay consistent.</p>
+  <div class="header-brand">
+    <div class="eyebrow"><span class="eyebrow-dot"></span>Create With Amber</div>
+    <h1>Weekly Content Calendar</h1>
+    <p class="subtitle">TikTok Shop — plan your videos, track your posts, stay consistent.</p>
+  </div>
+  <div class="header-credit">
+    <p class="credit-line">Created by <strong>Jerry</strong></p>
+    <a class="credit-handle" href="https://www.tiktok.com/@teachingtts" target="_blank" rel="noopener">@teachingtts</a>
+  </div>
 </div>
 
+<!-- ── Sticky controls ────────────────────────── -->
 <div class="sticky-header">
   <div class="toprow">
     <div class="weekwrap">
@@ -319,8 +483,10 @@ footer { margin-top: 32px; font-size: 11px; color: #C4C0B8; text-align: center; 
   </div>
 </div>
 
+<!-- ── Calendar ───────────────────────────────── -->
 <div class="cal-grid" id="calGrid"></div>
 
+<!-- ── Summary ────────────────────────────────── -->
 <div class="summary-bar" id="summaryBar">
   <div class="scard">
     <div class="scard-label" id="lbl-planned">Videos planned</div>
@@ -344,7 +510,11 @@ footer { margin-top: 32px; font-size: 11px; color: #C4C0B8; text-align: center; 
   </div>
 </div>
 
-<div class="autosave-note">✓ Saves automatically on this device. Add to your Home Screen for one-tap access.</div>
+<!-- ── Bottom ─────────────────────────────────── -->
+<div class="autosave-note">
+  <span class="autosave-icon">✦</span>
+  Saves automatically on this device. Add to your Home Screen for one-tap access.
+</div>
 
 <div class="download-wrap">
   <button class="download-btn" id="downloadBtn">Save My Calendar</button>
@@ -352,21 +522,24 @@ footer { margin-top: 32px; font-size: 11px; color: #C4C0B8; text-align: center; 
   <p class="download-msg" id="downloadMsg"></p>
 </div>
 
-<footer>Made for Create With Amber — plan it, post it, own it.</footer>
-</div>
+<footer>
+  <p class="footer-main">Made for Create With Amber — plan it, post it, own it.</p>
+  <p class="footer-credit">Created by Jerry · <a href="https://www.tiktok.com/@teachingtts" target="_blank" rel="noopener">@teachingtts</a></p>
+</footer>
+
+</div><!-- /.page -->
 
 <script>
-var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+var DAYS      = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 var DAY_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-var slotCounts  = [0,0,0,0,0,0,0];
+var slotCounts   = [0,0,0,0,0,0,0];
 var activeDayIdx = 0;
 var currentView  = 'daily';
 var STORAGE_KEY  = 'cwa_content_calendar_v1';
-var MIN_H = 34, MAX_H = 400;
+var MIN_H = 32, MAX_H = 400;
 
-// ── Auto-grow textareas ──────────────────────────────────────────────────────
-
+// ── Auto-grow ────────────────────────────────────────────────────────────────
 function autoGrow(el) {
   el.style.height = '0px';
   var h = Math.max(el.scrollHeight, MIN_H);
@@ -379,50 +552,36 @@ function attachAutoGrow(el) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
 function nextMondayStr() {
-  var today = new Date();
-  var day   = today.getDay();
+  var today = new Date(), day = today.getDay();
   var diff  = day === 1 ? 0 : (day === 0 ? 1 : 8 - day);
-  var d     = new Date(today);
-  d.setDate(today.getDate() + diff);
+  var d     = new Date(today); d.setDate(today.getDate() + diff);
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-// ── View switching ───────────────────────────────────────────────────────────
-
+// ── View ─────────────────────────────────────────────────────────────────────
 function setView(view) {
   currentView = view;
   var page = document.querySelector('.page');
   page.classList.toggle('view-daily',  view === 'daily');
   page.classList.toggle('view-weekly', view === 'weekly');
-
   document.querySelectorAll('.view-btn').forEach(function(b) {
     b.classList.toggle('active', b.getAttribute('data-view') === view);
   });
   document.getElementById('clearBtn').textContent = view === 'daily' ? 'Clear day' : 'Clear week';
-
-  // In weekly view refresh all; in daily ensure the active col is marked
-  if (view === 'daily') {
-    setActiveDay(activeDayIdx, false);
-  }
+  if (view === 'daily') setActiveDay(activeDayIdx, false);
   updateSummary();
 }
 
 // ── Day navigation ───────────────────────────────────────────────────────────
-
 function setActiveDay(idx, updateTabs) {
   activeDayIdx = idx;
   if (updateTabs !== false) {
-    document.querySelectorAll('.day-tab').forEach(function(t, i) {
-      t.classList.toggle('active', i === idx);
-    });
+    document.querySelectorAll('.day-tab').forEach(function(t, i) { t.classList.toggle('active', i === idx); });
     var active = document.querySelector('.day-tab.active');
     if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
-  document.querySelectorAll('.day-col').forEach(function(c, i) {
-    c.classList.toggle('active', i === idx);
-  });
+  document.querySelectorAll('.day-col').forEach(function(c, i) { c.classList.toggle('active', i === idx); });
   updateSummary();
 }
 
@@ -440,7 +599,6 @@ function buildDayTabs() {
 }
 
 // ── Slot construction ────────────────────────────────────────────────────────
-
 function makeSlot(dayIdx, slotNum, savedVideo) {
   slotCounts[dayIdx]++;
   var n   = slotCounts[dayIdx];
@@ -449,18 +607,27 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   div.setAttribute('data-day', dayIdx);
 
   // Header
-  var numDiv = document.createElement('div');
-  numDiv.className = 'slot-num';
+  var header = document.createElement('div');
+  header.className = 'slot-header';
 
-  var labelWrap = document.createElement('div');
-  labelWrap.className = 'slot-num-label';
-  var labelText = document.createTextNode('Video ' + n);
-  labelWrap.appendChild(labelText);
-  var badge = document.createElement('span');
-  badge.className = 'slot-posted-badge';
-  badge.textContent = 'Posted';
-  labelWrap.appendChild(badge);
-  numDiv.appendChild(labelWrap);
+  var left = document.createElement('div');
+  left.className = 'slot-header-left';
+
+  var badge = document.createElement('div');
+  badge.className = 'slot-num-badge';
+  badge.textContent = n;
+
+  var labelSpan = document.createElement('span');
+  labelSpan.className = 'slot-label';
+  labelSpan.textContent = 'Video ' + n;
+
+  var postedBadge = document.createElement('span');
+  postedBadge.className = 'slot-posted-badge';
+  postedBadge.textContent = 'Posted';
+
+  left.appendChild(badge);
+  left.appendChild(labelSpan);
+  left.appendChild(postedBadge);
 
   var delBtn = document.createElement('button');
   delBtn.className = 'slot-delete';
@@ -468,20 +635,18 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   delBtn.setAttribute('type', 'button');
   delBtn.innerHTML = '&#x2715;';
   delBtn.addEventListener('click', function() { removeSlot(delBtn); });
-  numDiv.appendChild(delBtn);
-  div.appendChild(numDiv);
+
+  header.appendChild(left);
+  header.appendChild(delBtn);
+  div.appendChild(header);
 
   // Fields
-  function makeField(label, isTextarea, placeholder) {
-    var fg  = document.createElement('div');
-    fg.className = 'field-group';
-    var lbl = document.createElement('div');
-    lbl.className = 'field-label';
-    lbl.textContent = label;
+  function makeField(labelText, isTextarea, placeholder) {
+    var fg  = document.createElement('div'); fg.className = 'field-group';
+    var lbl = document.createElement('div'); lbl.className = 'field-label'; lbl.textContent = labelText;
     fg.appendChild(lbl);
     var inp = document.createElement(isTextarea ? 'textarea' : 'input');
-    inp.className = 'field-input';
-    inp.placeholder = placeholder;
+    inp.className = 'field-input'; inp.placeholder = placeholder;
     if (!isTextarea) inp.type = 'text';
     else inp.rows = 2;
     inp.addEventListener('input', function() { updateSummary(); saveState(); });
@@ -501,8 +666,7 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   postedRow.className = 'posted-row';
   var cbId   = 'posted-' + dayIdx + '-' + n;
   var cbWrap = document.createElement('label');
-  cbWrap.className = 'posted-check-wrap';
-  cbWrap.setAttribute('for', cbId);
+  cbWrap.className = 'posted-check-wrap'; cbWrap.setAttribute('for', cbId);
   var cb = document.createElement('input');
   cb.type = 'checkbox'; cb.className = 'posted-check'; cb.id = cbId;
   cb.addEventListener('change', function() {
@@ -511,14 +675,11 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   });
   cbWrap.appendChild(cb);
   var cbLabel = document.createElement('label');
-  cbLabel.className = 'posted-label';
-  cbLabel.setAttribute('for', cbId);
+  cbLabel.className = 'posted-label'; cbLabel.setAttribute('for', cbId);
   cbLabel.textContent = 'Marked as posted';
-  postedRow.appendChild(cbWrap);
-  postedRow.appendChild(cbLabel);
+  postedRow.appendChild(cbWrap); postedRow.appendChild(cbLabel);
   div.appendChild(postedRow);
 
-  // Restore
   if (savedVideo) {
     productF.input.value = savedVideo.product || '';
     hookF.input.value    = savedVideo.hook    || '';
@@ -532,43 +693,30 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
 }
 
 function removeSlot(btn) {
-  var slot = btn.closest('.video-slot');
-  var wrap = slot.parentNode;
+  var slot = btn.closest('.video-slot'), wrap = slot.parentNode;
   slot.remove();
   wrap.querySelectorAll('.video-slot').forEach(function(s, i) {
-    s.querySelector('.slot-num-label').firstChild.textContent = 'Video ' + (i + 1);
+    s.querySelector('.slot-num-badge').textContent = i + 1;
+    s.querySelector('.slot-label').textContent = 'Video ' + (i + 1);
   });
   updateSummary(); saveState();
 }
 
 function togglePosted(cb) {
   var slot = cb.closest('.video-slot');
-  slot.querySelectorAll('.field-input').forEach(function(inp) {
-    inp.classList.toggle('posted', cb.checked);
-  });
+  slot.querySelectorAll('.field-input').forEach(function(inp) { inp.classList.toggle('posted', cb.checked); });
   slot.classList.toggle('slot-posted', cb.checked);
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-
 function getDayData(dayIdx) {
   var col    = document.querySelector('.day-col[data-day-idx="' + dayIdx + '"]');
-  var slots  = col.querySelectorAll('.video-slot');
   var videos = [];
-  slots.forEach(function(slot) {
+  col.querySelectorAll('.video-slot').forEach(function(slot) {
     var inputs = slot.querySelectorAll('.field-input');
-    videos.push({
-      product: inputs[0].value,
-      hook:    inputs[1].value,
-      notes:   inputs[2].value,
-      posted:  slot.querySelector('.posted-check').checked
-    });
+    videos.push({ product: inputs[0].value, hook: inputs[1].value, notes: inputs[2].value, posted: slot.querySelector('.posted-check').checked });
   });
-  return {
-    date:   col.querySelector('.day-date-input').value,
-    notes:  col.querySelector('.day-notes-input').value,
-    videos: videos
-  };
+  return { date: col.querySelector('.day-date-input').value, notes: col.querySelector('.day-notes-input').value, videos: videos };
 }
 
 function serializeState() {
@@ -577,38 +725,26 @@ function serializeState() {
   return { week: document.getElementById('wk').value, days: days };
 }
 
-function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); } catch (e) {}
-}
-function loadState() {
-  try { var r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; }
-}
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); } catch(e) {} }
+function loadState() { try { var r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
 
 // ── Summary ───────────────────────────────────────────────────────────────────
-
 function updateSummary() {
-  var planned, posted, isDay = currentView === 'daily';
-  var dayName = DAYS[activeDayIdx];
-
+  var planned, posted, isDay = currentView === 'daily', dayName = DAYS[activeDayIdx];
   if (isDay) {
     var col = document.querySelector('.day-col[data-day-idx="' + activeDayIdx + '"]');
-    if (col) {
-      planned = col.querySelectorAll('.video-slot').length;
-      posted  = col.querySelectorAll('.posted-check:checked').length;
-    } else { planned = posted = 0; }
+    planned = col ? col.querySelectorAll('.video-slot').length : 0;
+    posted  = col ? col.querySelectorAll('.posted-check:checked').length : 0;
   } else {
     planned = document.querySelectorAll('.video-slot').length;
     posted  = document.querySelectorAll('.posted-check:checked').length;
   }
-
   var remaining = planned - posted;
   var pct = planned > 0 ? Math.round((posted / planned) * 100) : 0;
-
   document.getElementById('sum-planned').textContent   = planned;
   document.getElementById('sum-posted').textContent    = posted;
   document.getElementById('sum-remaining').textContent = remaining;
   document.getElementById('sum-pct').textContent       = pct + '%';
-
   if (isDay) {
     document.getElementById('lbl-planned').textContent   = 'Videos today';
     document.getElementById('sub-planned').textContent   = dayName;
@@ -628,15 +764,12 @@ function updateSummary() {
   }
 }
 
-// ── Build calendar ────────────────────────────────────────────────────────────
-
+// ── Build ─────────────────────────────────────────────────────────────────────
 function buildCalendar(savedState) {
   var grid = document.getElementById('calGrid');
   grid.innerHTML = '';
   slotCounts = [0,0,0,0,0,0,0];
-
-  document.getElementById('wk').value =
-    (savedState && savedState.week) ? savedState.week : nextMondayStr();
+  document.getElementById('wk').value = (savedState && savedState.week) ? savedState.week : nextMondayStr();
 
   for (var d = 0; d < 7; d++) {
     var savedDay = savedState && savedState.days && savedState.days[d];
@@ -644,20 +777,25 @@ function buildCalendar(savedState) {
     col.className = 'day-col' + (d === activeDayIdx ? ' active' : '');
     col.setAttribute('data-day-idx', d);
 
+    // Header
     var hdr = document.createElement('div');
     hdr.className = 'day-header';
     hdr.innerHTML =
-      '<div class="day-name">' + DAYS[d] + '</div>' +
-      '<input class="day-date-input" type="text" placeholder="Date" oninput="updateSummary();saveState()">' +
-      '<div class="day-notes-label">Notes</div>' +
-      '<textarea class="day-notes-input" rows="2" placeholder="Daily notes, reminders…"></textarea>';
+      '<div class="day-name-row">' +
+        '<div class="day-name">' + DAYS[d] + '</div>' +
+        '<div class="day-dot"></div>' +
+      '</div>' +
+      '<input class="day-date-input" type="text" placeholder="Add date…" oninput="updateSummary();saveState()">' +
+      '<div class="notes-section">' +
+        '<div class="section-label">Notes</div>' +
+        '<textarea class="day-notes-input" rows="2" placeholder="Daily notes, reminders…"></textarea>' +
+      '</div>';
     col.appendChild(hdr);
 
     if (savedDay) {
       hdr.querySelector('.day-date-input').value  = savedDay.date  || '';
       hdr.querySelector('.day-notes-input').value = savedDay.notes || '';
     }
-
     var notesArea = hdr.querySelector('.day-notes-input');
     attachAutoGrow(notesArea);
     notesArea.addEventListener('input', saveState);
@@ -665,7 +803,6 @@ function buildCalendar(savedState) {
     var wrap = document.createElement('div');
     wrap.className = 'slots-wrap';
     wrap.setAttribute('data-slots', d);
-
     var savedVideos = savedDay && savedDay.videos;
     var count = savedVideos ? savedVideos.length : 1;
     for (var s = 0; s < count; s++) {
@@ -684,7 +821,6 @@ function buildCalendar(savedState) {
       });
     })(d, wrap);
     col.appendChild(addBtn);
-
     grid.appendChild(col);
   }
 
@@ -692,22 +828,18 @@ function buildCalendar(savedState) {
   setView(currentView);
 
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(function() {
-      document.querySelectorAll('textarea').forEach(autoGrow);
-    });
+    document.fonts.ready.then(function() { document.querySelectorAll('textarea').forEach(autoGrow); });
   }
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
-
 function clearCurrent() {
   if (currentView === 'daily') {
-    var dayName = DAYS[activeDayIdx];
     showModal({
-      message: 'Clear ' + dayName + '?',
+      message: 'Clear ' + DAYS[activeDayIdx] + '?',
       buttons: [
         { label: 'Cancel' },
-        { label: 'Clear day', style: { background: '#A32D2D', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
+        { label: 'Clear day', style: { background: var_danger(), color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
           var col = document.querySelector('.day-col[data-day-idx="' + activeDayIdx + '"]');
           col.querySelector('.day-date-input').value  = '';
           col.querySelector('.day-notes-input').value = '';
@@ -725,8 +857,8 @@ function clearCurrent() {
       message: 'Clear the entire week?',
       buttons: [
         { label: 'Cancel' },
-        { label: 'Clear week', style: { background: '#A32D2D', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
-          try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        { label: 'Clear week', style: { background: var_danger(), color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
+          try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
           activeDayIdx = 0;
           buildCalendar(null);
           saveState();
@@ -735,112 +867,88 @@ function clearCurrent() {
     });
   }
 }
+function var_danger() { return '#B33030'; }
 
 function nextWeek() {
-  var cur = document.getElementById('wk').value.trim();
-  var newDate = '';
+  var cur = document.getElementById('wk').value.trim(), newDate = '';
   if (cur) {
     var d = new Date(cur);
-    if (!isNaN(d.getTime())) {
-      d.setDate(d.getDate() + 7);
-      newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    }
+    if (!isNaN(d.getTime())) { d.setDate(d.getDate() + 7); newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
   }
   if (!newDate) newDate = nextMondayStr();
-
   var unpostedByDay = [], total = 0;
   for (var d = 0; d < 7; d++) {
     var u = getDayData(d).videos.filter(function(v) { return !v.posted; });
-    unpostedByDay.push(u);
-    total += u.length;
+    unpostedByDay.push(u); total += u.length;
   }
-
-  var msg = 'Start the week of ' + newDate + '?';
+  var msg  = 'Start the week of ' + newDate + '?';
   var btns = [{ label: 'Cancel' }];
-
   if (total > 0) {
     msg += '\n\n' + total + ' unposted video' + (total !== 1 ? 's' : '') + ' can carry forward.';
     var ubd = unpostedByDay;
-    btns.push({ label: 'Start fresh',    style: { background: '#1C1A18', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } });
-    btns.push({ label: 'Carry forward',  style: { background: '#5550A8', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x) { return function() { startNewWeek(newDate, x); }; })(ubd) });
+    btns.push({ label: 'Start fresh',   style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } });
+    btns.push({ label: 'Carry forward', style: { background: '#6460CC', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x) { return function() { startNewWeek(newDate, x); }; })(ubd) });
   } else {
-    btns.push({ label: 'Next week', style: { background: '#1C1A18', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } });
+    btns.push({ label: 'Next week', style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } });
   }
-
   showModal({ message: msg, buttons: btns });
 }
 
 function startNewWeek(weekDate, carryByDay) {
-  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   activeDayIdx = 0;
-  var newState = {
+  buildCalendar({
     week: weekDate,
     days: DAYS.map(function(_, i) {
-      var videos = carryByDay
-        ? carryByDay[i].map(function(v) { return Object.assign({}, v, { posted: false }); })
-        : [];
+      var videos = carryByDay ? carryByDay[i].map(function(v) { return Object.assign({}, v, { posted: false }); }) : [];
       return { date: '', notes: '', videos: videos };
     })
-  };
-  buildCalendar(newState);
+  });
   saveState();
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
-
 function showModal(opts) {
   var overlay = document.createElement('div');
   Object.assign(overlay.style, {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'rgba(28,26,24,0.4)',
+    background: 'rgba(26,24,20,0.45)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 9999, padding: '20px',
-    backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)'
+    backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)'
   });
-
   var box = document.createElement('div');
   Object.assign(box.style, {
-    background: '#fff', borderRadius: '18px', padding: '24px 22px',
-    maxWidth: '340px', width: '100%', textAlign: 'center',
+    background: '#fff', borderRadius: '20px', padding: '26px 24px',
+    maxWidth: '360px', width: '100%', textAlign: 'center',
     fontFamily: '"DM Sans", sans-serif',
-    boxShadow: '0 8px 32px rgba(28,26,24,0.18)'
+    boxShadow: '0 12px 48px rgba(26,24,20,0.2), 0 2px 8px rgba(26,24,20,0.08)'
   });
-
   var msg = document.createElement('p');
   msg.textContent = opts.message;
-  Object.assign(msg.style, {
-    fontSize: '14px', color: '#1C1A18', marginBottom: '18px',
-    lineHeight: '1.6', whiteSpace: 'pre-line'
-  });
+  Object.assign(msg.style, { fontSize: '14px', color: '#1A1816', marginBottom: '20px', lineHeight: '1.6', whiteSpace: 'pre-line', fontWeight: '500' });
   box.appendChild(msg);
-
   var btnRow = document.createElement('div');
   Object.assign(btnRow.style, { display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' });
-
-  var buttons = opts.buttons || [{ label: 'OK', style: { background: '#1C1A18', color: '#fff', border: 'none', fontWeight: '600' } }];
+  var buttons = opts.buttons || [{ label: 'OK', style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' } }];
   buttons.forEach(function(b) {
     var btn = document.createElement('button');
     btn.textContent = b.label;
     Object.assign(btn.style, {
-      flex: '1', minWidth: '80px', padding: '10px 14px', borderRadius: '22px',
-      border: '1px solid #DDD9D2', background: '#fff', color: '#1C1A18',
-      fontSize: '13px', fontFamily: '"DM Sans", sans-serif', fontWeight: '400', cursor: 'pointer'
+      flex: '1', minWidth: '80px', padding: '11px 16px', borderRadius: '999px',
+      border: '1.5px solid #DDD9D2', background: '#fff', color: '#1A1816',
+      fontSize: '13px', fontFamily: '"DM Sans", sans-serif', fontWeight: '500', cursor: 'pointer'
     });
     if (b.style) Object.assign(btn.style, b.style);
-    btn.addEventListener('click', function() {
-      document.body.removeChild(overlay);
-      if (b.onClick) b.onClick();
-    });
+    btn.addEventListener('click', function() { document.body.removeChild(overlay); if (b.onClick) b.onClick(); });
     btnRow.appendChild(btn);
   });
-
   box.appendChild(btnRow);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
 
 // ── Canvas export ─────────────────────────────────────────────────────────────
-
 function wrapText(ctx, text, maxWidth) {
   if (!text) return [];
   var lines = [], paragraphs = text.split('\n');
@@ -848,9 +956,8 @@ function wrapText(ctx, text, maxWidth) {
     var words = paragraphs[p].split(' '), current = '';
     for (var i = 0; i < words.length; i++) {
       var test = current ? current + ' ' + words[i] : words[i];
-      if (ctx.measureText(test).width <= maxWidth) {
-        current = test;
-      } else {
+      if (ctx.measureText(test).width <= maxWidth) { current = test; }
+      else {
         if (current) lines.push(current);
         if (ctx.measureText(words[i]).width > maxWidth) {
           var chunk = '';
@@ -872,11 +979,7 @@ function wrapText(ctx, text, maxWidth) {
 function drawCalendarImage() {
   var COL_W = 340, GAP = 16, PAD = 36, SCALE = 2;
   var FONT = '"DM Sans", sans-serif';
-  var C = {
-    ink: '#1C1A18', mute: '#9C9890', lightMute: '#B8B4AE',
-    bg: '#F4F2EF', card: '#fff', border: '#E8E4DE', slotBg: '#F9F8F6'
-  };
-
+  var C = { ink: '#1A1816', mute: '#6B675F', light: '#ABA69D', bg: '#E9E5DF', card: '#fff', border: '#E8E4DE', sub: '#F7F4F0' };
   var scratch = document.createElement('canvas').getContext('2d');
   var weekVal = document.getElementById('wk').value.trim();
   var dayLayouts = [], maxColH = 0;
@@ -884,14 +987,13 @@ function drawCalendarImage() {
   for (var d = 0; d < 7; d++) {
     var data = getDayData(d), y = 0, blocks = [];
     y += 14; blocks.push({ type: 'dayname', text: DAYS[d].toUpperCase(), y: y });
-    y += 17; blocks.push({ type: 'date', text: data.date || 'Date', placeholder: !data.date, y: y });
-    y += 21; blocks.push({ type: 'label', text: 'NOTES', y: y });
-    y += 13; scratch.font = '11px ' + FONT;
-    var dnLines = wrapText(scratch, data.notes || 'Daily notes…', COL_W - 38);
-    var dnH = Math.max(36, dnLines.length * 16 + 8);
-    blocks.push({ type: 'notesbox', lines: dnLines, y: y, h: dnH, placeholder: !data.notes });
+    y += 18; blocks.push({ type: 'date', text: data.date || 'Add date…', placeholder: !data.date, y: y });
+    y += 20; blocks.push({ type: 'label', text: 'NOTES', y: y });
+    y += 12; scratch.font = '11px ' + FONT;
+    var dnL = wrapText(scratch, data.notes || 'Daily notes…', COL_W - 38);
+    var dnH = Math.max(34, dnL.length * 16 + 8);
+    blocks.push({ type: 'notesbox', lines: dnL, y: y, h: dnH, placeholder: !data.notes });
     y += dnH + 14;
-
     for (var v = 0; v < data.videos.length; v++) {
       var vid = data.videos[v], sY = y, sy = 22;
       scratch.font = '11px ' + FONT;
@@ -910,121 +1012,115 @@ function drawCalendarImage() {
     if (y > maxColH) maxColH = y;
   }
 
-  var headerH = 110, summaryH = 90, footerH = 40;
+  var headerH = 110, summaryH = 90, footerH = 50;
   var totalW = PAD * 2 + COL_W * 7 + GAP * 6;
   var totalH = headerH + maxColH + summaryH + footerH + PAD;
-
   var canvas = document.createElement('canvas');
-  canvas.width  = totalW * SCALE;
-  canvas.height = totalH * SCALE;
-  var ctx = canvas.getContext('2d');
-  ctx.scale(SCALE, SCALE);
+  canvas.width = totalW * SCALE; canvas.height = totalH * SCALE;
+  var ctx = canvas.getContext('2d'); ctx.scale(SCALE, SCALE);
 
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, totalW, totalH);
 
   var hx = PAD, hy = 28;
-  ctx.fillStyle = C.mute; ctx.font = '600 11px ' + FONT; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#6460CC'; ctx.font = '700 10px ' + FONT; ctx.textBaseline = 'alphabetic';
   ctx.fillText('CREATE WITH AMBER', hx, hy); hy += 28;
-  ctx.fillStyle = C.ink; ctx.font = '600 26px ' + FONT; ctx.fillText('Weekly Content Calendar', hx, hy); hy += 22;
+  ctx.fillStyle = C.ink; ctx.font = '700 26px ' + FONT; ctx.fillText('Weekly Content Calendar', hx, hy); hy += 22;
   ctx.fillStyle = C.mute; ctx.font = '400 13px ' + FONT; ctx.fillText('TikTok Shop — plan your videos, track your posts, stay consistent.', hx, hy); hy += 22;
-  ctx.font = '400 12px ' + FONT; ctx.fillText('Week of: ' + (weekVal || '—'), hx, hy);
+  ctx.font = '500 12px ' + FONT; ctx.fillText('Week of: ' + (weekVal || '—'), hx, hy);
 
   var startY = headerH;
   for (var d = 0; d < 7; d++) {
     var colX = PAD + d * (COL_W + GAP), layout = dayLayouts[d];
     ctx.fillStyle = C.card; ctx.strokeStyle = C.border; ctx.lineWidth = 1;
-    roundRect(ctx, colX, startY, COL_W, maxColH, 12); ctx.fill(); ctx.stroke();
+    roundRect(ctx, colX, startY, COL_W, maxColH, 14); ctx.fill(); ctx.stroke();
+
+    // Gradient header band
+    var grad = ctx.createLinearGradient(colX, startY, colX, startY + 80);
+    grad.addColorStop(0, '#FDFCFA'); grad.addColorStop(1, '#F3EFE8');
+    ctx.fillStyle = grad; roundRect(ctx, colX, startY, COL_W, 80, 14); ctx.fill();
+    ctx.fillStyle = C.border; ctx.fillRect(colX, startY + 79, COL_W, 1);
 
     for (var b = 0; b < layout.blocks.length; b++) {
       var block = layout.blocks[b], bx = colX + 14, by = startY + block.y;
       if (block.type === 'dayname') {
-        ctx.fillStyle = C.mute; ctx.font = '600 10px ' + FONT; ctx.fillText(block.text, bx, by);
+        ctx.fillStyle = C.light; ctx.font = '800 10px ' + FONT; ctx.fillText(block.text, bx, by);
       } else if (block.type === 'date') {
-        ctx.fillStyle = block.placeholder ? '#C8C4BE' : C.ink; ctx.font = '500 14px ' + FONT; ctx.fillText(block.text, bx, by);
+        ctx.fillStyle = block.placeholder ? '#C8C4BE' : C.ink; ctx.font = block.placeholder ? '400 13px ' + FONT : '600 15px ' + FONT;
+        ctx.fillText(block.text, bx, by);
       } else if (block.type === 'label') {
-        ctx.fillStyle = C.lightMute; ctx.font = '600 9px ' + FONT; ctx.fillText(block.text, bx, by);
+        ctx.fillStyle = C.light; ctx.font = '800 8px ' + FONT; ctx.fillText(block.text, bx, by);
       } else if (block.type === 'notesbox') {
-        ctx.fillStyle = C.slotBg; ctx.strokeStyle = C.border;
-        roundRect(ctx, bx, by, COL_W - 28, block.h, 6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = C.sub; ctx.strokeStyle = C.border;
+        roundRect(ctx, bx, by, COL_W - 28, block.h, 7); ctx.fill(); ctx.stroke();
         ctx.fillStyle = block.placeholder ? '#C8C4BE' : C.ink; ctx.font = '400 11px ' + FONT;
         drawLines(ctx, block.lines, bx + 8, by + 16, 16);
       } else if (block.type === 'video') {
         var vx = bx - 6, vy = by, vw = COL_W - 16;
-        ctx.fillStyle = block.posted ? '#F0FBF6' : C.slotBg;
-        ctx.strokeStyle = block.posted ? '#5DCAA5' : C.border;
-        roundRect(ctx, vx, vy, vw, block.h, 9); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = block.posted ? '#FAFDF9' : C.sub;
+        ctx.strokeStyle = block.posted ? '#1F9467' : C.border;
+        roundRect(ctx, vx, vy, vw, block.h, 10); ctx.fill();
+        // Left accent bar
+        ctx.fillStyle = block.posted ? '#1F9467' : '#D0CECA';
+        roundRect(ctx, vx, vy + 4, 3, block.h - 8, 2); ctx.fill();
+        ctx.strokeStyle = block.posted ? 'rgba(31,148,103,0.3)' : C.border; ctx.lineWidth = 1;
+        roundRect(ctx, vx, vy, vw, block.h, 10); ctx.stroke();
         var cy = vy + 16;
-        ctx.fillStyle = C.lightMute; ctx.font = '600 9px ' + FONT;
-        ctx.fillText('VIDEO ' + block.num + (block.posted ? '  ·  POSTED' : ''), vx + 8, cy);
-        cy += 14;
+        ctx.fillStyle = C.light; ctx.font = '800 9px ' + FONT;
+        ctx.fillText('VIDEO ' + block.num + (block.posted ? '  ·  POSTED' : ''), vx + 12, cy); cy += 14;
         function imgField(lbl, f) {
-          ctx.fillStyle = C.lightMute; ctx.font = '600 9px ' + FONT; ctx.fillText(lbl, vx + 8, cy); cy += 11;
+          ctx.fillStyle = C.light; ctx.font = '800 8px ' + FONT; ctx.fillText(lbl, vx + 12, cy); cy += 11;
           ctx.fillStyle = '#fff'; ctx.strokeStyle = C.border;
-          roundRect(ctx, vx + 8, cy - 2, vw - 16, f.h, 5); ctx.fill(); ctx.stroke();
+          roundRect(ctx, vx + 12, cy - 2, vw - 22, f.h, 5); ctx.fill(); ctx.stroke();
           ctx.fillStyle = f.placeholder ? '#C8C4BE' : C.ink; ctx.font = '400 11px ' + FONT;
-          drawLines(ctx, f.lines, vx + 15, cy + 13, 16); cy += f.h + 7;
+          drawLines(ctx, f.lines, vx + 19, cy + 12, 16); cy += f.h + 7;
         }
-        imgField('PRODUCT',   block.product);
-        imgField('HOOK IDEA', block.hook);
-        imgField('NOTES',     block.notes);
-        cy += 2;
-        ctx.strokeStyle = C.border; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(vx + 8, cy); ctx.lineTo(vx + vw - 8, cy); ctx.stroke();
-        cy += 14;
-        ctx.fillStyle = block.posted ? '#085041' : '#fff'; ctx.strokeStyle = block.posted ? '#085041' : C.border;
-        roundRect(ctx, vx + 8, cy - 10, 13, 13, 3); ctx.fill(); ctx.stroke();
+        imgField('PRODUCT', block.product); imgField('HOOK IDEA', block.hook); imgField('NOTES', block.notes);
+        cy += 2; ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(vx + 12, cy); ctx.lineTo(vx + vw - 12, cy); ctx.stroke(); cy += 14;
+        ctx.fillStyle = block.posted ? '#1F9467' : '#fff'; ctx.strokeStyle = block.posted ? '#1F9467' : C.border;
+        roundRect(ctx, vx + 12, cy - 10, 13, 13, 3); ctx.fill(); ctx.stroke();
         if (block.posted) {
           ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.moveTo(vx + 11, cy - 4); ctx.lineTo(vx + 13.5, cy - 1.5); ctx.lineTo(vx + 18, cy - 8); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(vx + 15, cy - 4); ctx.lineTo(vx + 17.5, cy - 1.5); ctx.lineTo(vx + 22, cy - 8); ctx.stroke();
         }
-        ctx.lineWidth = 1; ctx.fillStyle = C.mute; ctx.font = '400 10px ' + FONT;
-        ctx.fillText('Marked as posted', vx + 26, cy);
+        ctx.lineWidth = 1; ctx.fillStyle = C.mute; ctx.font = '400 10px ' + FONT; ctx.fillText('Marked as posted', vx + 30, cy);
       }
     }
   }
 
   var sumY = startY + maxColH + 24, sumCardW = (totalW - PAD * 2 - GAP * 3) / 4;
-  var pl = document.querySelectorAll('.video-slot').length;
-  var po = document.querySelectorAll('.posted-check:checked').length;
+  var pl = document.querySelectorAll('.video-slot').length, po = document.querySelectorAll('.posted-check:checked').length;
   var pc = pl > 0 ? Math.round((po / pl) * 100) : 0;
   var summary = [
     { label: 'VIDEOS PLANNED', val: String(pl),     sub: 'across the week' },
     { label: 'POSTED',         val: String(po),     sub: 'marked as done' },
     { label: 'REMAINING',      val: String(pl - po), sub: 'still to post' },
-    { label: 'COMPLETION',     val: pc + '%',       sub: 'of planned videos' }
+    { label: 'COMPLETION',     val: pc + '%',        sub: 'of planned videos' }
   ];
   for (var s = 0; s < 4; s++) {
     var scx = PAD + s * (sumCardW + GAP);
     ctx.fillStyle = C.card; ctx.strokeStyle = C.border;
-    roundRect(ctx, scx, sumY, sumCardW, summaryH, 10); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = C.mute;      ctx.font = '600 10px ' + FONT; ctx.fillText(summary[s].label, scx + 12, sumY + 22);
-    ctx.fillStyle = C.ink;       ctx.font = '600 24px ' + FONT; ctx.fillText(summary[s].val,   scx + 12, sumY + 52);
-    ctx.fillStyle = C.lightMute; ctx.font = '400 10px ' + FONT; ctx.fillText(summary[s].sub,   scx + 12, sumY + 68);
+    roundRect(ctx, scx, sumY, sumCardW, summaryH, 12); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6460CC'; ctx.fillRect(scx, sumY, sumCardW, 3);
+    ctx.fillStyle = C.mute;  ctx.font = '700 9px ' + FONT;  ctx.fillText(summary[s].label, scx + 14, sumY + 22);
+    ctx.fillStyle = C.ink;   ctx.font = '700 24px ' + FONT; ctx.fillText(summary[s].val,   scx + 14, sumY + 52);
+    ctx.fillStyle = C.light; ctx.font = '400 10px ' + FONT; ctx.fillText(summary[s].sub,   scx + 14, sumY + 68);
   }
-  ctx.fillStyle = C.lightMute; ctx.font = '400 11px ' + FONT; ctx.textAlign = 'center';
-  ctx.fillText('Made for Create With Amber — plan it, post it, own it.', totalW / 2, sumY + summaryH + 26);
+  ctx.fillStyle = C.light; ctx.font = '400 11px ' + FONT; ctx.textAlign = 'center';
+  ctx.fillText('Made for Create With Amber  ·  Created by Jerry @teachingtts', totalW / 2, sumY + summaryH + 26);
   ctx.textAlign = 'left';
   return canvas;
 }
 
 function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
+  ctx.beginPath(); ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
-function drawLines(ctx, lines, x, y, lh) {
-  for (var i = 0; i < lines.length; i++) ctx.fillText(lines[i], x, y + i * lh);
-}
-
-// ── Download ──────────────────────────────────────────────────────────────────
+function drawLines(ctx, lines, x, y, lh) { for (var i = 0; i < lines.length; i++) ctx.fillText(lines[i], x, y + i * lh); }
 
 function fallbackDownload(blob, filename, msgEl) {
-  var url = URL.createObjectURL(blob);
-  var link = document.createElement('a');
+  var url = URL.createObjectURL(blob), link = document.createElement('a');
   link.download = filename; link.href = url;
   document.body.appendChild(link); link.click(); document.body.removeChild(link);
   setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
@@ -1038,27 +1134,17 @@ function fallbackDownload(blob, filename, msgEl) {
 document.getElementById('downloadBtn').addEventListener('click', function() {
   var btn = this, msgEl = document.getElementById('downloadMsg');
   btn.textContent = 'Rendering…'; btn.disabled = true; msgEl.style.display = 'none';
-
   requestAnimationFrame(function() {
     try {
       var canvas = drawCalendarImage();
       var wk = document.getElementById('wk').value.trim();
       var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
-
       canvas.toBlob(function(blob) {
-        if (!blob) {
-          btn.textContent = 'Save My Calendar'; btn.disabled = false;
-          showModal({ message: 'Could not save the image. Please try again or take a screenshot.' });
-          return;
-        }
+        if (!blob) { btn.textContent = 'Save My Calendar'; btn.disabled = false; showModal({ message: 'Could not save. Please try again or take a screenshot.' }); return; }
         var shareFile = new File([blob], filename, { type: 'image/jpeg' });
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
           navigator.share({ files: [shareFile], title: 'Content Calendar' })
-            .then(function() {
-              msgEl.textContent = 'Calendar shared!';
-              msgEl.style.display = 'block';
-              setTimeout(function() { msgEl.style.display = 'none'; }, 4000);
-            })
+            .then(function() { msgEl.textContent = 'Calendar shared!'; msgEl.style.display = 'block'; setTimeout(function() { msgEl.style.display = 'none'; }, 4000); })
             .catch(function(err) { if (err.name !== 'AbortError') fallbackDownload(blob, filename, msgEl); })
             .finally(function() { btn.textContent = 'Save My Calendar'; btn.disabled = false; });
         } else {
@@ -1066,14 +1152,12 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
           btn.textContent = 'Save My Calendar'; btn.disabled = false;
         }
       }, 'image/jpeg', 0.92);
-    } catch (err) {
+    } catch(err) {
       btn.textContent = 'Save My Calendar'; btn.disabled = false;
-      showModal({ message: 'Could not save the image. Please try again or take a screenshot.' });
+      showModal({ message: 'Could not save. Please try again or take a screenshot.' });
     }
   });
 });
-
-// ── Init ──────────────────────────────────────────────────────────────────────
 
 buildCalendar(loadState());
 </script>
