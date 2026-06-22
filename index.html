@@ -419,19 +419,82 @@ footer {
 .footer-credit a:hover { text-decoration: underline; }
 
 /* ─── View modes ─────────────────────────────────── */
-.view-daily .day-col { display: none; }
-.view-daily .day-col.active { display: flex; }
-.view-daily .cal-grid { grid-template-columns: 1fr; max-width: 580px; margin-left: auto; margin-right: auto; }
-.view-daily .day-tabs-wrap { display: block; }
+/* DAILY */
+.view-daily  .day-col { display: none !important; }
+.view-daily  .day-col.active { display: flex !important; }
+.view-daily  .cal-grid { grid-template-columns: 1fr !important; max-width: 580px; margin-left: auto; margin-right: auto; }
+.view-daily  .day-tabs-wrap { display: block; }
+.view-daily  .cal-wrap { overflow: visible; }
+.view-daily  .month-view { display: none; }
 
-.view-weekly .day-col { display: flex; }
+/* WEEKLY */
+.view-weekly .day-col { display: flex !important; }
 .view-weekly .day-tabs-wrap { display: none; }
-.view-weekly .cal-grid {
-  max-width: none;
-  grid-template-columns: repeat(7, minmax(200px, 1fr));
-  overflow-x: auto;
+.view-weekly .cal-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+.view-weekly .cal-grid { grid-template-columns: repeat(7, minmax(220px, 1fr)) !important; max-width: none; width: max-content; min-width: 100%; }
+.view-weekly .month-view { display: none; }
+
+/* MONTHLY */
+.view-monthly .cal-wrap { display: none; }
+.view-monthly .day-tabs-wrap { display: none; }
+.view-monthly .month-view { display: block; }
+.view-monthly .summary-bar { display: none; }
+.view-monthly .overview-section { display: none; }
+
+/* ─── Month view ──────────────────────────────────── */
+.month-view { display: none; }
+.month-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface); border-radius: var(--radius-lg);
+  padding: 14px 20px; margin-bottom: 12px; box-shadow: var(--shadow-md);
 }
-.view-weekly { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.month-nav-btn {
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  background: var(--surface-sub); border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 7px 16px;
+  cursor: pointer; font-family: "DM Sans", sans-serif;
+  transition: all 0.15s;
+}
+.month-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.month-nav-label { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.month-dow-row {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 6px;
+}
+.month-dow { text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); padding: 4px 0; }
+.month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.mc {
+  background: var(--surface); border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); min-height: 58px;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 4px 6px; gap: 5px; transition: all 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+.mc.mc-empty { background: transparent; border-color: transparent; box-shadow: none; }
+.mc.mc-today { border-color: var(--accent); }
+.mc.mc-has { border-left: 3px solid var(--accent); background: var(--accent-2); }
+.mc-num { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1; }
+.mc.mc-today .mc-num { color: var(--accent); font-weight: 800; }
+.mc-badge {
+  font-size: 10px; font-weight: 700; border-radius: 999px;
+  padding: 2px 6px; color: #fff; background: var(--accent); line-height: 1.4;
+}
+.mc-badge.mc-done { background: var(--success); }
+
+/* ─── Platform select ─────────────────────────────── */
+.plat-select {
+  width: 100%; font-family: "DM Sans", sans-serif;
+  font-size: 11px; font-weight: 500; color: var(--text);
+  background: var(--surface-sub); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 8px;
+  cursor: pointer; margin-bottom: 8px;
+  transition: border-color 0.15s;
+  -webkit-appearance: auto; appearance: auto;
+}
+.plat-select:focus { outline: none; border-color: var(--accent); }
+.plat-select.ps-tt { background: #f0f0f0; border-color: #555; color: #000; }
+.plat-select.ps-ig { background: #fce4ec; border-color: #e1306c; }
+.plat-select.ps-yt { background: #ffebee; border-color: #cc0000; }
+.plat-select.ps-fb { background: #e8f0fe; border-color: #1877F2; }
 
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 640px) {
@@ -588,8 +651,9 @@ footer {
     </div>
     <div class="top-right">
       <div class="view-toggle" id="viewToggle">
-        <button class="view-btn active" data-view="daily" onclick="setView('daily')">Day</button>
-        <button class="view-btn" data-view="weekly" onclick="setView('weekly')">Week</button>
+        <button class="view-btn active" data-view="daily"   onclick="setView('daily')">Day</button>
+        <button class="view-btn"        data-view="weekly"  onclick="setView('weekly')">Week</button>
+        <button class="view-btn"        data-view="monthly" onclick="setView('monthly')">Month</button>
       </div>
       <div class="action-btns">
         <button class="nextwkbtn" onclick="prevWeek()">← Prev</button>
@@ -604,7 +668,25 @@ footer {
 </div>
 
 <!-- ── Calendar ───────────────────────────────── -->
-<div class="cal-grid" id="calGrid"></div>
+<div class="cal-wrap" id="calWrap">
+  <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<!-- ── Month view ─────────────────────────────── -->
+<div class="month-view" id="monthView">
+  <div class="month-nav">
+    <button class="month-nav-btn" onclick="changeMonth(-1)">← Prev</button>
+    <span class="month-nav-label" id="monthLabel">June 2026</span>
+    <button class="month-nav-btn" onclick="changeMonth(1)">Next →</button>
+  </div>
+  <div class="month-dow-row">
+    <div class="month-dow">Mon</div><div class="month-dow">Tue</div>
+    <div class="month-dow">Wed</div><div class="month-dow">Thu</div>
+    <div class="month-dow">Fri</div><div class="month-dow">Sat</div>
+    <div class="month-dow">Sun</div>
+  </div>
+  <div class="month-grid" id="monthGrid"></div>
+</div>
 
 <!-- ── Summary ────────────────────────────────── -->
 <div class="summary-bar" id="summaryBar">
@@ -738,14 +820,17 @@ function updateDayDates() {
 function setView(view) {
   currentView = view;
   var page = document.querySelector('.page');
-  page.classList.toggle('view-daily',  view === 'daily');
-  page.classList.toggle('view-weekly', view === 'weekly');
+  page.classList.toggle('view-daily',   view === 'daily');
+  page.classList.toggle('view-weekly',  view === 'weekly');
+  page.classList.toggle('view-monthly', view === 'monthly');
   document.querySelectorAll('.view-btn').forEach(function(b) {
     b.classList.toggle('active', b.getAttribute('data-view') === view);
   });
   document.getElementById('clearBtn').textContent = view === 'daily' ? 'Clear day' : 'Clear week';
-  if (view === 'daily') setActiveDay(activeDayIdx, false);
-  updateSummary();
+  document.getElementById('clearBtn').style.display = view === 'monthly' ? 'none' : '';
+  if (view === 'daily')   setActiveDay(activeDayIdx, false);
+  if (view === 'monthly') buildMonthView();
+  if (view !== 'monthly') updateSummary();
 }
 
 // ── Day navigation ───────────────────────────────────────────────────────────
@@ -828,27 +913,18 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   header.appendChild(delBtn);
   div.appendChild(header);
 
-  // Platform row
-  var platRow = document.createElement('div');
-  platRow.className = 'platform-row';
-  PLAT_KEYS.forEach(function(key) {
-    var pb = document.createElement('button');
-    pb.className = 'plat-btn';
-    pb.setAttribute('type', 'button');
-    pb.setAttribute('data-plat', key);
-    pb.title = PLAT_LABEL[key];
-    pb.innerHTML = PLAT_SVG[key];
-    pb.addEventListener('click', function() {
-      var already = pb.classList.contains('active-' + key);
-      platRow.querySelectorAll('.plat-btn').forEach(function(b) {
-        b.classList.remove('active-tt','active-ig','active-yt','active-fb');
-      });
-      if (!already) pb.classList.add('active-' + key);
-      saveState();
-    });
-    platRow.appendChild(pb);
+  // Platform dropdown
+  var platSel = document.createElement('select');
+  platSel.className = 'plat-select';
+  [['','📱 Platform'],['tt','🎵 TikTok'],['ig','📸 Instagram'],['yt','▶️ YouTube'],['fb','👥 Facebook']].forEach(function(o) {
+    var opt = document.createElement('option'); opt.value = o[0]; opt.textContent = o[1];
+    platSel.appendChild(opt);
   });
-  div.appendChild(platRow);
+  platSel.addEventListener('change', function() {
+    platSel.className = 'plat-select' + (platSel.value ? ' ps-' + platSel.value : '');
+    saveState();
+  });
+  div.appendChild(platSel);
 
   // Fields
   function makeField(labelText, isTextarea, placeholder) {
@@ -901,8 +977,8 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
       starBtn.textContent = '★';
     }
     if (savedVideo.platform) {
-      var pb = platRow.querySelector('[data-plat="' + savedVideo.platform + '"]');
-      if (pb) pb.classList.add('active-' + savedVideo.platform);
+      platSel.value = savedVideo.platform;
+      platSel.className = 'plat-select ps-' + savedVideo.platform;
     }
   }
 
@@ -933,8 +1009,8 @@ function getDayData(dayIdx) {
   var videos = [];
   col.querySelectorAll('.video-slot').forEach(function(slot) {
     var inputs = slot.querySelectorAll('.field-input');
-    var activePlat = slot.querySelector('.plat-btn[class*="active-"]');
-    var platform = activePlat ? activePlat.getAttribute('data-plat') : '';
+    var platSel = slot.querySelector('.plat-select');
+    var platform = platSel ? platSel.value : '';
     videos.push({
       product:  inputs[0].value,
       hook:     inputs[1].value,
@@ -1190,6 +1266,89 @@ function nextWeek() {
     });
   } else {
     navigateToWeek(newDate, null);
+  }
+}
+
+// ── Month view ────────────────────────────────────────────────────────────────
+var monthViewDate = new Date();
+
+function changeMonth(dir) {
+  monthViewDate.setDate(1);
+  monthViewDate.setMonth(monthViewDate.getMonth() + dir);
+  buildMonthView();
+}
+
+function buildMonthView() {
+  var year  = monthViewDate.getFullYear();
+  var month = monthViewDate.getMonth();
+  document.getElementById('monthLabel').textContent =
+    monthViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  // Collect data from all stored weeks
+  var dayMap = {}; // dayOfMonth -> { total, posted }
+  function addToMap(dayNum, videos) {
+    if (!dayMap[dayNum]) dayMap[dayNum] = { total: 0, posted: 0 };
+    if (!videos) return;
+    dayMap[dayNum].total  += videos.length;
+    dayMap[dayNum].posted += videos.filter(function(v) { return v.posted; }).length;
+  }
+
+  var allWeeks = getAllWeeks();
+  Object.keys(allWeeks).forEach(function(k) {
+    if (k === '__default__') return;
+    var wDate = new Date(k); if (isNaN(wDate.getTime())) return;
+    var wd = allWeeks[k]; if (!wd || !wd.days) return;
+    wd.days.forEach(function(day, d) {
+      var dd = new Date(wDate); dd.setDate(wDate.getDate() + d);
+      if (dd.getFullYear() === year && dd.getMonth() === month)
+        addToMap(dd.getDate(), day && day.videos);
+    });
+  });
+
+  // Also merge current DOM (unsaved state)
+  var wStr = document.getElementById('wk').value.trim();
+  if (wStr) {
+    var wDate = new Date(wStr);
+    if (!isNaN(wDate.getTime())) {
+      for (var d = 0; d < 7; d++) {
+        var dd = new Date(wDate); dd.setDate(wDate.getDate() + d);
+        if (dd.getFullYear() === year && dd.getMonth() === month) {
+          var domDay = getDayData(d);
+          dayMap[dd.getDate()] = { total: domDay.videos.length, posted: domDay.videos.filter(function(v){return v.posted;}).length };
+        }
+      }
+    }
+  }
+
+  // Build grid
+  var grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+  var startOffset = (firstDow + 6) % 7; // Mon=0
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (var i = 0; i < startOffset; i++) {
+    var blank = document.createElement('div'); blank.className = 'mc mc-empty';
+    grid.appendChild(blank);
+  }
+  for (var day = 1; day <= daysInMonth; day++) {
+    var cell = document.createElement('div');
+    var cellDate = new Date(year, month, day);
+    var data = dayMap[day];
+    var hasVideos = data && data.total > 0;
+    var cls = 'mc' + (hasVideos ? ' mc-has' : '');
+    if (cellDate.getTime() === today.getTime()) cls += ' mc-today';
+    cell.className = cls;
+    var numDiv = document.createElement('div'); numDiv.className = 'mc-num'; numDiv.textContent = day;
+    cell.appendChild(numDiv);
+    if (hasVideos) {
+      var badge = document.createElement('div');
+      badge.className = 'mc-badge' + (data.posted === data.total ? ' mc-done' : '');
+      badge.textContent = data.posted + '/' + data.total;
+      cell.appendChild(badge);
+    }
+    grid.appendChild(cell);
   }
 }
 
