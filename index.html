@@ -310,7 +310,7 @@ footer { margin-top: 32px; font-size: 11px; color: #C4C0B8; text-align: center; 
       </div>
       <div class="action-btns">
         <button class="nextwkbtn" onclick="nextWeek()">Next week →</button>
-        <button class="clearbtn" onclick="clearAll()">Clear</button>
+        <button class="clearbtn" id="clearBtn" onclick="clearCurrent()">Clear day</button>
       </div>
     </div>
   </div>
@@ -400,6 +400,7 @@ function setView(view) {
   document.querySelectorAll('.view-btn').forEach(function(b) {
     b.classList.toggle('active', b.getAttribute('data-view') === view);
   });
+  document.getElementById('clearBtn').textContent = view === 'daily' ? 'Clear day' : 'Clear week';
 
   // In weekly view refresh all; in daily ensure the active col is marked
   if (view === 'daily') {
@@ -699,19 +700,40 @@ function buildCalendar(savedState) {
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
-function clearAll() {
-  showModal({
-    message: 'Clear the entire calendar?',
-    buttons: [
-      { label: 'Cancel' },
-      { label: 'Clear all', style: { background: '#A32D2D', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
-        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-        activeDayIdx = 0;
-        buildCalendar(null);
-        saveState();
-      }}
-    ]
-  });
+function clearCurrent() {
+  if (currentView === 'daily') {
+    var dayName = DAYS[activeDayIdx];
+    showModal({
+      message: 'Clear ' + dayName + '?',
+      buttons: [
+        { label: 'Cancel' },
+        { label: 'Clear day', style: { background: '#A32D2D', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
+          var col = document.querySelector('.day-col[data-day-idx="' + activeDayIdx + '"]');
+          col.querySelector('.day-date-input').value  = '';
+          col.querySelector('.day-notes-input').value = '';
+          autoGrow(col.querySelector('.day-notes-input'));
+          var wrap = col.querySelector('.slots-wrap');
+          wrap.innerHTML = '';
+          slotCounts[activeDayIdx] = 0;
+          wrap.appendChild(makeSlot(activeDayIdx, 0, null));
+          updateSummary(); saveState();
+        }}
+      ]
+    });
+  } else {
+    showModal({
+      message: 'Clear the entire week?',
+      buttons: [
+        { label: 'Cancel' },
+        { label: 'Clear week', style: { background: '#A32D2D', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
+          try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+          activeDayIdx = 0;
+          buildCalendar(null);
+          saveState();
+        }}
+      ]
+    });
+  }
 }
 
 function nextWeek() {
