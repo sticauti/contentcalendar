@@ -1029,6 +1029,7 @@ var PLAT_ICONS = {
 
 var slotCounts   = [0,0,0,0,0,0,0];
 var draggedSlot  = null;
+var suppressPickerChange = false;
 var activeDayIdx = 0;
 var currentView  = 'daily';
 var STORAGE_KEY  = 'cwa_calendar_v2';
@@ -1057,10 +1058,13 @@ function syncPickerToWeek() {
   var y = d.getFullYear();
   var m = String(d.getMonth() + 1).padStart(2, '0');
   var day = String(d.getDate()).padStart(2, '0');
+  suppressPickerChange = true;
   picker.value = y + '-' + m + '-' + day;
+  suppressPickerChange = false;
 }
 
 function onWeekPickerChange() {
+  if (suppressPickerChange) return;
   var picker = document.getElementById('wkPicker');
   if (!picker.value) return;
   var parts = picker.value.split('-');
@@ -2397,16 +2401,15 @@ function saveToCloud(weeksData) {
 }
 
 function loadFromCloud(callback) {
-  if (!currentUser) { alert('loadFromCloud: no user'); callback(null); return; }
+  if (!currentUser) { callback(null); return; }
   fbDb.collection('calendars').doc(currentUser.uid).get()
     .then(function(doc) {
-      if (!doc.exists) { alert('loadFromCloud: doc does not exist in Firestore'); callback(null); return; }
+      if (!doc.exists) { callback(null); return; }
       var weeks = doc.data().weeks;
       var keys = weeks ? Object.keys(weeks) : [];
-      alert('loadFromCloud: found ' + keys.length + ' week(s): ' + keys.join(', '));
       callback(keys.length > 0 ? weeks : null);
     })
-    .catch(function(e) { alert('loadFromCloud ERROR: ' + e.code + ' — ' + e.message); callback(null); });
+    .catch(function(e) { console.error('loadFromCloud error:', e); callback(null); });
 }
 
 function showAuthError(msg) {
@@ -2479,8 +2482,10 @@ fbAuth.onAuthStateChanged(function(user) {
       }
       document.getElementById('appLoading').style.display = 'none';
       document.getElementById('appPage').style.display = '';
-      buildCalendar(loadInitialState());
-      showHomeScreenPrompt();
+      setTimeout(function() {
+        buildCalendar(loadInitialState());
+        showHomeScreenPrompt();
+      }, 0);
     });
   } else {
     currentUser = null;
