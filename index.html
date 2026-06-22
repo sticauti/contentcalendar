@@ -3,15 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create With Amber — Weekly Content Calendar (v6)</title>
+<title>Create With Amber — Weekly Content Calendar</title>
 
-<!-- PWA: lets people "Add to Home Screen" with a proper icon and
-     full-screen app-like view instead of just bookmarking a browser tab. -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1C1A18">
-
-<!-- iOS-specific home screen tags (Safari doesn't fully support the
-     standard manifest yet, so these are needed in addition to it) -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CWA Calendar">
@@ -31,11 +26,9 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 .weekwrap label { font-size: 12px; color: #9C9890; font-weight: 500; }
 .weekinput { font-size: 13px; border: 1px solid #D4CFC8; background: #fff; border-radius: 8px; padding: 6px 10px; color: #1C1A18; width: 180px; font-family: "DM Sans", sans-serif; line-height: 1.4; }
 .weekinput:focus { outline: none; border-color: #8C8880; }
-.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .clearbtn { font-size: 12px; color: #9C9890; background: #fff; border: 1px solid #D4CFC8; border-radius: 20px; padding: 7px 14px; cursor: pointer; font-family: "DM Sans", sans-serif; }
 .clearbtn:hover { border-color: #8C8880; color: #1C1A18; }
 
-/* CALENDAR GRID */
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
 
 .day-col { background: #fff; border: 1px solid #E0DCD6; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
@@ -50,7 +43,6 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 
 .slots-wrap { padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
-/* VIDEO SLOT */
 .video-slot { background: #F7F5F2; border: 1px solid #E8E4DE; border-radius: 8px; padding: 8px; position: relative; }
 .slot-num { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #B8B4AE; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; line-height: 1.3; }
 .slot-delete { background: none; border: none; cursor: pointer; color: #C8C4BE; font-size: 14px; line-height: 1; padding: 0; font-family: "DM Sans", sans-serif; }
@@ -68,7 +60,6 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 .field-input::placeholder { color: #C8C4BE; }
 .field-input.posted { border-color: #5DCAA5; background: #F0FBF6; }
 
-
 .posted-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #E8E4DE; }
 .posted-check { width: 14px; height: 14px; accent-color: #085041; cursor: pointer; flex-shrink: 0; }
 .posted-label { font-size: 10px; color: #9C9890; cursor: pointer; user-select: none; }
@@ -81,7 +72,6 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.0
 }
 .add-video-btn:hover { border-color: #9B97E0; color: #3C3489; background: #EEEDFE; }
 
-/* SUMMARY BAR */
 .summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
 .scard { background: #fff; border: 1px solid #E0DCD6; border-radius: 8px; padding: 10px 12px; }
 .scard-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #9C9890; margin-bottom: 4px; }
@@ -127,48 +117,28 @@ footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; 
   <div class="scard"><div class="scard-label">Completion</div><div class="scard-val" id="sum-pct">0%</div><div class="scard-sub">of planned videos</div></div>
 </div>
 
-<div class="autosave-note" id="autosaveNote">✓ Your calendar saves automatically on this device — come back anytime to keep editing. 📱 Add this page to your Home Screen for one-tap access.</div>
+<div class="autosave-note">✓ Your calendar saves automatically on this device — come back anytime to keep editing. 📱 Add this page to your Home Screen for one-tap access.</div>
 
 <div class="download-wrap">
-  <button class="download-btn" id="downloadBtn">SAVE MY CALENDAR NOW (v6)</button>
+  <button class="download-btn" id="downloadBtn">SAVE MY CALENDAR NOW</button>
   <p class="download-hint">Saves your filled-in calendar as a JPEG to your device.</p>
 </div>
 
-<footer>Made for Create With Amber — plan it, post it, own it. (build v6)</footer>
+<footer>Made for Create With Amber — plan it, post it, own it.</footer>
 </div>
 
 <script>
 var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 var slotCounts = [0,0,0,0,0,0,0];
+var STORAGE_KEY = 'cwa_content_calendar_v1';
 
-// Auto-grow any textarea that has the autogrow behavior applied.
-// This makes the ACTUAL DOM element tall enough to fit its content, so
-// html2canvas (which just snapshots the DOM as-is) captures full text
-// instead of a clipped 2-row box.
-//
-// MIN_GROW_HEIGHT is the floor: boxes never get shorter than this, even
-// when empty, so they stay big enough to tap/click.
-//
-// MAX_GROW_HEIGHT is a hard ceiling. Some WebKit/iOS browsers don't
-// reliably collapse height back to content size when you set
-// height:'auto' on a box-sizing:border-box + overflow:hidden element —
-// scrollHeight can read a stale, already-inflated value instead of the
-// true content height, especially across fast keystrokes. That stale
-// value gets written back as the new height, which makes the NEXT
-// scrollHeight read even bigger, and it compounds without bound. Setting
-// height to 0 first (instead of 'auto') forces a real synchronous
-// reflow so scrollHeight reflects true content size, and the ceiling
-// guarantees that even if a bad read slips through, it can't run away.
 var MIN_GROW_HEIGHT = 36;
 var MAX_GROW_HEIGHT = 400;
 
 function autoGrow(el) {
   el.style.height = '0px';
-  var contentHeight = el.scrollHeight;
-  var needed = Math.max(contentHeight, MIN_GROW_HEIGHT);
+  var needed = Math.max(el.scrollHeight, MIN_GROW_HEIGHT);
   if (needed > MAX_GROW_HEIGHT) {
-    // Too much text for the ceiling — stop growing, but let the box
-    // scroll internally instead of silently clipping the overflow text.
     el.style.height = MAX_GROW_HEIGHT + 'px';
     el.style.overflow = 'auto';
   } else {
@@ -201,7 +171,6 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
       '<div class="field-label">Hook idea</div>' +
       '<textarea class="field-input" rows="2" placeholder="Opening line or hook…" oninput="updateSummary();saveState()"></textarea>' +
     '</div>' +
-
     '<div class="field-group">' +
       '<div class="field-label">Notes</div>' +
       '<textarea class="field-input" rows="2" placeholder="Any extra notes…" oninput="updateSummary();saveState()"></textarea>' +
@@ -223,7 +192,6 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
     }
   }
 
-  // Wire up auto-grow for the two textareas in this slot
   var areas = div.querySelectorAll('textarea.field-input');
   for (var i = 0; i < areas.length; i++) {
     attachAutoGrow(areas[i]);
@@ -236,50 +204,45 @@ function removeSlot(btn) {
   var slot = btn.closest('.video-slot');
   var wrap = slot.parentNode;
   slot.remove();
-  // Renumber remaining slots
   var remaining = wrap.querySelectorAll('.video-slot');
   for (var i = 0; i < remaining.length; i++) {
-    var numEl = remaining[i].querySelector('.slot-num');
-    numEl.childNodes[0].textContent = 'Video ' + (i + 1) + ' ';
+    remaining[i].querySelector('.slot-num').childNodes[0].textContent = 'Video ' + (i + 1) + ' ';
   }
   updateSummary();
   saveState();
 }
 
 function togglePosted(cb) {
-  var slot = cb.closest('.video-slot');
-  var inputs = slot.querySelectorAll('.field-input');
+  var inputs = cb.closest('.video-slot').querySelectorAll('.field-input');
   for (var i = 0; i < inputs.length; i++) {
-    if (cb.checked) inputs[i].classList.add('posted');
-    else inputs[i].classList.remove('posted');
+    inputs[i].classList.toggle('posted', cb.checked);
   }
 }
 
-var STORAGE_KEY = 'cwa_content_calendar_v1';
-
-// ===== PERSISTENCE =====
-// Saves the entire calendar (week label + every day's date, notes, and
-// videos) into localStorage as one JSON blob. Runs on every input via
-// event delegation, so nothing needs to be wired up per-field.
+function getDayData(dayIdx) {
+  var col = document.querySelector('.day-col[data-day-idx="' + dayIdx + '"]');
+  var slots = col.querySelectorAll('.video-slot');
+  var videos = [];
+  for (var i = 0; i < slots.length; i++) {
+    var inputs = slots[i].querySelectorAll('.field-input');
+    videos.push({
+      product: inputs[0].value,
+      hook: inputs[1].value,
+      notes: inputs[2].value,
+      posted: slots[i].querySelector('.posted-check').checked
+    });
+  }
+  return {
+    date: col.querySelector('.day-date-input').value,
+    notes: col.querySelector('.day-notes-input').value,
+    videos: videos
+  };
+}
 
 function serializeState() {
   var state = { week: document.getElementById('wk').value, days: [] };
   for (var d = 0; d < 7; d++) {
-    var col = document.querySelector('.day-col[data-day-idx="' + d + '"]');
-    var date = col.querySelector('.day-date-input').value;
-    var dayNotes = col.querySelector('.day-notes-input').value;
-    var slots = col.querySelectorAll('.video-slot');
-    var videos = [];
-    for (var i = 0; i < slots.length; i++) {
-      var inputs = slots[i].querySelectorAll('.field-input');
-      videos.push({
-        product: inputs[0].value,
-        hook: inputs[1].value,
-        notes: inputs[2].value,
-        posted: slots[i].querySelector('.posted-check').checked
-      });
-    }
-    state.days.push({ date: date, notes: dayNotes, videos: videos });
+    state.days.push(getDayData(d));
   }
   return state;
 }
@@ -287,10 +250,7 @@ function serializeState() {
 function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
-  } catch (e) {
-    // localStorage can throw in rare cases (private browsing limits,
-    // storage full, etc.) — fail silently rather than breaking the page.
-  }
+  } catch (e) {}
 }
 
 function loadState() {
@@ -319,7 +279,8 @@ function buildCalendar(savedState) {
 
     var hdr = document.createElement('div');
     hdr.className = 'day-header';
-    hdr.innerHTML = '<div class="day-name">' + DAYS[d] + '</div>' +
+    hdr.innerHTML =
+      '<div class="day-name">' + DAYS[d] + '</div>' +
       '<input class="day-date-input" type="text" placeholder="Date" oninput="updateSummary();saveState()">' +
       '<div class="day-notes-label">Notes</div>' +
       '<textarea class="day-notes-input" rows="2" placeholder="Daily notes, reminders…"></textarea>';
@@ -330,7 +291,6 @@ function buildCalendar(savedState) {
       hdr.querySelector('.day-notes-input').value = savedDay.notes || '';
     }
 
-    // Auto-grow the daily notes textarea too
     var dayNotesArea = hdr.querySelector('.day-notes-input');
     attachAutoGrow(dayNotesArea);
     dayNotesArea.addEventListener('input', saveState);
@@ -341,8 +301,7 @@ function buildCalendar(savedState) {
 
     var videoCount = (savedDay && savedDay.videos && savedDay.videos.length) || 3;
     for (var s = 0; s < videoCount; s++) {
-      var savedVideo = savedDay && savedDay.videos && savedDay.videos[s];
-      wrap.appendChild(makeSlot(d, s, savedVideo));
+      wrap.appendChild(makeSlot(d, s, savedDay && savedDay.videos && savedDay.videos[s]));
     }
     col.appendChild(wrap);
 
@@ -361,11 +320,19 @@ function buildCalendar(savedState) {
     grid.appendChild(col);
   }
   updateSummary();
+
+  // Re-measure all textareas once the webfont is loaded, since autoGrow
+  // runs before fonts are ready on initial page load and may underestimate
+  // the content height using fallback font metrics.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function() {
+      document.querySelectorAll('textarea').forEach(autoGrow);
+    });
+  }
 }
 
 function updateSummary() {
-  var slots = document.querySelectorAll('.video-slot');
-  var planned = slots.length;
+  var planned = document.querySelectorAll('.video-slot').length;
   var posted = document.querySelectorAll('.posted-check:checked').length;
   var remaining = planned - posted;
   var pct = planned > 0 ? Math.round((posted / planned) * 100) : 0;
@@ -376,172 +343,80 @@ function updateSummary() {
 }
 
 function clearAll() {
-  showConfirmModal('Clear the entire calendar?', function () {
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-    buildCalendar();
-    document.getElementById('wk').value = '';
-    saveState();
+  showModal({
+    message: 'Clear the entire calendar?',
+    confirmLabel: 'Clear',
+    confirmStyle: { background: '#A32D2D' },
+    onConfirm: function() {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      buildCalendar();
+      document.getElementById('wk').value = '';
+      saveState();
+    }
   });
 }
 
-// Custom confirm modal — window.confirm() is blocked or silently
-// no-ops in many in-app browsers (TikTok, Instagram, etc.), so we
-// build our own lightweight version instead of relying on it.
-function showConfirmModal(message, onConfirm) {
-  // iOS Safari has a known bug where a `position: fixed` element that's
-  // injected into a tall, scrollable page can render anchored far down
-  // the document instead of pinned to the current viewport — which is
-  // exactly the "have to scroll way down to see it" symptom. Scrolling
-  // to the top before inserting the modal sidesteps this reliably.
+function showModal(opts) {
+  // window.confirm/alert are blocked in many in-app browsers (TikTok, Instagram).
+  // iOS Safari also has a bug where position:fixed can anchor to the document
+  // rather than the viewport on tall pages — scrolling to top first sidesteps it.
   window.scrollTo(0, 0);
 
   var overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.right = 0;
-  overlay.style.bottom = 0;
-  overlay.style.background = 'rgba(28,26,24,0.45)';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = 9999;
-  overlay.style.padding = '20px';
+  Object.assign(overlay.style, {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(28,26,24,0.45)', display: 'flex',
+    alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px'
+  });
 
   var box = document.createElement('div');
-  box.style.background = '#fff';
-  box.style.borderRadius = '14px';
-  box.style.padding = '22px 20px';
-  box.style.maxWidth = '320px';
-  box.style.width = '100%';
-  box.style.textAlign = 'center';
-  box.style.fontFamily = '"DM Sans", sans-serif';
+  Object.assign(box.style, {
+    background: '#fff', borderRadius: '14px', padding: '22px 20px',
+    maxWidth: '320px', width: '100%', textAlign: 'center',
+    fontFamily: '"DM Sans", sans-serif'
+  });
 
   var msg = document.createElement('p');
-  msg.textContent = message;
-  msg.style.fontSize = '14px';
-  msg.style.color = '#1C1A18';
-  msg.style.marginBottom = '16px';
-  msg.style.lineHeight = '1.4';
+  msg.textContent = opts.message;
+  Object.assign(msg.style, { fontSize: '14px', color: '#1C1A18', marginBottom: '16px', lineHeight: '1.4' });
   box.appendChild(msg);
 
   var btnRow = document.createElement('div');
-  btnRow.style.display = 'flex';
-  btnRow.style.gap = '8px';
-  btnRow.style.justifyContent = 'center';
+  Object.assign(btnRow.style, { display: 'flex', gap: '8px', justifyContent: 'center' });
 
-  var cancelBtn = document.createElement('button');
-  cancelBtn.textContent = 'Cancel';
-  cancelBtn.style.flex = '1';
-  cancelBtn.style.padding = '10px';
-  cancelBtn.style.borderRadius = '20px';
-  cancelBtn.style.border = '1px solid #D4CFC8';
-  cancelBtn.style.background = '#fff';
-  cancelBtn.style.color = '#1C1A18';
-  cancelBtn.style.fontSize = '13px';
-  cancelBtn.style.fontFamily = '"DM Sans", sans-serif';
-  cancelBtn.style.cursor = 'pointer';
-  cancelBtn.addEventListener('click', function () {
-    document.body.removeChild(overlay);
-  });
+  function makeBtn(label, styles, onClick) {
+    var btn = document.createElement('button');
+    btn.textContent = label;
+    Object.assign(btn.style, {
+      flex: '1', padding: '10px', borderRadius: '20px', border: '1px solid #D4CFC8',
+      background: '#fff', color: '#1C1A18', fontSize: '13px',
+      fontFamily: '"DM Sans", sans-serif', fontWeight: '400', cursor: 'pointer'
+    }, styles);
+    btn.addEventListener('click', function() {
+      document.body.removeChild(overlay);
+      if (onClick) onClick();
+    });
+    return btn;
+  }
 
-  var confirmBtn = document.createElement('button');
-  confirmBtn.textContent = 'Clear';
-  confirmBtn.style.flex = '1';
-  confirmBtn.style.padding = '10px';
-  confirmBtn.style.borderRadius = '20px';
-  confirmBtn.style.border = 'none';
-  confirmBtn.style.background = '#A32D2D';
-  confirmBtn.style.color = '#fff';
-  confirmBtn.style.fontSize = '13px';
-  confirmBtn.style.fontFamily = '"DM Sans", sans-serif';
-  confirmBtn.style.fontWeight = '600';
-  confirmBtn.style.cursor = 'pointer';
-  confirmBtn.addEventListener('click', function () {
-    document.body.removeChild(overlay);
-    onConfirm();
-  });
+  if (opts.onConfirm) {
+    btnRow.appendChild(makeBtn('Cancel', {}, null));
+    btnRow.appendChild(makeBtn(opts.confirmLabel || 'OK', Object.assign({ border: 'none', color: '#fff', fontWeight: '600' }, opts.confirmStyle || { background: '#1C1A18' }), opts.onConfirm));
+  } else {
+    btnRow.appendChild(makeBtn('OK', { border: 'none', background: '#1C1A18', color: '#fff', fontWeight: '600' }, null));
+  }
 
-  btnRow.appendChild(cancelBtn);
-  btnRow.appendChild(confirmBtn);
   box.appendChild(btnRow);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
 
-// Single-button message modal — replacement for window.alert(), which
-// has the same in-app-browser reliability problem as window.confirm().
-function showMessageModal(message) {
-  window.scrollTo(0, 0);
-
-  var overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.right = 0;
-  overlay.style.bottom = 0;
-  overlay.style.background = 'rgba(28,26,24,0.45)';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = 9999;
-  overlay.style.padding = '20px';
-
-  var box = document.createElement('div');
-  box.style.background = '#fff';
-  box.style.borderRadius = '14px';
-  box.style.padding = '22px 20px';
-  box.style.maxWidth = '320px';
-  box.style.width = '100%';
-  box.style.textAlign = 'center';
-  box.style.fontFamily = '"DM Sans", sans-serif';
-
-  var msg = document.createElement('p');
-  msg.textContent = message;
-  msg.style.fontSize = '14px';
-  msg.style.color = '#1C1A18';
-  msg.style.marginBottom = '16px';
-  msg.style.lineHeight = '1.4';
-  box.appendChild(msg);
-
-  var okBtn = document.createElement('button');
-  okBtn.textContent = 'OK';
-  okBtn.style.width = '100%';
-  okBtn.style.padding = '10px';
-  okBtn.style.borderRadius = '20px';
-  okBtn.style.border = 'none';
-  okBtn.style.background = '#1C1A18';
-  okBtn.style.color = '#fff';
-  okBtn.style.fontSize = '13px';
-  okBtn.style.fontFamily = '"DM Sans", sans-serif';
-  okBtn.style.fontWeight = '600';
-  okBtn.style.cursor = 'pointer';
-  okBtn.addEventListener('click', function () {
-    document.body.removeChild(overlay);
-  });
-
-  box.appendChild(okBtn);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-}
-
 // ===== DOWNLOAD AS IMAGE =====
-// Instead of snapshotting the live DOM (which is what html2canvas does,
-// and which kept failing in different ways depending on font loading,
-// cross-origin CSS, and textarea height quirks across browsers), we
-// draw the calendar from scratch onto a <canvas> using the actual field
-// values. This gives full, reliable control over text wrapping and box
-// height — no dependency on browser-specific textarea/scrollHeight
-// behavior, no external stylesheet fetch, nothing that can hang.
 
 function wrapText(ctx, text, maxWidth) {
-  // Splits text into an array of lines that each fit within maxWidth,
-  // breaking on spaces first and falling back to a hard character break
-  // for any single "word" (e.g. a long URL) that's wider than the box
-  // on its own — the exact case that broke the old approach silently.
   if (!text) return [];
-  var paragraphs = text.split('\n');
   var lines = [];
+  var paragraphs = text.split('\n');
   for (var p = 0; p < paragraphs.length; p++) {
     var words = paragraphs[p].split(' ');
     var current = '';
@@ -552,7 +427,6 @@ function wrapText(ctx, text, maxWidth) {
         current = test;
       } else {
         if (current) lines.push(current);
-        // If the word itself is too wide (long URL, no spaces), hard-break it.
         if (ctx.measureText(word).width > maxWidth) {
           var chunk = '';
           for (var c = 0; c < word.length; c++) {
@@ -576,37 +450,13 @@ function wrapText(ctx, text, maxWidth) {
   return lines;
 }
 
-function getDayData(dayIdx) {
-  var col = document.querySelector('.day-col[data-day-idx="' + dayIdx + '"]');
-  var date = col.querySelector('.day-date-input').value || '';
-  var dayNotes = col.querySelector('.day-notes-input').value || '';
-  var slots = col.querySelectorAll('.video-slot');
-  var videos = [];
-  for (var i = 0; i < slots.length; i++) {
-    var inputs = slots[i].querySelectorAll('.field-input');
-    var posted = slots[i].querySelector('.posted-check').checked;
-    videos.push({
-      product: inputs[0].value || '',
-      hook: inputs[1].value || '',
-      notes: inputs[2].value || '',
-      posted: posted
-    });
-  }
-  return { date: date, dayNotes: dayNotes, videos: videos };
-}
-
 function drawCalendarImage() {
-  var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   var COL_W = 340, GAP = 18, PAD = 36;
   var FONT = '"DM Sans", sans-serif';
   var COLOR_INK = '#1C1A18', COLOR_MUTE = '#9C9890', COLOR_LIGHT_MUTE = '#B8B4AE';
   var COLOR_BG = '#F7F5F2', COLOR_CARD = '#fff', COLOR_BORDER = '#E0DCD6', COLOR_SLOT_BG = '#F7F5F2';
-  var COLOR_GREEN_BORDER = '#5DCAA5', COLOR_GREEN_BG = '#F0FBF6';
   var SCALE = 2;
 
-  // Pass 1: measure how tall each day column needs to be, using a
-  // scratch canvas context for text measurement before we know the
-  // final canvas height.
   var scratch = document.createElement('canvas').getContext('2d');
   var weekVal = document.getElementById('wk').value.trim();
 
@@ -618,7 +468,7 @@ function drawCalendarImage() {
     var y = 0;
     var blocks = [];
 
-    y += 14; // top pad
+    y += 14;
     blocks.push({ type: 'dayname', text: DAYS[d].toUpperCase(), y: y });
     y += 16;
     blocks.push({ type: 'date', text: data.date || 'Date', placeholder: !data.date, y: y });
@@ -626,36 +476,34 @@ function drawCalendarImage() {
     blocks.push({ type: 'label', text: 'NOTES', y: y });
     y += 13;
     scratch.font = '11px ' + FONT;
-    var dayNotesLines = wrapText(scratch, data.dayNotes || 'Daily notes, reminders…', COL_W - 24 - 14);
+    var dayNotesLines = wrapText(scratch, data.notes || 'Daily notes, reminders…', COL_W - 24 - 14);
     var dayNotesBoxH = Math.max(36, dayNotesLines.length * 15 + 8);
-    blocks.push({ type: 'notesbox', lines: dayNotesLines, y: y, h: dayNotesBoxH, placeholder: !data.dayNotes });
+    blocks.push({ type: 'notesbox', lines: dayNotesLines, y: y, h: dayNotesBoxH, placeholder: !data.notes });
     y += dayNotesBoxH + 14;
 
     for (var v = 0; v < data.videos.length; v++) {
       var vid = data.videos[v];
       var slotY = y;
       var sy = 10;
-      sy += 12; // "VIDEO N" label row
+      sy += 12;
 
-      sy += 11; sy += 2;
+      sy += 13;
       scratch.font = '11px ' + FONT;
       var prodLines = wrapText(scratch, vid.product || 'Product name', COL_W - 24 - 14);
       var prodH = Math.max(22, prodLines.length * 15 + 6);
       sy += prodH + 5;
 
-      sy += 11; sy += 2;
+      sy += 13;
       var hookLines = wrapText(scratch, vid.hook || 'Opening line or hook…', COL_W - 24 - 14);
       var hookH = Math.max(22, hookLines.length * 15 + 6);
       sy += hookH + 5;
 
-      sy += 11; sy += 2;
+      sy += 13;
       var notesLines = wrapText(scratch, vid.notes || 'Any extra notes…', COL_W - 24 - 14);
       var notesH = Math.max(22, notesLines.length * 15 + 6);
       sy += notesH + 5;
 
-      sy += 10; // posted row divider gap
-      sy += 16; // checkbox row
-      sy += 8;
+      sy += 26;
 
       blocks.push({
         type: 'video', y: slotY, h: sy, num: v + 1,
@@ -667,7 +515,7 @@ function drawCalendarImage() {
       y += sy + 8;
     }
 
-    y += 8; // bottom pad
+    y += 8;
     dayLayouts.push({ blocks: blocks, height: y });
     if (y > maxColHeight) maxColHeight = y;
   }
@@ -684,11 +532,9 @@ function drawCalendarImage() {
   var ctx = canvas.getContext('2d');
   ctx.scale(SCALE, SCALE);
 
-  // Background
   ctx.fillStyle = COLOR_BG;
   ctx.fillRect(0, 0, totalW, totalH);
 
-  // Header
   var hx = PAD, hy = 28;
   ctx.fillStyle = COLOR_MUTE;
   ctx.font = '600 11px ' + FONT;
@@ -706,7 +552,6 @@ function drawCalendarImage() {
   ctx.font = '400 12px ' + FONT;
   ctx.fillText('Week of: ' + (weekVal || '—'), hx, hy);
 
-  // Day columns
   var startY = headerH;
   for (var d = 0; d < 7; d++) {
     var colX = PAD + d * (COL_W + GAP);
@@ -815,6 +660,7 @@ function drawCalendarImage() {
           ctx.lineTo(vx + 18, cy - 8);
           ctx.stroke();
         }
+        ctx.lineWidth = 1;
         ctx.fillStyle = COLOR_MUTE;
         ctx.font = '400 10px ' + FONT;
         ctx.fillText('Marked as posted', vx + 26, cy);
@@ -822,18 +668,15 @@ function drawCalendarImage() {
     }
   }
 
-  // Summary bar
   var sumY = startY + maxColHeight + 24;
   var sumCardW = (totalW - PAD * 2 - GAP * 3) / 4;
-  var slots = document.querySelectorAll('.video-slot');
-  var planned = slots.length;
-  var posted = document.querySelectorAll('.posted-check:checked').length;
-  var remaining = planned - posted;
-  var pct = planned > 0 ? Math.round((posted / planned) * 100) : 0;
+  var planned = document.querySelectorAll('.video-slot').length;
+  var postedCount = document.querySelectorAll('.posted-check:checked').length;
+  var pct = planned > 0 ? Math.round((postedCount / planned) * 100) : 0;
   var summary = [
     { label: 'VIDEOS PLANNED', val: String(planned), sub: 'across the week' },
-    { label: 'POSTED', val: String(posted), sub: 'marked as done' },
-    { label: 'REMAINING', val: String(remaining), sub: 'still to post' },
+    { label: 'POSTED', val: String(postedCount), sub: 'marked as done' },
+    { label: 'REMAINING', val: String(planned - postedCount), sub: 'still to post' },
     { label: 'COMPLETION', val: pct + '%', sub: 'of planned videos' }
   ];
   for (var s = 0; s < 4; s++) {
@@ -853,11 +696,10 @@ function drawCalendarImage() {
     ctx.fillText(summary[s].sub, scx + 12, sumY + 68);
   }
 
-  // Footer
   ctx.fillStyle = COLOR_LIGHT_MUTE;
   ctx.font = '400 11px ' + FONT;
   ctx.textAlign = 'center';
-  ctx.fillText('Made for Create With Amber — plan it, post it, own it. (build v6)', totalW / 2, sumY + summaryH + 26);
+  ctx.fillText('Made for Create With Amber — plan it, post it, own it.', totalW / 2, sumY + summaryH + 26);
   ctx.textAlign = 'left';
 
   return canvas;
@@ -879,32 +721,22 @@ function drawLines(ctx, lines, x, y, lineHeight) {
   }
 }
 
-// Download as image
 document.getElementById('downloadBtn').addEventListener('click', function() {
   var btn = this;
   btn.textContent = 'Rendering...';
   btn.disabled = true;
 
-  // requestAnimationFrame just to let the button label paint before
-  // the (synchronous) drawing work runs.
   requestAnimationFrame(function () {
     try {
       var canvas = drawCalendarImage();
       var wk = document.getElementById('wk').value.trim();
       var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
 
-      // Use toBlob + an object URL instead of toDataURL. A data: URL is
-      // treated as a navigation to inline content, and privacy-hardened
-      // browsers (Firefox Focus, and some others) actively block/interrupt
-      // that kind of navigation — which is exactly the "Frame load
-      // interrupted" error. An object URL is just a reference to a
-      // same-origin Blob, not a data-URL navigation, so it isn't subject
-      // to that guard and downloads normally everywhere.
       canvas.toBlob(function (blob) {
         if (!blob) {
-          btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
+          btn.textContent = 'SAVE MY CALENDAR NOW';
           btn.disabled = false;
-          showMessageModal('Could not save the image. Please try again, or take a screenshot instead.');
+          showModal({ message: 'Could not save the image. Please try again, or take a screenshot instead.' });
           return;
         }
         var url = URL.createObjectURL(blob);
@@ -914,15 +746,14 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        // Release the object URL shortly after triggering the download.
         setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-        btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
+        btn.textContent = 'SAVE MY CALENDAR NOW';
         btn.disabled = false;
       }, 'image/jpeg', 0.92);
     } catch (err) {
-      btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
+      btn.textContent = 'SAVE MY CALENDAR NOW';
       btn.disabled = false;
-      showMessageModal('Could not save the image. Please try again, or take a screenshot instead.');
+      showModal({ message: 'Could not save the image. Please try again, or take a screenshot instead.' });
     }
   });
 });
