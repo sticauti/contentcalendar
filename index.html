@@ -897,7 +897,8 @@ footer {
   <div class="header-user">
     <span class="header-email" id="headerEmail"></span>
     <span id="syncStatus" style="font-size:11px;font-weight:600;"></span>
-    <button class="signout-btn" onclick="manualSync()" id="manualSyncBtn">☁ Sync</button>
+    <button class="signout-btn" onclick="manualSync()" id="manualSyncBtn">☁ Save</button>
+    <button class="signout-btn" onclick="manualLoad()" id="manualLoadBtn">☁ Load</button>
     <button class="signout-btn" onclick="authSignOut()">Sign out</button>
   </div>
   </div>
@@ -2364,6 +2365,24 @@ function setSyncStatus(state) {
   if (state === 'saving') { el.textContent = '↑ Syncing…'; el.style.color = 'var(--text-3)'; }
   else if (state === 'saved') { el.textContent = '✓ Synced'; el.style.color = '#4CAF50'; }
   else if (state === 'error') { el.textContent = '⚠ Sync failed'; el.style.color = 'var(--danger)'; }
+}
+
+function manualLoad() {
+  var btn = document.getElementById('manualLoadBtn');
+  btn.textContent = '↓ Loading…'; btn.disabled = true;
+  if (!currentUser) { alert('Not logged in.'); btn.textContent = '☁ Load'; btn.disabled = false; return; }
+  fbDb.collection('calendars').doc(currentUser.uid).get()
+    .then(function(doc) {
+      btn.textContent = '☁ Load'; btn.disabled = false;
+      if (!doc.exists) { alert('No document found in Firestore for your account.'); return; }
+      var weeks = doc.data().weeks;
+      var keys = weeks ? Object.keys(weeks) : [];
+      if (keys.length === 0) { alert('Document exists in Firestore but weeks data is empty.'); return; }
+      alert('Found ' + keys.length + ' week(s) in Firestore:\n' + keys.join('\n') + '\n\nLoading now...');
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(weeks)); } catch(e) {}
+      buildCalendar(loadInitialState());
+    })
+    .catch(function(e) { btn.textContent = '☁ Load'; btn.disabled = false; alert('Load error: ' + e.code + '\n' + e.message); });
 }
 
 function manualSync() {
