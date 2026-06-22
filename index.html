@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create With Amber — Weekly Content Calendar</title>
+<title>Create With Amber — Content Calendar</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#19170F">
@@ -62,10 +62,10 @@ body {
 .app-header {
   padding: 36px 0 28px;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0;
 }
 .header-brand {}
 .eyebrow {
@@ -87,8 +87,8 @@ h1 {
   font-weight: 400;
 }
 .header-credit {
-  text-align: right;
-  flex-shrink: 0;
+  text-align: center;
+  margin-top: 10px;
 }
 .credit-line {
   font-size: 11px; color: var(--text-3); font-weight: 400; line-height: 1.6;
@@ -433,7 +433,6 @@ footer {
   .summary-bar { grid-template-columns: repeat(2, 1fr); }
   .weekinput { width: 155px; }
   h1 { font-size: 24px; }
-  .header-credit { display: none; }
 }
 @media (max-width: 420px) {
   .nextwkbtn { display: none; }
@@ -448,7 +447,7 @@ footer {
 <div class="app-header">
   <div class="header-brand">
     <div class="eyebrow"><span class="eyebrow-dot"></span>Create With Amber</div>
-    <h1>Weekly Content Calendar</h1>
+    <h1>Content Calendar</h1>
     <p class="subtitle">TikTok Shop — plan your videos, track your posts, stay consistent.</p>
   </div>
   <div class="header-credit">
@@ -1046,7 +1045,7 @@ function drawCalendarImage() {
   var hx = PAD, hy = 28;
   ctx.fillStyle = '#6460CC'; ctx.font = '700 10px ' + FONT; ctx.textBaseline = 'alphabetic';
   ctx.fillText('CREATE WITH AMBER', hx, hy); hy += 28;
-  ctx.fillStyle = C.ink; ctx.font = '700 26px ' + FONT; ctx.fillText('Weekly Content Calendar', hx, hy); hy += 22;
+  ctx.fillStyle = C.ink; ctx.font = '700 26px ' + FONT; ctx.fillText('Content Calendar', hx, hy); hy += 22;
   ctx.fillStyle = C.mute; ctx.font = '400 13px ' + FONT; ctx.fillText('TikTok Shop — plan your videos, track your posts, stay consistent.', hx, hy); hy += 22;
   ctx.font = '500 12px ' + FONT; ctx.fillText('Week of: ' + (weekVal || '—'), hx, hy);
 
