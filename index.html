@@ -144,13 +144,21 @@ var slotCounts = [0,0,0,0,0,0,0];
 // reflow so scrollHeight reflects true content size, and the ceiling
 // guarantees that even if a bad read slips through, it can't run away.
 var MIN_GROW_HEIGHT = 36;
-var MAX_GROW_HEIGHT = 240;
+var MAX_GROW_HEIGHT = 400;
 
 function autoGrow(el) {
   el.style.height = '0px';
-  var needed = Math.max(el.scrollHeight, MIN_GROW_HEIGHT);
-  needed = Math.min(needed, MAX_GROW_HEIGHT);
-  el.style.height = needed + 'px';
+  var contentHeight = el.scrollHeight;
+  var needed = Math.max(contentHeight, MIN_GROW_HEIGHT);
+  if (needed > MAX_GROW_HEIGHT) {
+    // Too much text for the ceiling — stop growing, but let the box
+    // scroll internally instead of silently clipping the overflow text.
+    el.style.height = MAX_GROW_HEIGHT + 'px';
+    el.style.overflow = 'auto';
+  } else {
+    el.style.height = needed + 'px';
+    el.style.overflow = 'hidden';
+  }
 }
 
 function attachAutoGrow(el) {
@@ -362,6 +370,60 @@ function showConfirmModal(message, onConfirm) {
   document.body.appendChild(overlay);
 }
 
+// Single-button message modal — replacement for window.alert(), which
+// has the same in-app-browser reliability problem as window.confirm().
+function showMessageModal(message) {
+  var overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.right = 0;
+  overlay.style.bottom = 0;
+  overlay.style.background = 'rgba(28,26,24,0.45)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = 9999;
+  overlay.style.padding = '20px';
+
+  var box = document.createElement('div');
+  box.style.background = '#fff';
+  box.style.borderRadius = '14px';
+  box.style.padding = '22px 20px';
+  box.style.maxWidth = '320px';
+  box.style.width = '100%';
+  box.style.textAlign = 'center';
+  box.style.fontFamily = '"DM Sans", sans-serif';
+
+  var msg = document.createElement('p');
+  msg.textContent = message;
+  msg.style.fontSize = '14px';
+  msg.style.color = '#1C1A18';
+  msg.style.marginBottom = '16px';
+  msg.style.lineHeight = '1.4';
+  box.appendChild(msg);
+
+  var okBtn = document.createElement('button');
+  okBtn.textContent = 'OK';
+  okBtn.style.width = '100%';
+  okBtn.style.padding = '10px';
+  okBtn.style.borderRadius = '20px';
+  okBtn.style.border = 'none';
+  okBtn.style.background = '#1C1A18';
+  okBtn.style.color = '#fff';
+  okBtn.style.fontSize = '13px';
+  okBtn.style.fontFamily = '"DM Sans", sans-serif';
+  okBtn.style.fontWeight = '600';
+  okBtn.style.cursor = 'pointer';
+  okBtn.addEventListener('click', function () {
+    document.body.removeChild(overlay);
+  });
+
+  box.appendChild(okBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
 // Download as image
 document.getElementById('downloadBtn').addEventListener('click', function() {
   var btn = this;
@@ -385,14 +447,27 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
   // causes the title text to appear to shift down in the exported image.
   requestAnimationFrame(function () {
     requestAnimationFrame(function () {
-      html2canvas(target, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#F7F5F2',
-        logging: false,
-        windowWidth: target.scrollWidth,
-        windowHeight: target.scrollHeight
-      }).then(function(canvas) {
+      // html2canvas can hang indefinitely if it stalls trying to fetch
+      // the cross-origin Google Fonts stylesheet (a known issue on some
+      // browsers/networks) — its promise never resolves OR rejects, so
+      // without a timeout the button would be stuck on "Saving..."
+      // forever with no way to recover. Race it against a 12-second
+      // timeout so the user always gets their button back.
+      var captureTimeout = new Promise(function (_, reject) {
+        setTimeout(function () { reject(new Error('timeout')); }, 12000);
+      });
+
+      Promise.race([
+        html2canvas(target, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#F7F5F2',
+          logging: false,
+          windowWidth: target.scrollWidth,
+          windowHeight: target.scrollHeight
+        }),
+        captureTimeout
+      ]).then(function(canvas) {
         var wk = document.getElementById('wk').value.trim();
         var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
         var link = document.createElement('a');
@@ -404,7 +479,7 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
       }).catch(function() {
         btn.textContent = 'Download my calendar as image';
         btn.disabled = false;
-        alert('Could not save. Try taking a screenshot instead.');
+        showMessageModal('Could not save the image — your network may be slow, or this browser may be blocking the save. Try taking a screenshot instead.');
       });
     });
   });
