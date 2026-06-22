@@ -131,13 +131,25 @@ var slotCounts = [0,0,0,0,0,0,0];
 // instead of a clipped 2-row box.
 //
 // MIN_GROW_HEIGHT is the floor: boxes never get shorter than this, even
-// when empty, so they stay big enough to tap/click. They only grow taller
-// than this floor, never shrink below it.
+// when empty, so they stay big enough to tap/click.
+//
+// MAX_GROW_HEIGHT is a hard ceiling. Some WebKit/iOS browsers don't
+// reliably collapse height back to content size when you set
+// height:'auto' on a box-sizing:border-box + overflow:hidden element —
+// scrollHeight can read a stale, already-inflated value instead of the
+// true content height, especially across fast keystrokes. That stale
+// value gets written back as the new height, which makes the NEXT
+// scrollHeight read even bigger, and it compounds without bound. Setting
+// height to 0 first (instead of 'auto') forces a real synchronous
+// reflow so scrollHeight reflects true content size, and the ceiling
+// guarantees that even if a bad read slips through, it can't run away.
 var MIN_GROW_HEIGHT = 36;
+var MAX_GROW_HEIGHT = 240;
 
 function autoGrow(el) {
-  el.style.height = 'auto';
+  el.style.height = '0px';
   var needed = Math.max(el.scrollHeight, MIN_GROW_HEIGHT);
+  needed = Math.min(needed, MAX_GROW_HEIGHT);
   el.style.height = needed + 'px';
 }
 
