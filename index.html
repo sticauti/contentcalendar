@@ -462,7 +462,7 @@ footer {
 }
 .mc-badge.mc-done { background: var(--success); }
 
-/* ─── Platform select ─────────────────────────────── */
+/* ─── Platform select (day view) ─────────────────── */
 .plat-select {
   width: 100%; font-family: "DM Sans", sans-serif;
   font-size: 11px; font-weight: 500; color: var(--text);
@@ -477,6 +477,40 @@ footer {
 .plat-select.ps-ig { background: #fce4ec; border-color: #e1306c; }
 .plat-select.ps-yt { background: #ffebee; border-color: #cc0000; }
 .plat-select.ps-fb { background: #e8f0fe; border-color: #1877F2; }
+
+/* ─── Platform icon (week view) ──────────────────── */
+.slot-plat-icon {
+  display: none; width: 22px; height: 22px; border-radius: 6px;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  margin-bottom: 6px;
+}
+.slot-plat-icon svg { width: 13px; height: 13px; display: block; fill: #fff; }
+.slot-plat-icon.pi-tt { display: flex; background: #010101; }
+.slot-plat-icon.pi-ig { display: flex; background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); }
+.slot-plat-icon.pi-yt { display: flex; background: #FF0000; }
+.slot-plat-icon.pi-fb { display: flex; background: #1877F2; }
+
+/* ─── Compact slots (week view) ──────────────────── */
+.compact-slots .notes-section    { display: none; }
+.compact-slots .hook-group       { display: none; }
+.compact-slots .slot-notes-group { display: none; }
+.compact-slots .posted-row       { display: none; }
+.compact-slots .plat-select      { display: none; }
+.compact-slots .field-label      { display: none; }
+.compact-slots .slot-num-badge   { display: none; }
+.compact-slots .slot-label       { display: none; }
+.compact-slots .slot-posted-badge{ display: none; }
+.compact-slots .video-slot { padding: 8px 10px 8px 11px; }
+.compact-slots .slot-header { margin-bottom: 4px; }
+.compact-slots .product-group .field-input {
+  font-weight: 600; font-size: 12px; color: var(--accent);
+  background: transparent; border-color: transparent;
+  padding: 4px 0; cursor: pointer; min-height: 28px;
+}
+.compact-slots .product-group .field-input:hover {
+  background: var(--accent-2); border-color: var(--accent-3); padding: 4px 8px;
+}
+.compact-slots .product-group .field-input::placeholder { color: var(--accent); opacity: 0.5; }
 
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 640px) {
@@ -738,6 +772,13 @@ var DAYS      = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','
 var DAY_SHORT = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 
 
+var PLAT_ICONS = {
+  tt: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.13a8.16 8.16 0 004.77 1.52V7.21a4.85 4.85 0 01-1-.52z"/></svg>',
+  ig: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>',
+  yt: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+  fb: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>'
+};
+
 var slotCounts   = [0,0,0,0,0,0,0];
 var activeDayIdx = 0;
 var currentView  = 'daily';
@@ -804,6 +845,7 @@ function applyViewToColumns() {
     grid.style.marginLeft = '';
     grid.style.marginRight = '';
     document.querySelectorAll('.day-col').forEach(function(c) { c.style.display = 'flex'; });
+    grid.classList.add('compact-slots');
   } else if (currentView === 'daily') {
     calWrap.style.display = '';
     calWrap.style.overflowX = '';
@@ -811,6 +853,7 @@ function applyViewToColumns() {
     grid.style.maxWidth = '580px';
     grid.style.marginLeft = 'auto';
     grid.style.marginRight = 'auto';
+    grid.classList.remove('compact-slots');
     document.querySelectorAll('.day-col').forEach(function(c, i) {
       c.style.display = (i === activeDayIdx) ? 'flex' : 'none';
     });
@@ -921,15 +964,25 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   header.appendChild(delBtn);
   div.appendChild(header);
 
-  // Platform dropdown
+  // Platform icon (shown in week view instead of select)
+  var platIcon = document.createElement('div');
+  platIcon.className = 'slot-plat-icon';
+  left.insertBefore(platIcon, badge);
+
+  // Platform dropdown (shown in day view)
   var platSel = document.createElement('select');
   platSel.className = 'plat-select';
-  [['','📱 Platform'],['tt','🎵 TikTok'],['ig','📸 Instagram'],['yt','▶️ YouTube'],['fb','👥 Facebook']].forEach(function(o) {
+  [['','Platform'],['tt','TikTok'],['ig','Instagram'],['yt','YouTube'],['fb','Facebook']].forEach(function(o) {
     var opt = document.createElement('option'); opt.value = o[0]; opt.textContent = o[1];
     platSel.appendChild(opt);
   });
+  function updatePlatIcon(val) {
+    platIcon.innerHTML = val ? PLAT_ICONS[val] : '';
+    platIcon.className = 'slot-plat-icon' + (val ? ' pi-' + val : '');
+  }
   platSel.addEventListener('change', function() {
     platSel.className = 'plat-select' + (platSel.value ? ' ps-' + platSel.value : '');
+    updatePlatIcon(platSel.value);
     saveState();
   });
   div.appendChild(platSel);
@@ -951,6 +1004,18 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   var productF = makeField('Product',   false, 'Product name');
   var hookF    = makeField('Hook idea', true,  'Opening line or hook…');
   var notesF   = makeField('Notes',     true,  'Any extra notes…');
+  productF.wrap.classList.add('product-group');
+  hookF.wrap.classList.add('hook-group');
+  notesF.wrap.classList.add('slot-notes-group');
+
+  // Click product in week view → switch to day view for that day
+  productF.input.addEventListener('click', function() {
+    if (currentView === 'weekly') {
+      setView('daily');
+      setActiveDay(dayIdx);
+    }
+  });
+
   div.appendChild(productF.wrap);
   div.appendChild(hookF.wrap);
   div.appendChild(notesF.wrap);
@@ -987,6 +1052,7 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
     if (savedVideo.platform) {
       platSel.value = savedVideo.platform;
       platSel.className = 'plat-select ps-' + savedVideo.platform;
+      updatePlatIcon(savedVideo.platform);
     }
   }
 
