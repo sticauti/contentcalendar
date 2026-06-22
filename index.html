@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create With Amber — Weekly Content Calendar</title>
+<title>Create With Amber — Weekly Content Calendar (v6)</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -114,11 +114,11 @@ footer { margin-top: 28px; font-size: 11px; color: #B8B4AE; text-align: center; 
 </div>
 
 <div class="download-wrap">
-  <button class="download-btn" id="downloadBtn">Download my calendar as image</button>
+  <button class="download-btn" id="downloadBtn">SAVE MY CALENDAR NOW (v6)</button>
   <p class="download-hint">Saves your filled-in calendar as a JPEG to your device.</p>
 </div>
 
-<footer>Made for Create With Amber — plan it, post it, own it.</footer>
+<footer>Made for Create With Amber — plan it, post it, own it. (build v6)</footer>
 </div>
 
 <script>
@@ -756,7 +756,7 @@ function drawCalendarImage() {
   ctx.fillStyle = COLOR_LIGHT_MUTE;
   ctx.font = '400 11px ' + FONT;
   ctx.textAlign = 'center';
-  ctx.fillText('Made for Create With Amber — plan it, post it, own it.', totalW / 2, sumY + summaryH + 26);
+  ctx.fillText('Made for Create With Amber — plan it, post it, own it. (build v6)', totalW / 2, sumY + summaryH + 26);
   ctx.textAlign = 'left';
 
   return canvas;
@@ -795,10 +795,10 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
       link.download = filename;
       link.href = canvas.toDataURL('image/jpeg', 0.92);
       link.click();
-      btn.textContent = 'Download my calendar as image';
+      btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
       btn.disabled = false;
     } catch (err) {
-      btn.textContent = 'Download my calendar as image';
+      btn.textContent = 'SAVE MY CALENDAR NOW (v6)';
       btn.disabled = false;
       showMessageModal('Could not save the image. Please try again, or take a screenshot instead.');
     }
