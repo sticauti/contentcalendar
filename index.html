@@ -891,7 +891,7 @@ footer {
 <div class="app-header">
   <div class="header-brand">
     <div class="eyebrow"><span class="eyebrow-dot"></span>Create With Amber</div>
-    <h1>Content Calendar</h1>
+    <h1 id="appTitle">Content Calendar</h1>
     <p class="subtitle">TikTok Shop — plan your videos, track your posts, stay consistent.</p>
   </div>
   <div class="header-user">
@@ -914,8 +914,8 @@ footer {
     </div>
     <div class="top-right">
       <div class="view-toggle" id="viewToggle">
-        <button class="view-btn active" data-view="daily"   onclick="setView('daily')">Day</button>
-        <button class="view-btn"        data-view="weekly"  onclick="setView('weekly')">Week</button>
+        <button class="view-btn"        data-view="daily"   onclick="setView('daily')">Day</button>
+        <button class="view-btn active" data-view="weekly"  onclick="setView('weekly')">Week</button>
         <button class="view-btn"        data-view="monthly" onclick="setView('monthly')">Month</button>
       </div>
       <div class="action-btns">
@@ -1032,7 +1032,7 @@ var slotCounts   = [0,0,0,0,0,0,0];
 var draggedSlot  = null;
 var suppressPickerChange = false;
 var activeDayIdx = 0;
-var currentView  = 'daily';
+var currentView  = 'weekly';
 var STORAGE_KEY  = 'cwa_calendar_v2';
 var LEGACY_KEY   = 'cwa_content_calendar_v1';
 var MIN_H = 32, MAX_H = 400;
@@ -2488,6 +2488,25 @@ function authSignOut() {
     ]
   });
 }
+
+// ── Easter egg: tap title 10x to reveal debug buttons ────────────────────────
+(function() {
+  var taps = 0, timer;
+  document.getElementById('appTitle').addEventListener('click', function() {
+    taps++;
+    clearTimeout(timer);
+    timer = setTimeout(function() { taps = 0; }, 1500);
+    if (taps >= 10) {
+      taps = 0;
+      var s = document.getElementById('manualSyncBtn');
+      var l = document.getElementById('manualLoadBtn');
+      var show = s.style.display === 'none';
+      s.style.display = show ? '' : 'none';
+      l.style.display = show ? '' : 'none';
+      if (show) alert('🛠 Debug buttons visible. Tap title 10x again to hide.');
+    }
+  });
+})();
 
 // Wire picker change listener via JS (not inline onchange) so it can be removed safely
 document.getElementById('wkPicker').addEventListener('change', onWeekPickerChange);
