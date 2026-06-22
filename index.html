@@ -1282,7 +1282,7 @@ function clearCurrent() {
           try { var all = getAllWeeks(); delete all[weekStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch(e) {}
           activeDayIdx = 0;
           buildCalendar({ week: weekStr, days: null });
-          saveState();
+          // intentionally NOT calling saveState() — empty placeholder slots should not be persisted
         }}
       ]
     });
@@ -1298,7 +1298,8 @@ function navigateToWeek(newDate, carryByDay) {
     return { notes: '', videos: carryByDay[i].map(function(v) { return Object.assign({}, v, { posted: false }); }) };
   }) : null);
   buildCalendar({ week: newDate, days: days });
-  saveState();
+  // only persist if there's real content to save
+  if (days) saveState();
 }
 
 function prevWeek() {
@@ -1363,8 +1364,9 @@ function buildMonthView() {
   function addToMap(dayNum, videos) {
     if (!dayMap[dayNum]) dayMap[dayNum] = { total: 0, posted: 0 };
     if (!videos) return;
-    dayMap[dayNum].total  += videos.length;
-    dayMap[dayNum].posted += videos.filter(function(v) { return v.posted; }).length;
+    var real = videos.filter(function(v) { return v.product || v.hook || v.notes; });
+    dayMap[dayNum].total  += real.length;
+    dayMap[dayNum].posted += real.filter(function(v) { return v.posted; }).length;
   }
 
   var allWeeks = getAllWeeks();
@@ -1388,7 +1390,8 @@ function buildMonthView() {
         var dd = new Date(wDate); dd.setDate(wDate.getDate() + d);
         if (dd.getFullYear() === year && dd.getMonth() === month) {
           var domDay = getDayData(d);
-          dayMap[dd.getDate()] = { total: domDay.videos.length, posted: domDay.videos.filter(function(v){return v.posted;}).length };
+          var realVids = domDay.videos.filter(function(v){return v.product||v.hook||v.notes;});
+          dayMap[dd.getDate()] = { total: realVids.length, posted: realVids.filter(function(v){return v.posted;}).length };
         }
       }
     }
@@ -1457,8 +1460,10 @@ function buildOverview() {
       var col = document.querySelector('.day-col[data-day-idx="' + d + '"]');
       if (!col) continue;
       col.querySelectorAll('.video-slot').forEach(function(slot) {
-        if (slot.querySelector('.posted-check').checked) return;
         var inputs = slot.querySelectorAll('.field-input');
+        var hasContent = inputs[0] && (inputs[0].value.trim() || (inputs[1] && inputs[1].value.trim()) || (inputs[2] && inputs[2].value.trim()));
+        if (!hasContent) return;
+        if (slot.querySelector('.posted-check').checked) return;
         var name = (inputs[0] && inputs[0].value.trim()) || 'Untitled';
         var starred = slot.classList.contains('slot-starred');
         var item = { name: name, day: DAY_SHORT[d], starred: starred };
