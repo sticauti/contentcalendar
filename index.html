@@ -545,16 +545,53 @@ footer {
 .plat-btn.active-fb { background: #1877F2; border-color: #1877F2; }
 .plat-btn.active-fb svg { fill: #fff; }
 
-/* ─── Star button ────────────────────────────── */
-.star-btn {
-  background: none; border: none; cursor: pointer; color: var(--text-3);
-  font-size: 15px; line-height: 1; padding: 0 4px;
-  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
-  display: flex; align-items: center; justify-content: center;
-  min-width: 28px; min-height: 28px; margin-right: 2px;
+/* ─── Brand deal button ──────────────────────── */
+.brand-deal-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 999px;
+  border: 1.5px solid var(--border); background: var(--surface-sub);
+  font-size: 10px; font-weight: 700; color: var(--text-3);
+  cursor: pointer; font-family: "DM Sans", sans-serif;
+  letter-spacing: 0.02em; transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent; min-height: 26px; white-space: nowrap;
 }
-.star-btn:hover { color: var(--star); }
-.star-btn.starred { color: var(--star); }
+.brand-deal-btn:hover { border-color: var(--star); color: #9A6E00; }
+.brand-deal-btn.starred { background: var(--star); border-color: var(--star); color: #fff; }
+
+/* ─── Brand deal badge (in header) ──────────── */
+.slot-bd-badge {
+  display: none; font-size: 8px; font-weight: 700; letter-spacing: 0.06em;
+  color: #9A6E00; background: var(--star-2); border-radius: 4px;
+  padding: 2px 6px; text-transform: uppercase;
+}
+.slot-starred .slot-bd-badge { display: inline; }
+
+/* ─── Video type toggle ──────────────────────── */
+.type-toggle {
+  display: flex; background: var(--surface-sub);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 2px; margin-bottom: 8px;
+}
+.type-btn {
+  flex: 1; font-size: 10px; font-weight: 600; padding: 4px 6px;
+  border-radius: 5px; border: none; background: transparent;
+  color: var(--text-3); cursor: pointer; font-family: "DM Sans", sans-serif;
+  transition: all 0.15s; text-align: center;
+}
+.type-btn.active { background: var(--accent); color: #fff; }
+
+/* Hide product field for regular videos */
+.video-slot[data-type="regular"] .product-group { display: none; }
+
+/* ─── Compact title (week view) ──────────────── */
+.compact-title {
+  display: none; font-size: 12px; font-weight: 600; color: var(--accent);
+  cursor: pointer; padding: 2px 0 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.compact-slots .compact-title { display: block; }
+.compact-slots .field-group   { display: none; }
+.compact-slots .type-toggle   { display: none; }
 
 /* ─── Starred slot ───────────────────────────── */
 .video-slot.slot-starred {
@@ -940,15 +977,19 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   left.appendChild(labelSpan);
   left.appendChild(postedBadge);
 
+  var bdBadge = document.createElement('span');
+  bdBadge.className = 'slot-bd-badge';
+  bdBadge.textContent = '★ Brand Deal';
+  left.appendChild(bdBadge);
+
   var starBtn = document.createElement('button');
-  starBtn.className = 'star-btn';
-  starBtn.title = 'Brand deal — mark as starred';
+  starBtn.className = 'brand-deal-btn';
   starBtn.setAttribute('type', 'button');
-  starBtn.textContent = '☆';
+  starBtn.innerHTML = '☆ <span>Brand Deal</span>';
   starBtn.addEventListener('click', function() {
     var isStarred = div.classList.toggle('slot-starred');
     starBtn.classList.toggle('starred', isStarred);
-    starBtn.textContent = isStarred ? '★' : '☆';
+    starBtn.innerHTML = (isStarred ? '★' : '☆') + ' <span>Brand Deal</span>';
     updateSummary(); buildOverview(); saveState();
   });
 
@@ -1001,6 +1042,39 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
     return { wrap: fg, input: inp };
   }
 
+  // Video type toggle
+  var typeToggle = document.createElement('div');
+  typeToggle.className = 'type-toggle';
+  var regularBtn = document.createElement('button');
+  regularBtn.className = 'type-btn';
+  regularBtn.setAttribute('type', 'button');
+  regularBtn.textContent = 'Regular';
+  var productTypeBtn = document.createElement('button');
+  productTypeBtn.className = 'type-btn active';
+  productTypeBtn.setAttribute('type', 'button');
+  productTypeBtn.textContent = 'Product';
+  div.setAttribute('data-type', 'product');
+  function setVideoType(t) {
+    div.setAttribute('data-type', t);
+    regularBtn.classList.toggle('active', t === 'regular');
+    productTypeBtn.classList.toggle('active', t === 'product');
+    updateCompactTitle();
+    saveState();
+  }
+  regularBtn.addEventListener('click', function() { setVideoType('regular'); });
+  productTypeBtn.addEventListener('click', function() { setVideoType('product'); });
+  typeToggle.appendChild(regularBtn);
+  typeToggle.appendChild(productTypeBtn);
+  div.appendChild(typeToggle);
+
+  // Compact title shown in week view
+  var compactTitle = document.createElement('div');
+  compactTitle.className = 'compact-title';
+  compactTitle.addEventListener('click', function() {
+    if (currentView === 'weekly') { setView('daily'); setActiveDay(dayIdx); }
+  });
+  div.appendChild(compactTitle);
+
   var productF = makeField('Product',   false, 'Product name');
   var hookF    = makeField('Hook idea', true,  'Opening line or hook…');
   var notesF   = makeField('Notes',     true,  'Any extra notes…');
@@ -1008,13 +1082,15 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
   hookF.wrap.classList.add('hook-group');
   notesF.wrap.classList.add('slot-notes-group');
 
-  // Click product in week view → switch to day view for that day
-  productF.input.addEventListener('click', function() {
-    if (currentView === 'weekly') {
-      setView('daily');
-      setActiveDay(dayIdx);
-    }
-  });
+  function updateCompactTitle() {
+    var type = div.getAttribute('data-type');
+    var title = type === 'product'
+      ? (productF.input.value.trim() || hookF.input.value.trim())
+      : (hookF.input.value.trim() || productF.input.value.trim());
+    compactTitle.textContent = title || 'Untitled video';
+  }
+  productF.input.addEventListener('input', updateCompactTitle);
+  hookF.input.addEventListener('input', updateCompactTitle);
 
   div.appendChild(productF.wrap);
   div.appendChild(hookF.wrap);
@@ -1047,8 +1123,12 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
     if (savedVideo.starred) {
       div.classList.add('slot-starred');
       starBtn.classList.add('starred');
-      starBtn.textContent = '★';
+      starBtn.innerHTML = '★ <span>Brand Deal</span>';
     }
+    if (savedVideo.type && savedVideo.type !== 'product') {
+      setVideoType(savedVideo.type);
+    }
+    updateCompactTitle();
     if (savedVideo.platform) {
       platSel.value = savedVideo.platform;
       platSel.className = 'plat-select ps-' + savedVideo.platform;
@@ -1091,7 +1171,8 @@ function getDayData(dayIdx) {
       notes:    inputs[2].value,
       posted:   slot.querySelector('.posted-check').checked,
       starred:  slot.classList.contains('slot-starred'),
-      platform: platform
+      platform: platform,
+      type:     slot.getAttribute('data-type') || 'product'
     });
   });
   return { notes: col.querySelector('.day-notes-input').value, videos: videos };
@@ -1149,15 +1230,24 @@ function loadInitialState() {
 }
 
 // ── Summary ───────────────────────────────────────────────────────────────────
+function isSlotReal(slot) {
+  var inputs = slot.querySelectorAll('.field-input');
+  return Array.prototype.some.call(inputs, function(inp) { return inp.value.trim(); });
+}
+
 function updateSummary() {
   var planned, posted, isDay = currentView === 'daily', dayName = DAYS[activeDayIdx];
   if (isDay) {
     var col = document.querySelector('.day-col[data-day-idx="' + activeDayIdx + '"]');
-    planned = col ? col.querySelectorAll('.video-slot').length : 0;
-    posted  = col ? col.querySelectorAll('.posted-check:checked').length : 0;
+    var slots = col ? col.querySelectorAll('.video-slot') : [];
+    var real  = Array.prototype.filter.call(slots, isSlotReal);
+    planned = real.length;
+    posted  = real.filter(function(s) { return s.querySelector('.posted-check').checked; }).length;
   } else {
-    planned = document.querySelectorAll('.video-slot').length;
-    posted  = document.querySelectorAll('.posted-check:checked').length;
+    var slots = document.querySelectorAll('.video-slot');
+    var real  = Array.prototype.filter.call(slots, isSlotReal);
+    planned = real.length;
+    posted  = real.filter(function(s) { return s.querySelector('.posted-check').checked; }).length;
   }
   var remaining = planned - posted;
   var pct = planned > 0 ? Math.round((posted / planned) * 100) : 0;
