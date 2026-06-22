@@ -2397,10 +2397,16 @@ function saveToCloud(weeksData) {
 }
 
 function loadFromCloud(callback) {
-  if (!currentUser) { callback(null); return; }
+  if (!currentUser) { alert('loadFromCloud: no user'); callback(null); return; }
   fbDb.collection('calendars').doc(currentUser.uid).get()
-    .then(function(doc) { callback(doc.exists ? (doc.data().weeks || null) : null); })
-    .catch(function() { callback(null); });
+    .then(function(doc) {
+      if (!doc.exists) { alert('loadFromCloud: doc does not exist in Firestore'); callback(null); return; }
+      var weeks = doc.data().weeks;
+      var keys = weeks ? Object.keys(weeks) : [];
+      alert('loadFromCloud: found ' + keys.length + ' week(s): ' + keys.join(', '));
+      callback(keys.length > 0 ? weeks : null);
+    })
+    .catch(function(e) { alert('loadFromCloud ERROR: ' + e.code + ' — ' + e.message); callback(null); });
 }
 
 function showAuthError(msg) {
