@@ -533,7 +533,8 @@ var DAY_SHORT = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 var slotCounts   = [0,0,0,0,0,0,0];
 var activeDayIdx = 0;
 var currentView  = 'daily';
-var STORAGE_KEY  = 'cwa_content_calendar_v1';
+var STORAGE_KEY  = 'cwa_calendar_v2';
+var LEGACY_KEY   = 'cwa_content_calendar_v1';
 var MIN_H = 32, MAX_H = 400;
 
 // ── Auto-grow ────────────────────────────────────────────────────────────────
@@ -741,14 +742,56 @@ function getDayData(dayIdx) {
   return { notes: col.querySelector('.day-notes-input').value, videos: videos };
 }
 
-function serializeState() {
+function serializeDays() {
   var days = [];
   for (var d = 0; d < 7; d++) days.push(getDayData(d));
-  return { week: document.getElementById('wk').value, days: days };
+  return days;
 }
 
-function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); } catch(e) {} }
-function loadState() { try { var r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+function getAllWeeks() {
+  try { var r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
+}
+
+function saveState() {
+  var weekStr = document.getElementById('wk').value.trim() || '__default__';
+  try {
+    var all = getAllWeeks();
+    all[weekStr] = { days: serializeDays() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  } catch(e) {}
+}
+
+function loadWeekData(weekStr) {
+  var all = getAllWeeks();
+  return all[weekStr || '__default__'] || null;
+}
+
+function loadInitialState() {
+  // Migrate legacy single-week storage if present
+  try {
+    var legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      var old = JSON.parse(legacy);
+      if (old && old.week) {
+        var all = getAllWeeks();
+        if (!all[old.week]) { all[old.week] = { days: old.days }; localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); }
+      }
+      localStorage.removeItem(LEGACY_KEY);
+    }
+  } catch(e) {}
+
+  // Find the week closest to today
+  var all = getAllWeeks(), keys = Object.keys(all);
+  if (!keys.length) return null;
+  var today = new Date(), best = null, bestDiff = Infinity;
+  keys.forEach(function(k) {
+    if (k === '__default__') return;
+    var d = new Date(k);
+    if (!isNaN(d.getTime()) && Math.abs(today - d) < bestDiff) { bestDiff = Math.abs(today - d); best = k; }
+  });
+  if (!best) best = keys[0];
+  return { week: best, days: all[best].days };
+}
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 function updateSummary() {
@@ -879,9 +922,10 @@ function clearCurrent() {
       buttons: [
         { label: 'Cancel' },
         { label: 'Clear week', style: { background: var_danger(), color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() {
-          try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+          var weekStr = document.getElementById('wk').value.trim() || '__default__';
+          try { var all = getAllWeeks(); delete all[weekStr]; localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch(e) {}
           activeDayIdx = 0;
-          buildCalendar(null);
+          buildCalendar({ week: weekStr, days: null });
           saveState();
         }}
       ]
@@ -890,20 +934,25 @@ function clearCurrent() {
 }
 function var_danger() { return '#B33030'; }
 
+function navigateToWeek(newDate, carryByDay) {
+  saveState();
+  activeDayIdx = 0;
+  var existing = loadWeekData(newDate);
+  var days = existing ? existing.days : (carryByDay ? DAYS.map(function(_, i) {
+    return { notes: '', videos: carryByDay[i].map(function(v) { return Object.assign({}, v, { posted: false }); }) };
+  }) : null);
+  buildCalendar({ week: newDate, days: days });
+  saveState();
+}
+
 function prevWeek() {
-  var cur = document.getElementById('wk').value.trim(), newDate = '';
-  if (cur) {
-    var d = new Date(cur);
-    if (!isNaN(d.getTime())) { d.setDate(d.getDate() - 7); newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
-  }
-  if (!newDate) return;
-  showModal({
-    message: 'Go back to the week of ' + newDate + '?\n\nThis will clear your current week.',
-    buttons: [
-      { label: 'Cancel' },
-      { label: 'Go back', style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } }
-    ]
-  });
+  var cur = document.getElementById('wk').value.trim();
+  if (!cur) return;
+  var d = new Date(cur);
+  if (isNaN(d.getTime())) return;
+  d.setDate(d.getDate() - 7);
+  var newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  navigateToWeek(newDate, null);
 }
 
 function nextWeek() {
@@ -913,35 +962,29 @@ function nextWeek() {
     if (!isNaN(d.getTime())) { d.setDate(d.getDate() + 7); newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
   }
   if (!newDate) newDate = nextMondayStr();
+
+  // If next week already has saved data, just navigate there
+  if (loadWeekData(newDate)) { navigateToWeek(newDate, null); return; }
+
+  // Next week is empty — offer to carry forward unposted videos
   var unpostedByDay = [], total = 0;
   for (var d = 0; d < 7; d++) {
     var u = getDayData(d).videos.filter(function(v) { return !v.posted; });
     unpostedByDay.push(u); total += u.length;
   }
-  var msg  = 'Start the week of ' + newDate + '?';
-  var btns = [{ label: 'Cancel' }];
   if (total > 0) {
-    msg += '\n\n' + total + ' unposted video' + (total !== 1 ? 's' : '') + ' can carry forward.';
     var ubd = unpostedByDay;
-    btns.push({ label: 'Start fresh',   style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } });
-    btns.push({ label: 'Carry forward', style: { background: '#6460CC', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x) { return function() { startNewWeek(newDate, x); }; })(ubd) });
+    showModal({
+      message: 'Week of ' + newDate + '\n\n' + total + ' unposted video' + (total !== 1 ? 's' : '') + ' can carry forward.',
+      buttons: [
+        { label: 'Cancel' },
+        { label: 'Start fresh',   style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { navigateToWeek(newDate, null); } },
+        { label: 'Carry forward', style: { background: '#6460CC', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x) { return function() { navigateToWeek(newDate, x); }; })(ubd) }
+      ]
+    });
   } else {
-    btns.push({ label: 'Next week', style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { startNewWeek(newDate, null); } });
+    navigateToWeek(newDate, null);
   }
-  showModal({ message: msg, buttons: btns });
-}
-
-function startNewWeek(weekDate, carryByDay) {
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
-  activeDayIdx = 0;
-  buildCalendar({
-    week: weekDate,
-    days: DAYS.map(function(_, i) {
-      var videos = carryByDay ? carryByDay[i].map(function(v) { return Object.assign({}, v, { posted: false }); }) : [];
-      return { date: '', notes: '', videos: videos };
-    })
-  });
-  saveState();
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -1197,7 +1240,7 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
   });
 });
 
-buildCalendar(loadState());
+buildCalendar(loadInitialState());
 </script>
 </body>
 </html>
