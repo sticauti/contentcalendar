@@ -359,6 +359,27 @@ input.field-input { white-space: normal; min-height: 34px; }
   color: var(--text-2); cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 
+/* ─── Weekly scroll hint ─────────────────────────── */
+.scroll-hint-pill {
+  display: none;
+  margin: 6px auto 2px;
+  width: fit-content;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--accent-2);
+  border: 1.5px solid var(--accent-3);
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  letter-spacing: 0.02em;
+  animation: hintFade 3s ease forwards;
+  pointer-events: none;
+}
+@keyframes hintFade {
+  0%   { opacity: 0; transform: translateY(-4px); }
+   15% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ─── Drag & drop (weekly view) ─────────────────── */
 .video-slot.dragging      { opacity: 0.35; }
 .slots-wrap.drag-over     { background: var(--accent-2); border-radius: var(--radius-md); outline: 2px dashed var(--accent); }
@@ -787,6 +808,7 @@ footer {
 <!-- ── Calendar ───────────────────────────────── -->
 <div class="cal-wrap" id="calWrap">
   <div class="cal-grid" id="calGrid"></div>
+  <div class="scroll-hint-pill" id="scrollHintPill">swipe to see all days &nbsp;→</div>
 </div>
 
 <!-- ── Month view ─────────────────────────────── -->
@@ -972,6 +994,13 @@ function applyViewToColumns() {
     grid.style.marginRight = '';
     document.querySelectorAll('.day-col').forEach(function(c) { c.style.display = 'flex'; });
     grid.classList.add('compact-slots');
+    var pill = document.getElementById('scrollHintPill');
+    if (pill) {
+      pill.style.display = 'block';
+      pill.style.animation = 'none';
+      void pill.offsetWidth;
+      pill.style.animation = '';
+    }
   } else if (currentView === 'daily') {
     calWrap.style.display = '';
     calWrap.style.overflowX = '';
@@ -980,6 +1009,8 @@ function applyViewToColumns() {
     grid.style.marginLeft = 'auto';
     grid.style.marginRight = 'auto';
     grid.classList.remove('compact-slots');
+    var pill = document.getElementById('scrollHintPill');
+    if (pill) pill.style.display = 'none';
     document.querySelectorAll('.day-col').forEach(function(c, i) {
       c.style.display = (i === activeDayIdx) ? 'flex' : 'none';
     });
@@ -1501,12 +1532,12 @@ function buildCalendar(savedState) {
           var newSlot = makeSlot(di, w.querySelectorAll('.video-slot').length);
           w.appendChild(newSlot);
           updateSummary(); saveState();
-          setTimeout(function() { newSlot.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+          setTimeout(function() { var r = newSlot.getBoundingClientRect(); window.scrollBy({ top: r.top - 90, behavior: 'smooth' }); }, 100);
         } else {
           var newSlot = makeSlot(di, w.querySelectorAll('.video-slot').length);
           w.appendChild(newSlot);
           updateSummary(); saveState();
-          setTimeout(function() { newSlot.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+          setTimeout(function() { var r = newSlot.getBoundingClientRect(); window.scrollBy({ top: r.top - 90, behavior: 'smooth' }); }, 100);
         }
       });
     })(d, wrap);
@@ -1595,17 +1626,31 @@ function nextWeek() {
   // Next week is empty — offer to carry forward unposted videos
   var unpostedByDay = [], total = 0;
   for (var d = 0; d < 7; d++) {
-    var u = getDayData(d).videos.filter(function(v) { return !v.posted; });
+    var u = getDayData(d).videos.filter(function(v) { return !v.posted && (v.product || v.hook || v.notes); });
     unpostedByDay.push(u); total += u.length;
   }
   if (total > 0) {
     var ubd = unpostedByDay;
+    var fromWeekStr = document.getElementById('wk').value.trim() || '__default__';
     showModal({
       message: 'Week of ' + newDate + '\n\n' + total + ' unposted video' + (total !== 1 ? 's' : '') + ' can carry forward.',
       buttons: [
         { label: 'Cancel' },
         { label: 'Start fresh',   style: { background: '#1A1816', color: '#fff', border: 'none', fontWeight: '600' }, onClick: function() { navigateToWeek(newDate, null); } },
-        { label: 'Carry forward', style: { background: '#D06B38', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x) { return function() { navigateToWeek(newDate, x); }; })(ubd) }
+        { label: 'Carry forward', style: { background: '#D06B38', color: '#fff', border: 'none', fontWeight: '600' }, onClick: (function(x, fws) { return function() {
+          navigateToWeek(newDate, x);
+          // Remove the carried (unposted) videos from the source week
+          try {
+            var all = getAllWeeks();
+            if (all[fws] && all[fws].days) {
+              all[fws].days = all[fws].days.map(function(day) {
+                if (!day) return day;
+                return { notes: day.notes || '', videos: (day.videos || []).filter(function(v) { return v.posted; }) };
+              });
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+            }
+          } catch(e) {}
+        }; })(ubd, fromWeekStr) }
       ]
     });
   } else {
