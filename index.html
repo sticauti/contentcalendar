@@ -1057,8 +1057,9 @@ footer {
 <div class="sticky-header">
   <div class="toprow">
     <div class="weekwrap">
-      <label for="wkPicker">Week of</label>
-      <input class="weekinput" type="date" id="wkPicker">
+      <label id="wkLabel" for="wkPicker">Week of</label>
+      <input class="weekinput" type="date"  id="wkPicker">
+      <input class="weekinput" type="month" id="monthPicker" style="display:none">
       <input type="hidden" id="wk">
     </div>
     <div class="top-right">
@@ -1305,16 +1306,33 @@ function applyViewToColumns() {
     calWrap.style.display = 'none';
   }
   var isSchedule = currentView === 'schedule';
+  var isMonthly  = currentView === 'monthly';
   document.getElementById('scheduleView').style.display = isSchedule ? '' : 'none';
-  document.getElementById('monthView').style.display    = currentView === 'monthly'  ? 'block' : 'none';
-  document.getElementById('dayTabsWrap').style.display  = currentView === 'daily'    ? ''      : 'none';
+  document.getElementById('monthView').style.display    = isMonthly  ? 'block' : 'none';
+  document.getElementById('dayTabsWrap').style.display  = currentView === 'daily' ? '' : 'none';
   var ov = document.getElementById('overviewSection');
   if (ov) ov.style.display = isSchedule ? 'none' : '';
   var cb = document.getElementById('clearBtn');
   cb.textContent   = currentView === 'daily' ? 'Clear day' : 'Clear week';
-  cb.style.display = (currentView === 'monthly' || isSchedule) ? 'none' : '';
+  cb.style.display = (isMonthly || isSchedule) ? 'none' : '';
   var mb = document.getElementById('moveWkBtn');
   if (mb) mb.style.display = currentView === 'weekly' ? '' : 'none';
+
+  // Label + picker swap
+  var wkLabel      = document.getElementById('wkLabel');
+  var wkPicker     = document.getElementById('wkPicker');
+  var monthPicker  = document.getElementById('monthPicker');
+  if (wkLabel)  wkLabel.textContent = isMonthly ? 'Month of' : currentView === 'daily' ? 'Day of' : 'Week of';
+  if (wkPicker)    wkPicker.style.display    = isMonthly ? 'none' : '';
+  if (monthPicker) monthPicker.style.display = isMonthly ? '' : 'none';
+  if (isMonthly && monthPicker) {
+    monthPicker.value = monthViewDate.getFullYear() + '-' + String(monthViewDate.getMonth()+1).padStart(2,'0');
+  }
+
+  // Hide nav arrows on monthly (month-nav inside monthView handles it)
+  document.querySelectorAll('.nextwkbtn').forEach(function(btn) {
+    btn.style.display = isMonthly ? 'none' : '';
+  });
 }
 
 function setView(view) {
@@ -2012,6 +2030,8 @@ var monthViewDate = new Date();
 function changeMonth(dir) {
   monthViewDate.setDate(1);
   monthViewDate.setMonth(monthViewDate.getMonth() + dir);
+  var mp = document.getElementById('monthPicker');
+  if (mp) mp.value = monthViewDate.getFullYear() + '-' + String(monthViewDate.getMonth()+1).padStart(2,'0');
   buildMonthView();
   buildOverview();
 }
@@ -3415,6 +3435,14 @@ function renderWeekBar(bar, blocks) {
 
 // Wire picker change listener via JS (not inline onchange) so it can be removed safely
 document.getElementById('wkPicker').addEventListener('change', onWeekPickerChange);
+document.getElementById('monthPicker').addEventListener('change', function() {
+  var val = this.value; // "YYYY-MM"
+  if (!val) return;
+  var parts = val.split('-');
+  monthViewDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+  buildMonthView();
+  buildOverview();
+});
 
 // ── App startup gated on auth ─────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(function(user) {
