@@ -1088,8 +1088,8 @@ footer {
         <button class="view-btn"        data-view="schedule" onclick="setView('schedule')">Schedule</button>
       </div>
       <div class="action-btns">
-        <button class="nextwkbtn" onclick="prevWeek()">←</button>
-        <button class="nextwkbtn" onclick="nextWeek()">→</button>
+        <button class="nextwkbtn" onclick="navigatePrev()">←</button>
+        <button class="nextwkbtn" onclick="navigateNext()">→</button>
         <button class="clearbtn" id="clearBtn" onclick="clearCurrent()">Clear day</button>
         <button class="movewkbtn" id="moveWkBtn" onclick="moveUnpostedToNextWeek()" style="display:none">Move unposted →</button>
       </div>
@@ -1274,10 +1274,11 @@ function onWeekPickerChange() {
   var parts = picker.value.split('-');
   var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
   var dow = d.getDay();
+  var dayIdx = (dow + 6) % 7; // Mon=0 … Sun=6
   var diff = dow === 1 ? 0 : (dow === 0 ? -6 : 1 - dow);
-  d.setDate(d.getDate() + diff);
-  var newDate = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  navigateToWeek(newDate, null);
+  var monday = new Date(d); monday.setDate(d.getDate() + diff);
+  var newDate = monday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  navigateToWeek(newDate, null, dayIdx);
 }
 
 function nextMondayStr() {
@@ -1977,9 +1978,9 @@ function clearCurrent() {
 }
 function var_danger() { return '#B33030'; }
 
-function navigateToWeek(newDate, carryByDay) {
+function navigateToWeek(newDate, carryByDay, targetDayIdx) {
   saveState();
-  activeDayIdx = 0;
+  activeDayIdx = (typeof targetDayIdx === 'number') ? targetDayIdx : 0;
   var existing = loadWeekData(newDate);
   var days = existing ? existing.days : (carryByDay ? DAYS.map(function(_, i) {
     return { notes: '', videos: carryByDay[i].map(function(v) { return Object.assign({}, v, { posted: false }); }) };
@@ -2011,6 +2012,33 @@ function nextWeek() {
   if (loadWeekData(newDate)) { navigateToWeek(newDate, null); return; }
 
   navigateToWeek(newDate, null);
+}
+
+function navigatePrev() {
+  if (currentView === 'monthly') { changeMonth(-1); return; }
+  if (currentView === 'daily')   { prevDay();       return; }
+  prevWeek();
+}
+function navigateNext() {
+  if (currentView === 'monthly') { changeMonth(1); return; }
+  if (currentView === 'daily')   { nextDay();      return; }
+  nextWeek();
+}
+function prevDay() {
+  if (activeDayIdx > 0) { setActiveDay(activeDayIdx - 1); return; }
+  var cur = document.getElementById('wk').value.trim();
+  if (!cur) return;
+  var d = new Date(cur); if (isNaN(d.getTime())) return;
+  d.setDate(d.getDate() - 7);
+  navigateToWeek(d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }), null, 6);
+}
+function nextDay() {
+  if (activeDayIdx < 6) { setActiveDay(activeDayIdx + 1); return; }
+  var cur = document.getElementById('wk').value.trim();
+  if (!cur) return;
+  var d = new Date(cur); if (isNaN(d.getTime())) return;
+  d.setDate(d.getDate() + 7);
+  navigateToWeek(d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }), null, 0);
 }
 
 function moveUnpostedToNextWeek() {
@@ -2154,9 +2182,8 @@ function buildMonthView() {
         var monday = new Date(clicked); monday.setDate(clicked.getDate() + diff);
         var weekStr = monday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         var dayIdx = (dow + 6) % 7; // Mon=0 … Sun=6
-        navigateToWeek(weekStr, null);
+        navigateToWeek(weekStr, null, dayIdx);
         setView('daily');
-        setActiveDay(dayIdx);
       });
     })(day);
     grid.appendChild(cell);
