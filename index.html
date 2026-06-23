@@ -412,27 +412,23 @@ input.field-input { white-space: normal; min-height: 34px; }
   background: var(--accent-2);
 }
 
-/* ─── Summary bar ────────────────────────────────── */
-.summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
-.scard {
-  background: var(--surface); border-radius: var(--radius-lg);
-  padding: 18px 20px; box-shadow: var(--shadow-md);
-  position: relative; overflow: hidden;
+/* ─── Overview progress bar & insight ───────────── */
+.ov-progress-wrap {
+  margin: 4px 0 10px; height: 6px; border-radius: 99px;
+  background: var(--border); overflow: hidden;
 }
-.scard::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0;
-  height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-3));
-  opacity: 0.5;
+.ov-progress-bar {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  transition: width 0.4s ease;
 }
-.scard-label {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.1em; color: var(--text-3); margin-bottom: 8px;
+.ov-insight {
+  font-size: 11px; color: var(--text-3); font-weight: 500;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
 }
-.scard-val {
-  font-size: 32px; font-weight: 700; color: var(--text);
-  letter-spacing: -0.04em; line-height: 1;
+.ov-insight-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0;
 }
-.scard-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; font-weight: 400; }
 
 /* ─── Bottom ─────────────────────────────────────── */
 .autosave-note {
@@ -581,8 +577,7 @@ footer {
 
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 640px) {
-  .summary-bar { grid-template-columns: repeat(2, 1fr); }
-  .weekinput { width: 155px; }
+.weekinput { width: 155px; }
   h1 { font-size: 24px; }
 }
 @media (max-width: 520px) {
@@ -1133,42 +1128,20 @@ footer {
   <div class="sched-tray" id="schedTray"></div>
 </div>
 
-<!-- ── Summary ────────────────────────────────── -->
-<div class="summary-bar" id="summaryBar">
-  <div class="scard">
-    <div class="scard-label" id="lbl-planned">Videos planned</div>
-    <div class="scard-val" id="sum-planned">0</div>
-    <div class="scard-sub" id="sub-planned">across the week</div>
-  </div>
-  <div class="scard">
-    <div class="scard-label" id="lbl-posted">Posted</div>
-    <div class="scard-val" id="sum-posted">0</div>
-    <div class="scard-sub" id="sub-posted">marked as done</div>
-  </div>
-  <div class="scard">
-    <div class="scard-label" id="lbl-remaining">Remaining</div>
-    <div class="scard-val" id="sum-remaining">0</div>
-    <div class="scard-sub" id="sub-remaining">still to post</div>
-  </div>
-  <div class="scard">
-    <div class="scard-label">Completion</div>
-    <div class="scard-val" id="sum-pct">0%</div>
-    <div class="scard-sub" id="sub-pct">of planned videos</div>
-  </div>
-</div>
-
 <!-- ── Overview dashboard ──────────────────────── -->
 <div class="overview-section ov-open" id="overviewSection">
   <div class="overview-header" onclick="toggleOverview()">
-    <span class="overview-title">📊 Overview Dashboard</span>
+    <span class="overview-title" id="ovTitle">📊 Overview Dashboard</span>
     <span class="overview-chevron">▾</span>
   </div>
   <div class="overview-body">
-    <div class="ov-cards" id="ovCards">
-      <div class="ov-card ov-overdue"  onclick="toggleOvList('ov-list-overdue')"><div class="ov-card-lbl">⚠️ Overdue</div><div class="ov-card-num" id="ov-num-overdue">0</div><div class="ov-card-sub">unposted past videos</div></div>
-      <div class="ov-card ov-today"    onclick="toggleOvList('ov-list-today')"  ><div class="ov-card-lbl">📌 Today</div><div class="ov-card-num" id="ov-num-today">0</div><div class="ov-card-sub">videos to post today</div></div>
-      <div class="ov-card ov-upcoming" onclick="toggleOvList('ov-list-upcoming')"><div class="ov-card-lbl">📅 Upcoming</div><div class="ov-card-num" id="ov-num-upcoming">0</div><div class="ov-card-sub">videos ahead this week</div></div>
-      <div class="ov-card ov-deals"    onclick="toggleOvList('ov-list-deals')"  ><div class="ov-card-lbl">⭐ Brand Deals</div><div class="ov-card-num" id="ov-num-deals">0</div><div class="ov-card-sub">starred videos</div></div>
+    <div class="ov-cards" id="ovCards"></div>
+    <div class="ov-progress-wrap" id="ovProgressWrap" style="display:none">
+      <div class="ov-progress-bar" id="ovProgressBar" style="width:0%"></div>
+    </div>
+    <div class="ov-insight" id="ovInsight" style="display:none">
+      <span class="ov-insight-dot"></span>
+      <span id="ovInsightText"></span>
     </div>
     <div class="ov-list" id="ov-list-overdue"></div>
     <div class="ov-list" id="ov-list-today"></div>
@@ -1355,7 +1328,6 @@ function applyViewToColumns() {
   document.getElementById('scheduleView').style.display = isSchedule ? '' : 'none';
   document.getElementById('monthView').style.display    = currentView === 'monthly'  ? 'block' : 'none';
   document.getElementById('dayTabsWrap').style.display  = currentView === 'daily'    ? ''      : 'none';
-  document.getElementById('summaryBar').style.display   = (currentView === 'monthly' || isSchedule) ? 'none' : '';
   var ov = document.getElementById('overviewSection');
   if (ov) ov.style.display = isSchedule ? 'none' : '';
   var cb = document.getElementById('clearBtn');
@@ -1773,45 +1745,7 @@ function isSlotReal(slot) {
   return Array.prototype.some.call(inputs, function(inp) { return inp.value.trim(); });
 }
 
-function updateSummary() {
-  var planned, posted, isDay = currentView === 'daily', dayName = DAYS[activeDayIdx];
-  if (isDay) {
-    var col = document.querySelector('.day-col[data-day-idx="' + activeDayIdx + '"]');
-    var slots = col ? col.querySelectorAll('.video-slot') : [];
-    var real  = Array.prototype.filter.call(slots, isSlotReal);
-    planned = real.length;
-    posted  = real.filter(function(s) { return s.querySelector('.posted-check').checked; }).length;
-  } else {
-    var slots = document.querySelectorAll('.video-slot');
-    var real  = Array.prototype.filter.call(slots, isSlotReal);
-    planned = real.length;
-    posted  = real.filter(function(s) { return s.querySelector('.posted-check').checked; }).length;
-  }
-  var remaining = planned - posted;
-  var pct = planned > 0 ? Math.round((posted / planned) * 100) : 0;
-  document.getElementById('sum-planned').textContent   = planned;
-  document.getElementById('sum-posted').textContent    = posted;
-  document.getElementById('sum-remaining').textContent = remaining;
-  document.getElementById('sum-pct').textContent       = pct + '%';
-  buildOverview();
-  if (isDay) {
-    document.getElementById('lbl-planned').textContent   = 'Videos today';
-    document.getElementById('sub-planned').textContent   = dayName;
-    document.getElementById('lbl-posted').textContent    = 'Posted';
-    document.getElementById('sub-posted').textContent    = dayName;
-    document.getElementById('lbl-remaining').textContent = 'Remaining';
-    document.getElementById('sub-remaining').textContent = dayName;
-    document.getElementById('sub-pct').textContent       = dayName + ' progress';
-  } else {
-    document.getElementById('lbl-planned').textContent   = 'Videos planned';
-    document.getElementById('sub-planned').textContent   = 'across the week';
-    document.getElementById('lbl-posted').textContent    = 'Posted';
-    document.getElementById('sub-posted').textContent    = 'marked as done';
-    document.getElementById('lbl-remaining').textContent = 'Remaining';
-    document.getElementById('sub-remaining').textContent = 'still to post';
-    document.getElementById('sub-pct').textContent       = 'of planned videos';
-  }
-}
+function updateSummary() { buildOverview(); }
 
 // ── Build ─────────────────────────────────────────────────────────────────────
 function buildCalendar(savedState) {
@@ -2271,87 +2205,213 @@ function toggleOvList(id) {
 
 function buildOverview() {
   if (currentView === 'monthly') { buildMonthlyOverview(); return; }
-  var today = new Date(); today.setHours(0,0,0,0);
-  var weekStr = document.getElementById('wk').value.trim();
+
+  var today     = new Date(); today.setHours(0,0,0,0);
+  var weekStr   = document.getElementById('wk').value.trim();
   var weekStart = weekStr ? new Date(weekStr) : null;
   if (weekStart && isNaN(weekStart.getTime())) weekStart = null;
 
-  // Restore standard card layout in case we came from monthly view
-  document.getElementById('ovCards').innerHTML =
-    '<div class="ov-card ov-overdue"  onclick="toggleOvList(\'ov-list-overdue\')"><div class="ov-card-lbl">⚠️ Overdue</div><div class="ov-card-num" id="ov-num-overdue">0</div><div class="ov-card-sub">unposted past videos</div></div>' +
-    '<div class="ov-card ov-today"    onclick="toggleOvList(\'ov-list-today\')"  ><div class="ov-card-lbl">📌 Today</div><div class="ov-card-num" id="ov-num-today">0</div><div class="ov-card-sub">videos to post today</div></div>' +
-    '<div class="ov-card ov-upcoming" onclick="toggleOvList(\'ov-list-upcoming\')"><div class="ov-card-lbl">📅 Upcoming</div><div class="ov-card-num" id="ov-num-upcoming">0</div><div class="ov-card-sub">videos ahead this week</div></div>' +
-    '<div class="ov-card ov-deals"    onclick="toggleOvList(\'ov-list-deals\')"  ><div class="ov-card-lbl">⭐ Brand Deals</div><div class="ov-card-num" id="ov-num-deals">0</div><div class="ov-card-sub">starred videos</div></div>';
+  // helpers
+  function card(cls, icon, label, num, sub, listId) {
+    return '<div class="ov-card ' + cls + '" onclick="toggleOvList(\'' + listId + '\')">' +
+      '<div class="ov-card-lbl">' + icon + ' ' + label + '</div>' +
+      '<div class="ov-card-num" id="ov-num-' + listId.replace('ov-list-','') + '">' + num + '</div>' +
+      '<div class="ov-card-sub">' + sub + '</div></div>';
+  }
+  function fillList(id, items, emptyMsg) {
+    var el = document.getElementById(id); if (!el) return;
+    el.innerHTML = '';
+    if (!items.length) { el.innerHTML = '<p class="ov-empty">' + emptyMsg + '</p>'; return; }
+    items.slice(0, 8).forEach(function(it) {
+      var row = document.createElement('div'); row.className = 'ov-item';
+      row.innerHTML = '<span class="ov-item-day">' + it.day + '</span>' +
+        '<span class="ov-item-name">' + (it.name||'').replace(/</g,'&lt;') + '</span>' +
+        (it.starred ? '<span class="ov-item-star">★</span>' : '');
+      el.appendChild(row);
+    });
+    if (items.length > 8) {
+      var more = document.createElement('p'); more.className = 'ov-empty';
+      more.textContent = '+ ' + (items.length - 8) + ' more'; el.appendChild(more);
+    }
+  }
+  function setProgress(pct, insightHtml) {
+    var pw = document.getElementById('ovProgressWrap');
+    var pb = document.getElementById('ovProgressBar');
+    var ins = document.getElementById('ovInsight');
+    var insTxt = document.getElementById('ovInsightText');
+    if (pw) { pw.style.display = ''; pb.style.width = pct + '%'; }
+    if (ins && insightHtml) { ins.style.display = 'flex'; insTxt.innerHTML = insightHtml; }
+    else if (ins) { ins.style.display = 'none'; }
+  }
 
+  // ── DAY VIEW ──────────────────────────────────────────────────────────────────
+  if (currentView === 'daily') {
+    document.getElementById('ovTitle').textContent = '📊 ' + DAYS[activeDayIdx] + ' Overview';
+    var col = document.querySelector('.day-col[data-day-idx="' + activeDayIdx + '"]');
+    var slots = col ? Array.prototype.filter.call(col.querySelectorAll('.video-slot'), isSlotReal) : [];
+    var planned   = slots.length;
+    var posted    = slots.filter(function(s){ return s.querySelector('.posted-check').checked; }).length;
+    var remaining = planned - posted;
+    var deals     = slots.filter(function(s){ return s.classList.contains('slot-starred'); }).length;
+    var pct       = planned > 0 ? Math.round((posted/planned)*100) : 0;
+
+    // scheduled videos today
+    var scheduledToday = slots.filter(function(s){ return s.getAttribute('data-scheduled-min') !== null && s.getAttribute('data-scheduled-min') !== ''; }).length;
+
+    // overdue from other weeks
+    var overdueItems = [], dealItems = [];
+    var allWeeks = getAllWeeks();
+    Object.keys(allWeeks).forEach(function(k) {
+      if (k === weekStr || k === '__default__') return;
+      var wDate = new Date(k); if (isNaN(wDate.getTime())) return;
+      var wd = allWeeks[k]; if (!wd || !wd.days) return;
+      wd.days.forEach(function(day, d) {
+        if (!day || !day.videos) return;
+        var dd = new Date(wDate); dd.setDate(wDate.getDate() + d); dd.setHours(0,0,0,0);
+        if (dd >= today) return;
+        day.videos.forEach(function(v) {
+          if (v.posted || (!v.product && !v.hook && !v.notes)) return;
+          var item = { name: v.product||v.hook||'Untitled', day: DAY_SHORT[d], starred: !!v.starred };
+          overdueItems.push(item);
+          if (v.starred) dealItems.push(item);
+        });
+      });
+    });
+    // add current week overdue (days before today)
+    if (weekStart) {
+      for (var d2 = 0; d2 < 7; d2++) {
+        if (d2 === activeDayIdx) continue;
+        var dd2 = new Date(weekStart); dd2.setDate(weekStart.getDate() + d2); dd2.setHours(0,0,0,0);
+        if (dd2 >= today) continue;
+        var c2 = document.querySelector('.day-col[data-day-idx="' + d2 + '"]');
+        if (!c2) continue;
+        Array.prototype.filter.call(c2.querySelectorAll('.video-slot'), isSlotReal).forEach(function(s) {
+          if (s.querySelector('.posted-check').checked) return;
+          var nm = s.querySelectorAll('.field-input')[0];
+          var item = { name: (nm&&nm.value)||'Untitled', day: DAY_SHORT[d2], starred: s.classList.contains('slot-starred') };
+          overdueItems.push(item);
+          if (item.starred) dealItems.push(item);
+        });
+      }
+    }
+
+    // day slots as list items
+    var postedItems = [], remainingItems = [];
+    slots.forEach(function(s) {
+      var nm = s.querySelectorAll('.field-input')[0];
+      var item = { name: (nm&&nm.value)||'Untitled', day: DAYS[activeDayIdx].slice(0,3), starred: s.classList.contains('slot-starred') };
+      if (s.querySelector('.posted-check').checked) postedItems.push(item);
+      else remainingItems.push(item);
+    });
+
+    var insight = pct === 100 && planned > 0
+      ? '🎉 All done for today — amazing work!'
+      : pct >= 50 && planned > 0
+        ? pct + '% posted · ' + remaining + ' left to go'
+        : planned === 0
+          ? 'No videos planned today yet'
+          : remaining + ' video' + (remaining !== 1 ? 's' : '') + ' to post today' + (scheduledToday ? ' · ' + scheduledToday + ' scheduled' : '');
+
+    document.getElementById('ovCards').innerHTML =
+      card('ov-upcoming', '📹', 'Planned Today',  planned,   planned === 1 ? 'video' : 'videos',                         'ov-list-upcoming') +
+      card('ov-today',    '✅', 'Posted',          posted,    posted === 1 ? 'video posted' : 'videos posted',             'ov-list-today')    +
+      card('ov-overdue',  '⚠️', 'Overdue',         overdueItems.length, 'across all weeks',                               'ov-list-overdue')  +
+      card('ov-deals',    '⭐', 'Brand Deals',     deals,     deals === 1 ? 'starred video' : 'starred videos',            'ov-list-deals');
+
+    setProgress(pct, insight);
+    fillList('ov-list-upcoming', remainingItems, 'Nothing left to post today!');
+    fillList('ov-list-today',    postedItems,    'Nothing posted yet today.');
+    fillList('ov-list-overdue',  overdueItems,   'No overdue videos — great!');
+    fillList('ov-list-deals',    slots.filter(function(s){ return s.classList.contains('slot-starred'); }).map(function(s){
+      var nm = s.querySelectorAll('.field-input')[0]; return { name: (nm&&nm.value)||'Untitled', day: DAYS[activeDayIdx].slice(0,3), starred: true };
+    }).concat(dealItems), 'No brand deals this week.');
+    return;
+  }
+
+  // ── WEEK VIEW ─────────────────────────────────────────────────────────────────
+  document.getElementById('ovTitle').textContent = '📊 This Week';
   var overdueItems = [], todayItems = [], upcomingItems = [], dealItems = [];
+  var perDay = []; // { idx, count } for busiest-day insight
+  var totalPosted = 0, totalPlanned = 0;
 
-  // Scan current week DOM
   if (weekStart) {
     for (var d = 0; d < 7; d++) {
       var dayDate = new Date(weekStart); dayDate.setDate(weekStart.getDate() + d); dayDate.setHours(0,0,0,0);
       var col = document.querySelector('.day-col[data-day-idx="' + d + '"]');
-      if (!col) continue;
-      col.querySelectorAll('.video-slot').forEach(function(slot) {
-        var inputs = slot.querySelectorAll('.field-input');
-        var hasContent = inputs[0] && (inputs[0].value.trim() || (inputs[1] && inputs[1].value.trim()) || (inputs[2] && inputs[2].value.trim()));
-        if (!hasContent) return;
-        if (slot.querySelector('.posted-check').checked) return;
-        var name = (inputs[0] && inputs[0].value.trim()) || 'Untitled';
+      if (!col) { perDay.push(0); continue; }
+      var daySlots = Array.prototype.filter.call(col.querySelectorAll('.video-slot'), isSlotReal);
+      perDay.push(daySlots.length);
+      totalPlanned += daySlots.length;
+      daySlots.forEach(function(slot) {
+        var isPosted = slot.querySelector('.posted-check').checked;
+        if (isPosted) totalPosted++;
+        var nm = slot.querySelectorAll('.field-input')[0];
+        var name = (nm && nm.value.trim()) || 'Untitled';
         var starred = slot.classList.contains('slot-starred');
         var item = { name: name, day: DAY_SHORT[d], starred: starred };
         if (starred) dealItems.push(item);
-        if (dayDate < today)                               overdueItems.push(item);
-        else if (dayDate.getTime() === today.getTime())    todayItems.push(item);
-        else                                               upcomingItems.push(item);
+        if (!isPosted) {
+          if (dayDate < today)                             overdueItems.push(item);
+          else if (dayDate.getTime() === today.getTime())  todayItems.push(item);
+          else                                             upcomingItems.push(item);
+        }
       });
     }
   }
 
-  // Scan past weeks in storage for additional overdue + deals
+  // Past weeks: overdue + deals
   var allWeeks = getAllWeeks();
   Object.keys(allWeeks).forEach(function(k) {
     if (k === weekStr || k === '__default__') return;
     var wDate = new Date(k); if (isNaN(wDate.getTime())) return;
-    var weekData = allWeeks[k]; if (!weekData || !weekData.days) return;
-    weekData.days.forEach(function(day, d) {
+    var wd = allWeeks[k]; if (!wd || !wd.days) return;
+    wd.days.forEach(function(day, d) {
       if (!day || !day.videos) return;
-      var dayDate = new Date(wDate); dayDate.setDate(wDate.getDate() + d); dayDate.setHours(0,0,0,0);
-      if (dayDate >= today) return;
+      var dd = new Date(wDate); dd.setDate(wDate.getDate() + d); dd.setHours(0,0,0,0);
+      if (dd >= today) return;
       day.videos.forEach(function(v) {
-        if (v.posted) return;
-        if (!v.product && !v.hook && !v.notes) return;
-        var item = { name: v.product || v.hook || 'Untitled', day: DAY_SHORT[d], starred: !!v.starred };
+        if (v.posted || (!v.product && !v.hook && !v.notes)) return;
+        var item = { name: v.product||v.hook||'Untitled', day: DAY_SHORT[d], starred: !!v.starred };
         overdueItems.push(item);
         if (v.starred) dealItems.push(item);
       });
     });
   });
 
-  function setCard(idNum, idList, items) {
-    document.getElementById(idNum).textContent = items.length;
-    var el = document.getElementById(idList);
-    el.innerHTML = '';
-    if (!items.length) {
-      el.innerHTML = '<p class="ov-empty">Nothing here — great job!</p>';
-    } else {
-      items.slice(0, 8).forEach(function(it) {
-        var row = document.createElement('div'); row.className = 'ov-item';
-        row.innerHTML = '<span class="ov-item-day">' + it.day + '</span>' +
-          '<span class="ov-item-name">' + it.name.replace(/</g,'&lt;') + '</span>' +
-          (it.starred ? '<span class="ov-item-star">★</span>' : '');
-        el.appendChild(row);
+  var pct = totalPlanned > 0 ? Math.round((totalPosted/totalPlanned)*100) : 0;
+  var busiest = -1, busiestCount = 0;
+  perDay.forEach(function(cnt, i) { if (cnt > busiestCount) { busiestCount = cnt; busiest = i; } });
+  var busiestStr = busiest >= 0 && busiestCount > 0 ? DAYS[busiest] + ' (' + busiestCount + ')' : null;
+  var insight = totalPlanned === 0
+    ? 'No videos planned this week yet'
+    : pct === 100
+      ? '🎉 Perfect week — every video posted!'
+      : pct + '% complete' + (busiestStr ? ' · busiest day: ' + busiestStr : '') + (overdueItems.length ? ' · ⚠️ ' + overdueItems.length + ' overdue' : '');
+
+  document.getElementById('ovCards').innerHTML =
+    card('ov-upcoming', '📹', 'This Week',    totalPlanned,         totalPlanned === 1 ? 'video planned' : 'videos planned',  'ov-list-upcoming') +
+    card('ov-today',    '✅', 'Posted',        totalPosted,          pct + '% complete',                                        'ov-list-today')    +
+    card('ov-overdue',  '⚠️', 'Overdue',       overdueItems.length,  'unposted past videos',                                    'ov-list-overdue')  +
+    card('ov-deals',    '⭐', 'Brand Deals',   dealItems.length,     'starred videos',                                          'ov-list-deals');
+
+  setProgress(pct, insight);
+  // build posted list from DOM
+  var postedWeekItems = [];
+  if (weekStart) {
+    for (var dp = 0; dp < 7; dp++) {
+      var cp = document.querySelector('.day-col[data-day-idx="' + dp + '"]');
+      if (!cp) continue;
+      Array.prototype.filter.call(cp.querySelectorAll('.video-slot'), isSlotReal).forEach(function(s) {
+        if (!s.querySelector('.posted-check').checked) return;
+        var nm = s.querySelectorAll('.field-input')[0];
+        postedWeekItems.push({ name: (nm&&nm.value)||'Untitled', day: DAY_SHORT[dp], starred: s.classList.contains('slot-starred') });
       });
-      if (items.length > 8) {
-        var more = document.createElement('p'); more.className = 'ov-empty';
-        more.textContent = '+ ' + (items.length - 8) + ' more';
-        el.appendChild(more);
-      }
     }
   }
-  setCard('ov-num-overdue',  'ov-list-overdue',  overdueItems);
-  setCard('ov-num-today',    'ov-list-today',    todayItems);
-  setCard('ov-num-upcoming', 'ov-list-upcoming', upcomingItems);
-  setCard('ov-num-deals',    'ov-list-deals',    dealItems);
+  fillList('ov-list-upcoming', upcomingItems.concat(todayItems), 'No upcoming videos this week.');
+  fillList('ov-list-today',    postedWeekItems,  'Nothing posted yet this week.');
+  fillList('ov-list-overdue',  overdueItems,     'No overdue videos — great!');
+  fillList('ov-list-deals',    dealItems,        'No brand deals this week.');
 }
 
 function buildMonthlyOverview() {
@@ -2400,6 +2460,11 @@ function buildMonthlyOverview() {
 
   var total = missedItems.length + upcomingItems.length + postedItems.length;
   var avg   = total > 0 ? (total / daysInMonth).toFixed(1) : '0';
+  var pct   = (missedItems.length + postedItems.length) > 0
+    ? Math.round(postedItems.length / (missedItems.length + postedItems.length) * 100) : 0;
+
+  var monthName = monthViewDate.toLocaleDateString('en-US', { month: 'long' });
+  document.getElementById('ovTitle').textContent = '📊 ' + monthName + ' Overview';
 
   document.getElementById('ovCards').innerHTML =
     '<div class="ov-card ov-overdue"  onclick="toggleOvList(\'ov-list-overdue\')">' +
@@ -2417,7 +2482,19 @@ function buildMonthlyOverview() {
     '<div class="ov-card ov-deals"    onclick="toggleOvList(\'ov-list-deals\')">' +
       '<div class="ov-card-lbl">📊 Total</div>' +
       '<div class="ov-card-num" id="ov-num-deals">' + total + '</div>' +
-      '<div class="ov-card-sub">avg ' + avg + ' per day</div></div>';
+      '<div class="ov-card-sub">avg ' + avg + '/day</div></div>';
+
+  var pw = document.getElementById('ovProgressWrap');
+  var pb = document.getElementById('ovProgressBar');
+  var ins = document.getElementById('ovInsight');
+  var insTxt = document.getElementById('ovInsightText');
+  if (pw) { pw.style.display = ''; pb.style.width = pct + '%'; }
+  var insight = total === 0
+    ? 'No videos planned for ' + monthName + ' yet'
+    : pct === 100 && missedItems.length === 0
+      ? '🎉 Perfect month — every video posted!'
+      : pct + '% of past-due videos posted · ' + upcomingItems.length + ' still ahead';
+  if (ins) { ins.style.display = 'flex'; insTxt.innerHTML = insight; }
 
   function fillList(id, items, emptyMsg) {
     var el = document.getElementById(id);
