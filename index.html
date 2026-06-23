@@ -1357,7 +1357,7 @@ function applyViewToColumns() {
   document.getElementById('dayTabsWrap').style.display  = currentView === 'daily'    ? ''      : 'none';
   document.getElementById('summaryBar').style.display   = (currentView === 'monthly' || isSchedule) ? 'none' : '';
   var ov = document.getElementById('overviewSection');
-  if (ov) ov.style.display = (currentView === 'monthly' || isSchedule) ? 'none' : '';
+  if (ov) ov.style.display = isSchedule ? 'none' : '';
   var cb = document.getElementById('clearBtn');
   cb.textContent   = currentView === 'daily' ? 'Clear day' : 'Clear week';
   cb.style.display = (currentView === 'monthly' || isSchedule) ? 'none' : '';
