@@ -118,8 +118,58 @@ h1 {
   display: flex; align-items: center; justify-content: space-between;
   gap: 10px; flex-wrap: wrap; padding-bottom: 10px;
 }
-.weekwrap { display: flex; align-items: center; gap: 8px; }
+.weekwrap { display: flex; align-items: center; gap: 8px; position: relative; }
 .weekwrap label { font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: 0.02em; }
+.month-picker-trigger {
+  font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--text); border-radius: var(--radius-sm); padding: 6px 10px;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  -webkit-tap-highlight-color: transparent; transition: border-color 0.15s;
+  white-space: nowrap;
+}
+.month-picker-trigger:hover { border-color: var(--accent); }
+.month-picker-trigger::after { content: '▾'; font-size: 10px; opacity: 0.5; }
+.month-picker-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 300;
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
+  border: 1.5px solid var(--border); padding: 16px; min-width: 230px;
+  animation: fadeSlideIn 0.14s ease;
+}
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.mp-year-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; gap: 8px;
+}
+.mp-year-btn {
+  background: var(--surface-sub); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); width: 30px; height: 30px;
+  font-size: 14px; cursor: pointer; font-family: "DM Sans", sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text); transition: all 0.12s; flex-shrink: 0;
+}
+.mp-year-btn:hover { border-color: var(--accent); color: var(--accent); }
+.mp-year-label { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.mp-month-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+.mp-month-cell {
+  padding: 9px 4px; border-radius: var(--radius-sm); border: 1.5px solid transparent;
+  font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+  font-family: "DM Sans", sans-serif; color: var(--text);
+  background: transparent; transition: all 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-month-cell:hover { border-color: var(--accent-3); background: var(--accent-2); color: var(--accent); }
+.mp-month-cell.mp-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.sched-add-block-global {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 11px 16px; margin-bottom: 20px;
+  font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--accent); background: var(--accent-2);
+  border: 1.5px solid var(--accent-3); border-radius: var(--radius-lg);
+  cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+}
+.sched-add-block-global:hover { background: var(--accent-3); }
 .weekinput {
   font-size: 13px; font-weight: 500;
   border: 1.5px solid var(--border);
@@ -1058,8 +1108,8 @@ footer {
   <div class="toprow">
     <div class="weekwrap">
       <label id="wkLabel" for="wkPicker">Week of</label>
-      <input class="weekinput" type="date"  id="wkPicker">
-      <input class="weekinput" type="month" id="monthPicker" style="display:none">
+      <input class="weekinput" type="date" id="wkPicker">
+      <button type="button" class="month-picker-trigger" id="monthPickerBtn" style="display:none" onclick="showMonthYearPicker(this)">June 2026</button>
       <input type="hidden" id="wk">
     </div>
     <div class="top-right">
@@ -1319,14 +1369,14 @@ function applyViewToColumns() {
   if (mb) mb.style.display = currentView === 'weekly' ? '' : 'none';
 
   // Label + picker swap
-  var wkLabel      = document.getElementById('wkLabel');
-  var wkPicker     = document.getElementById('wkPicker');
-  var monthPicker  = document.getElementById('monthPicker');
-  if (wkLabel)  wkLabel.textContent = isMonthly ? 'Month of' : currentView === 'daily' ? 'Day of' : 'Week of';
-  if (wkPicker)    wkPicker.style.display    = isMonthly ? 'none' : '';
-  if (monthPicker) monthPicker.style.display = isMonthly ? '' : 'none';
-  if (isMonthly && monthPicker) {
-    monthPicker.value = monthViewDate.getFullYear() + '-' + String(monthViewDate.getMonth()+1).padStart(2,'0');
+  var wkLabel         = document.getElementById('wkLabel');
+  var wkPicker        = document.getElementById('wkPicker');
+  var monthPickerBtn  = document.getElementById('monthPickerBtn');
+  if (wkLabel)        wkLabel.textContent         = isMonthly ? 'Month of' : currentView === 'daily' ? 'Day of' : 'Week of';
+  if (wkPicker)       wkPicker.style.display       = isMonthly ? 'none' : '';
+  if (monthPickerBtn) monthPickerBtn.style.display  = isMonthly ? '' : 'none';
+  if (isMonthly && monthPickerBtn) {
+    monthPickerBtn.textContent = monthViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
   // Hide nav arrows on monthly (month-nav inside monthView handles it)
@@ -2030,8 +2080,8 @@ var monthViewDate = new Date();
 function changeMonth(dir) {
   monthViewDate.setDate(1);
   monthViewDate.setMonth(monthViewDate.getMonth() + dir);
-  var mp = document.getElementById('monthPicker');
-  if (mp) mp.value = monthViewDate.getFullYear() + '-' + String(monthViewDate.getMonth()+1).padStart(2,'0');
+  var mpb = document.getElementById('monthPickerBtn');
+  if (mpb) mpb.textContent = monthViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   buildMonthView();
   buildOverview();
 }
@@ -2996,6 +3046,14 @@ function buildScheduleAgenda() {
     return;
   }
 
+  // Global add-block button always visible at top
+  var globalAdd = document.createElement('button');
+  globalAdd.type = 'button';
+  globalAdd.className = 'sched-add-block-global';
+  globalAdd.innerHTML = '<span style="font-size:16px;line-height:1">＋</span> Add time block';
+  globalAdd.addEventListener('click', showAddBlockWithDateSheet);
+  agenda.appendChild(globalAdd);
+
   var hasAny = false;
 
   for (var d = 0; d < 7; d++) {
@@ -3435,14 +3493,192 @@ function renderWeekBar(bar, blocks) {
 
 // Wire picker change listener via JS (not inline onchange) so it can be removed safely
 document.getElementById('wkPicker').addEventListener('change', onWeekPickerChange);
-document.getElementById('monthPicker').addEventListener('change', function() {
-  var val = this.value; // "YYYY-MM"
-  if (!val) return;
-  var parts = val.split('-');
-  monthViewDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
-  buildMonthView();
-  buildOverview();
-});
+// ── Custom month/year picker ──────────────────────────────────────────────────
+function showMonthYearPicker(triggerBtn) {
+  // Close any existing dropdown
+  var existing = document.getElementById('monthPickerDropdown');
+  if (existing) { existing.parentNode.removeChild(existing); return; }
+
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var pickerYear = monthViewDate.getFullYear();
+
+  var drop = document.createElement('div');
+  drop.id = 'monthPickerDropdown';
+  drop.className = 'month-picker-dropdown';
+
+  function render() {
+    drop.innerHTML = '';
+
+    // Year row
+    var yearRow = document.createElement('div'); yearRow.className = 'mp-year-row';
+    var prevYr = document.createElement('button'); prevYr.className = 'mp-year-btn'; prevYr.type = 'button'; prevYr.textContent = '‹';
+    prevYr.addEventListener('click', function(e) { e.stopPropagation(); pickerYear--; render(); });
+    var yearLbl = document.createElement('span'); yearLbl.className = 'mp-year-label'; yearLbl.textContent = pickerYear;
+    var nextYr = document.createElement('button'); nextYr.className = 'mp-year-btn'; nextYr.type = 'button'; nextYr.textContent = '›';
+    nextYr.addEventListener('click', function(e) { e.stopPropagation(); pickerYear++; render(); });
+    yearRow.appendChild(prevYr); yearRow.appendChild(yearLbl); yearRow.appendChild(nextYr);
+    drop.appendChild(yearRow);
+
+    // Month grid
+    var grid = document.createElement('div'); grid.className = 'mp-month-grid';
+    MONTHS.forEach(function(name, i) {
+      var cell = document.createElement('button');
+      cell.type = 'button'; cell.className = 'mp-month-cell';
+      cell.textContent = name.slice(0, 3);
+      if (pickerYear === monthViewDate.getFullYear() && i === monthViewDate.getMonth()) {
+        cell.classList.add('mp-active');
+      }
+      cell.addEventListener('click', function(e) {
+        e.stopPropagation();
+        monthViewDate = new Date(pickerYear, i, 1);
+        var mpb = document.getElementById('monthPickerBtn');
+        if (mpb) mpb.textContent = monthViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        buildMonthView(); buildOverview();
+        closeDrop();
+      });
+      grid.appendChild(cell);
+    });
+    drop.appendChild(grid);
+  }
+
+  function closeDrop() {
+    if (drop.parentNode) drop.parentNode.removeChild(drop);
+    document.removeEventListener('click', outsideClick);
+  }
+  function outsideClick(e) {
+    if (!drop.contains(e.target) && e.target !== triggerBtn) closeDrop();
+  }
+
+  render();
+  triggerBtn.parentNode.appendChild(drop);
+  setTimeout(function() { document.addEventListener('click', outsideClick); }, 0);
+}
+
+// ── Schedule view: add block with date picker first ──────────────────────────
+function showAddBlockWithDateSheet() {
+  var wk = document.getElementById('wk').value.trim();
+  var weekStart = wk ? new Date(wk) : null;
+  if (weekStart && isNaN(weekStart.getTime())) weekStart = null;
+
+  var overlay = document.createElement('div'); overlay.className = 'move-overlay';
+  var sheet   = document.createElement('div'); sheet.className   = 'act-sheet';
+
+  var selectedDayIdx = null;
+  var selectedType   = null;
+
+  function showDayStep() {
+    sheet.innerHTML = '';
+    var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
+    ttl.textContent = 'Add time block — choose day';
+    sheet.appendChild(ttl);
+
+    var dayGrid = document.createElement('div');
+    dayGrid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:16px;';
+    var today = new Date(); today.setHours(0,0,0,0);
+    for (var i = 0; i < 7; i++) {
+      var dayDate = weekStart ? new Date(weekStart.getTime() + i * 86400000) : null;
+      if (dayDate) dayDate.setHours(0,0,0,0);
+      var isToday = dayDate && dayDate.getTime() === today.getTime();
+      var cell = document.createElement('button'); cell.type = 'button';
+      var isSelected = selectedDayIdx === i;
+      cell.style.cssText = 'padding:10px 4px;border-radius:10px;border:1.5px solid ' +
+        (isSelected ? 'var(--accent)' : isToday ? 'var(--accent-3)' : 'var(--border)') +
+        ';background:' + (isSelected ? 'var(--accent)' : isToday ? 'var(--accent-2)' : 'var(--surface-sub)') +
+        ';color:' + (isSelected ? '#fff' : isToday ? 'var(--accent)' : 'var(--text)') +
+        ';font-size:11px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;';
+      cell.innerHTML = '<span>' + DAY_SHORT[i] + '</span>' +
+        (dayDate ? '<span style="font-size:10px;font-weight:500;opacity:0.75">' + dayDate.getDate() + '</span>' : '');
+      (function(idx) {
+        cell.addEventListener('click', function() { selectedDayIdx = idx; showTypeStep(); });
+      })(i);
+      dayGrid.appendChild(cell);
+    }
+    sheet.appendChild(dayGrid);
+
+    var cancel = document.createElement('button');
+    cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', close);
+    sheet.appendChild(cancel);
+  }
+
+  function showTypeStep() {
+    sheet.innerHTML = '';
+    var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
+    ttl.textContent = 'Add time block — ' + DAYS[selectedDayIdx];
+    sheet.appendChild(ttl);
+
+    var grid = document.createElement('div'); grid.className = 'act-type-grid';
+    ACTIVITIES.forEach(function(act) {
+      var btn = document.createElement('button');
+      btn.className = 'act-type-btn'; btn.type = 'button';
+      btn.style.cssText = 'background:' + act.bg + ';border-color:' + act.border + ';color:' + act.text;
+      btn.innerHTML = '<span class="sched-dot" style="background:' + act.bar + '"></span>' + act.label;
+      btn.addEventListener('click', function() { selectedType = act.id; showTimeStep(); });
+      grid.appendChild(btn);
+    });
+    sheet.appendChild(grid);
+
+    var backBtn = document.createElement('button');
+    backBtn.type = 'button';
+    backBtn.style.cssText = 'display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
+    backBtn.textContent = '← Back';
+    backBtn.addEventListener('click', showDayStep);
+    sheet.appendChild(backBtn);
+
+    var cancel = document.createElement('button');
+    cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', close);
+    sheet.appendChild(cancel);
+  }
+
+  function showTimeStep() {
+    sheet.innerHTML = '';
+    var act = actById(selectedType);
+    var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
+    ttl.textContent = act.label + ' — ' + DAYS[selectedDayIdx] + ' · what time?';
+    sheet.appendChild(ttl);
+
+    var scroller = document.createElement('div'); scroller.className = 'time-picker-scroll';
+    for (var h = TIMELINE_START_H; h < TIMELINE_END_H; h++) {
+      for (var m = 0; m < 60; m += 30) {
+        var min = h * 60 + m;
+        var btn = document.createElement('button');
+        btn.className = 'time-pick-btn'; btn.type = 'button';
+        btn.textContent = fmtMin(min);
+        (function(startMin) {
+          btn.addEventListener('click', function() {
+            close();
+            currentBlocks[selectedDayIdx].push({ type: selectedType, startMin: startMin, endMin: Math.min(TIMELINE_END_H * 60, startMin + 60) });
+            saveState(); buildScheduleAgenda(); updateWeekBarForDay(selectedDayIdx);
+          });
+        })(min);
+        scroller.appendChild(btn);
+      }
+    }
+    sheet.appendChild(scroller);
+
+    var backBtn = document.createElement('button');
+    backBtn.type = 'button';
+    backBtn.style.cssText = 'display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
+    backBtn.textContent = '← Back';
+    backBtn.addEventListener('click', showTypeStep);
+    sheet.appendChild(backBtn);
+
+    var cancel = document.createElement('button');
+    cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', close);
+    sheet.appendChild(cancel);
+  }
+
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (sheet.parentNode)   sheet.parentNode.removeChild(sheet);
+  }
+  overlay.addEventListener('click', close);
+  document.body.appendChild(overlay);
+  document.body.appendChild(sheet);
+  showDayStep();
+}
 
 // ── App startup gated on auth ─────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(function(user) {
