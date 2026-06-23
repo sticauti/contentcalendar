@@ -1371,7 +1371,7 @@ function setView(view) {
     b.classList.toggle('active', b.getAttribute('data-view') === view);
   });
   applyViewToColumns();
-  if (view === 'monthly') buildMonthView();
+  if (view === 'monthly') { buildMonthView(); buildOverview(); }
   else if (view === 'schedule') { buildScheduleDayTabs(); renderScheduleView(activeDayIdx); }
   else updateSummary();
 }
@@ -2099,6 +2099,7 @@ function changeMonth(dir) {
   monthViewDate.setDate(1);
   monthViewDate.setMonth(monthViewDate.getMonth() + dir);
   buildMonthView();
+  buildOverview();
 }
 
 function buildMonthView() {
@@ -2269,10 +2270,18 @@ function toggleOvList(id) {
 }
 
 function buildOverview() {
+  if (currentView === 'monthly') { buildMonthlyOverview(); return; }
   var today = new Date(); today.setHours(0,0,0,0);
   var weekStr = document.getElementById('wk').value.trim();
   var weekStart = weekStr ? new Date(weekStr) : null;
   if (weekStart && isNaN(weekStart.getTime())) weekStart = null;
+
+  // Restore standard card layout in case we came from monthly view
+  document.getElementById('ovCards').innerHTML =
+    '<div class="ov-card ov-overdue"  onclick="toggleOvList(\'ov-list-overdue\')"><div class="ov-card-lbl">⚠️ Overdue</div><div class="ov-card-num" id="ov-num-overdue">0</div><div class="ov-card-sub">unposted past videos</div></div>' +
+    '<div class="ov-card ov-today"    onclick="toggleOvList(\'ov-list-today\')"  ><div class="ov-card-lbl">📌 Today</div><div class="ov-card-num" id="ov-num-today">0</div><div class="ov-card-sub">videos to post today</div></div>' +
+    '<div class="ov-card ov-upcoming" onclick="toggleOvList(\'ov-list-upcoming\')"><div class="ov-card-lbl">📅 Upcoming</div><div class="ov-card-num" id="ov-num-upcoming">0</div><div class="ov-card-sub">videos ahead this week</div></div>' +
+    '<div class="ov-card ov-deals"    onclick="toggleOvList(\'ov-list-deals\')"  ><div class="ov-card-lbl">⭐ Brand Deals</div><div class="ov-card-num" id="ov-num-deals">0</div><div class="ov-card-sub">starred videos</div></div>';
 
   var overdueItems = [], todayItems = [], upcomingItems = [], dealItems = [];
 
@@ -2343,6 +2352,94 @@ function buildOverview() {
   setCard('ov-num-today',    'ov-list-today',    todayItems);
   setCard('ov-num-upcoming', 'ov-list-upcoming', upcomingItems);
   setCard('ov-num-deals',    'ov-list-deals',    dealItems);
+}
+
+function buildMonthlyOverview() {
+  var year  = monthViewDate.getFullYear();
+  var month = monthViewDate.getMonth();
+  var today = new Date(); today.setHours(0,0,0,0);
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+  var curWkStr = document.getElementById('wk').value.trim();
+
+  var missedItems = [], upcomingItems = [], postedItems = [];
+
+  function processDay(dayDate, videos) {
+    var dd = new Date(dayDate); dd.setHours(0,0,0,0);
+    if (dd.getFullYear() !== year || dd.getMonth() !== month) return;
+    if (!videos) return;
+    videos.forEach(function(v) {
+      if (!v.product && !v.hook && !v.notes) return;
+      var item = { name: v.product || v.hook || 'Untitled', day: dd.getDate(), starred: !!v.starred };
+      if (v.posted)      { postedItems.push(item); }
+      else if (dd < today) { missedItems.push(item); }
+      else               { upcomingItems.push(item); }
+    });
+  }
+
+  var allWeeks = getAllWeeks();
+  Object.keys(allWeeks).forEach(function(k) {
+    if (k === '__default__' || k === curWkStr) return;
+    var wDate = new Date(k); if (isNaN(wDate.getTime())) return;
+    var wd = allWeeks[k]; if (!wd || !wd.days) return;
+    wd.days.forEach(function(day, d) {
+      var dd = new Date(wDate); dd.setDate(wDate.getDate() + d);
+      processDay(dd, day && day.videos);
+    });
+  });
+
+  // Current week from DOM (most up-to-date)
+  if (curWkStr) {
+    var wDate = new Date(curWkStr);
+    if (!isNaN(wDate.getTime())) {
+      for (var d = 0; d < 7; d++) {
+        var dd = new Date(wDate); dd.setDate(wDate.getDate() + d);
+        processDay(dd, getDayData(d).videos);
+      }
+    }
+  }
+
+  var total = missedItems.length + upcomingItems.length + postedItems.length;
+  var avg   = total > 0 ? (total / daysInMonth).toFixed(1) : '0';
+
+  document.getElementById('ovCards').innerHTML =
+    '<div class="ov-card ov-overdue"  onclick="toggleOvList(\'ov-list-overdue\')">' +
+      '<div class="ov-card-lbl">⚠️ Missed</div>' +
+      '<div class="ov-card-num" id="ov-num-overdue">' + missedItems.length + '</div>' +
+      '<div class="ov-card-sub">unposted past videos</div></div>' +
+    '<div class="ov-card ov-upcoming" onclick="toggleOvList(\'ov-list-upcoming\')">' +
+      '<div class="ov-card-lbl">📅 Upcoming</div>' +
+      '<div class="ov-card-num" id="ov-num-upcoming">' + upcomingItems.length + '</div>' +
+      '<div class="ov-card-sub">not yet posted</div></div>' +
+    '<div class="ov-card ov-today"    onclick="toggleOvList(\'ov-list-today\')">' +
+      '<div class="ov-card-lbl">✅ Posted</div>' +
+      '<div class="ov-card-num" id="ov-num-today">' + postedItems.length + '</div>' +
+      '<div class="ov-card-sub">this month</div></div>' +
+    '<div class="ov-card ov-deals"    onclick="toggleOvList(\'ov-list-deals\')">' +
+      '<div class="ov-card-lbl">📊 Total</div>' +
+      '<div class="ov-card-num" id="ov-num-deals">' + total + '</div>' +
+      '<div class="ov-card-sub">avg ' + avg + ' per day</div></div>';
+
+  function fillList(id, items, emptyMsg) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    if (!items.length) { el.innerHTML = '<p class="ov-empty">' + emptyMsg + '</p>'; return; }
+    items.slice(0, 8).forEach(function(it) {
+      var row = document.createElement('div'); row.className = 'ov-item';
+      row.innerHTML = '<span class="ov-item-day">' + it.day + '</span>' +
+        '<span class="ov-item-name">' + it.name.replace(/</g, '&lt;') + '</span>' +
+        (it.starred ? '<span class="ov-item-star">★</span>' : '');
+      el.appendChild(row);
+    });
+    if (items.length > 8) {
+      var more = document.createElement('p'); more.className = 'ov-empty';
+      more.textContent = '+ ' + (items.length - 8) + ' more'; el.appendChild(more);
+    }
+  }
+  fillList('ov-list-overdue',  missedItems,   'Nothing missed — great!');
+  fillList('ov-list-upcoming', upcomingItems, 'No upcoming videos planned.');
+  fillList('ov-list-today',    postedItems,   'Nothing posted yet this month.');
+  fillList('ov-list-deals',    missedItems.concat(upcomingItems).concat(postedItems), 'No videos this month.');
 }
 
 // ── Home screen prompt ────────────────────────────────────────────────────────
