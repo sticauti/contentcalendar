@@ -1599,8 +1599,16 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
 
   function updateSchedBtn() {
     var sa = div.getAttribute('data-scheduled-min');
-    var scheduled = sa !== null && sa !== '';
-    schedBtn.textContent = scheduled ? ('⏰ ' + fmtMin(parseInt(sa))) : '⏰ Schedule';
+    var sd = div.getAttribute('data-scheduled-date');
+    var scheduled = (sa !== null && sa !== '') && (sd !== null && sd !== '');
+    if (scheduled) {
+      var p = sd.split('-');
+      var dd = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
+      var lbl = dd.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' · ' + fmtMin(parseInt(sa));
+      schedBtn.textContent = '⏰ ' + lbl;
+    } else {
+      schedBtn.textContent = '⏰ Schedule';
+    }
     schedBtn.classList.toggle('is-scheduled', scheduled);
   }
 
@@ -1623,10 +1631,9 @@ function makeSlot(dayIdx, slotNum, savedVideo) {
       platSel.className = 'plat-select ps-' + savedVideo.platform;
       updatePlatIcon(savedVideo.platform);
     }
-    if (savedVideo.scheduledMin != null) {
-      div.setAttribute('data-scheduled-min', savedVideo.scheduledMin);
-      updateSchedBtn();
-    }
+    if (savedVideo.scheduledDate) div.setAttribute('data-scheduled-date', savedVideo.scheduledDate);
+    if (savedVideo.scheduledMin != null) div.setAttribute('data-scheduled-min', savedVideo.scheduledMin);
+    if (savedVideo.scheduledDate || savedVideo.scheduledMin != null) updateSchedBtn();
   }
   div._updateSchedBtn = updateSchedBtn;
 
@@ -1689,15 +1696,17 @@ function getDayData(dayIdx) {
     var platSel = slot.querySelector('.plat-select');
     var platform = platSel ? platSel.value : '';
     var sa = slot.getAttribute('data-scheduled-min');
+    var sd = slot.getAttribute('data-scheduled-date');
     videos.push({
-      product:      inputs[0].value,
-      hook:         inputs[1].value,
-      notes:        inputs[2].value,
-      posted:       slot.querySelector('.posted-check').checked,
-      starred:      slot.classList.contains('slot-starred'),
-      platform:     platform,
-      type:         slot.getAttribute('data-type') || 'product',
-      scheduledMin: (sa !== null && sa !== '') ? parseInt(sa) : null
+      product:       inputs[0].value,
+      hook:          inputs[1].value,
+      notes:         inputs[2].value,
+      posted:        slot.querySelector('.posted-check').checked,
+      starred:       slot.classList.contains('slot-starred'),
+      platform:      platform,
+      type:          slot.getAttribute('data-type') || 'product',
+      scheduledMin:  (sa !== null && sa !== '') ? parseInt(sa) : null,
+      scheduledDate: sd || null
     });
   });
   return { notes: col.querySelector('.day-notes-input').value, videos: videos, blocks: currentBlocks[dayIdx] || [] };
@@ -2815,17 +2824,16 @@ function renderScheduleView(dayIdx) {
     inner.appendChild(makeBlockEl(block, dayIdx, i));
   });
 
-  // Scheduled video chips
-  var cols = document.querySelectorAll('.day-col');
-  if (cols[dayIdx]) {
-    cols[dayIdx].querySelectorAll('.video-slot').forEach(function(slot, i) {
-      var sa = slot.getAttribute('data-scheduled-min');
-      if (sa !== null && sa !== '') {
-        var sm = parseInt(sa);
-        if (!isNaN(sm)) inner.appendChild(makeVideoChipEl(slot, dayIdx, sm));
-      }
-    });
-  }
+  // Scheduled video chips — scan all day columns for slots scheduled on this date
+  var dayDateStr = getDayDateStr(dayIdx);
+  document.querySelectorAll('.video-slot').forEach(function(slot) {
+    var sa = slot.getAttribute('data-scheduled-min');
+    var sd = slot.getAttribute('data-scheduled-date');
+    if (sa !== null && sa !== '' && sd === dayDateStr) {
+      var sm = parseInt(sa);
+      if (!isNaN(sm)) inner.appendChild(makeVideoChipEl(slot, dayIdx, sm));
+    }
+  });
 
   // Current time indicator
   var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
@@ -2942,6 +2950,7 @@ function makeVideoChipEl(slot, dayIdx, scheduledMin) {
     '<button class="tl-chip-del" type="button">×</button>';
   el.querySelector('.tl-chip-del').addEventListener('click', function(e) {
     e.stopPropagation();
+    slot.removeAttribute('data-scheduled-date');
     slot.removeAttribute('data-scheduled-min');
     if (slot._updateSchedBtn) slot._updateSchedBtn();
     saveState(); renderScheduleView(dayIdx);
@@ -2959,8 +2968,8 @@ function renderUnscheduledTray(dayIdx) {
   cols[dayIdx].querySelectorAll('.video-slot').forEach(function(slot) {
     var inputs = slot.querySelectorAll('.field-input');
     var hasContent = inputs[0] && (inputs[0].value.trim() || (inputs[1] && inputs[1].value.trim()));
-    var sa = slot.getAttribute('data-scheduled-min');
-    if (hasContent && (sa === null || sa === '')) unscheduled.push(slot);
+    var sd = slot.getAttribute('data-scheduled-date');
+    if (hasContent && (sd === null || sd === '')) unscheduled.push(slot);
   });
   if (!unscheduled.length) {
     tray.style.display = 'none'; return;
@@ -3018,37 +3027,165 @@ function showActivityPicker(dayIdx, tapMin) {
   document.body.appendChild(sheet);
 }
 
+function getDayDateStr(dayIdx) {
+  var wk = document.getElementById('wk').value.trim();
+  if (!wk) return null;
+  var d = new Date(wk);
+  if (isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() + dayIdx);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 function showTimePickerForVideo(slot, dayIdx) {
+  showDatePickerForVideo(slot, dayIdx);
+}
+
+function showDatePickerForVideo(slot, dayIdx) {
   var inputs = slot.querySelectorAll('.field-input');
   var title  = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Untitled';
+
+  // Default displayed month to the current week's day
+  var defaultDate = new Date();
+  var wk = document.getElementById('wk').value.trim();
+  if (wk) {
+    var wd = new Date(wk);
+    if (!isNaN(wd.getTime())) { defaultDate = new Date(wd); defaultDate.setDate(wd.getDate() + dayIdx); }
+  }
+  var pickerMonth = new Date(defaultDate.getFullYear(), defaultDate.getMonth(), 1);
+
   var overlay = document.createElement('div'); overlay.className = 'move-overlay';
   var sheet   = document.createElement('div'); sheet.className   = 'act-sheet';
-  var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
-  ttl.textContent = 'Schedule: ' + title.slice(0, 28);
+
+  function buildCal(currentSel) {
+    sheet.innerHTML = '';
+    var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
+    ttl.textContent = '📅 Schedule: ' + title.slice(0, 22);
+    sheet.appendChild(ttl);
+
+    // Month nav
+    var nav = document.createElement('div');
+    nav.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;';
+    var prevBtn = document.createElement('button');
+    prevBtn.type='button'; prevBtn.className='month-nav-btn'; prevBtn.textContent='←';
+    prevBtn.addEventListener('click', function() { pickerMonth.setMonth(pickerMonth.getMonth()-1); buildCal(currentSel); });
+    var monthLbl = document.createElement('span');
+    monthLbl.style.cssText='font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.02em;flex:1;text-align:center;';
+    monthLbl.textContent = pickerMonth.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+    var nextBtn = document.createElement('button');
+    nextBtn.type='button'; nextBtn.className='month-nav-btn'; nextBtn.textContent='→';
+    nextBtn.addEventListener('click', function() { pickerMonth.setMonth(pickerMonth.getMonth()+1); buildCal(currentSel); });
+    nav.appendChild(prevBtn); nav.appendChild(monthLbl); nav.appendChild(nextBtn);
+    sheet.appendChild(nav);
+
+    // DOW row
+    var dowRow = document.createElement('div');
+    dowRow.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px;';
+    ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(function(d) {
+      var h = document.createElement('div');
+      h.style.cssText='text-align:center;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);padding:3px 0;';
+      h.textContent=d; dowRow.appendChild(h);
+    });
+    sheet.appendChild(dowRow);
+
+    // Day grid
+    var grid = document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px;';
+    var today = new Date(); today.setHours(0,0,0,0);
+    var year=pickerMonth.getFullYear(), month=pickerMonth.getMonth();
+    var firstDow=new Date(year,month,1).getDay();
+    var startOffset=(firstDow+6)%7;
+    var daysInMonth=new Date(year,month+1,0).getDate();
+    var wkStart=wk?new Date(wk):null, wkEnd=wkStart?new Date(wkStart.getTime()+6*86400000):null;
+    if (wkStart) wkStart.setHours(0,0,0,0);
+    if (wkEnd)   wkEnd.setHours(0,0,0,0);
+
+    for (var i=0;i<startOffset;i++) { var bl=document.createElement('div'); bl.style.minHeight='38px'; grid.appendChild(bl); }
+    for (var day=1;day<=daysInMonth;day++) {
+      var cd=new Date(year,month,day); cd.setHours(0,0,0,0);
+      var ds=year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      var isTdy=cd.getTime()===today.getTime();
+      var inWk=wkStart&&cd>=wkStart&&cd<=wkEnd;
+      var isSel=currentSel&&currentSel===ds;
+      var cell=document.createElement('button'); cell.type='button';
+      var bg=isSel?'var(--accent)':isTdy?'var(--accent-2)':inWk?'var(--surface-sub)':'transparent';
+      var fg=isSel?'#fff':isTdy?'var(--accent)':'var(--text)';
+      var bd=isSel?'var(--accent)':isTdy?'var(--accent-3)':inWk?'var(--border)':'transparent';
+      cell.style.cssText='min-height:38px;border-radius:9px;border:1.5px solid '+bd+';background:'+bg+';color:'+fg+';font-size:13px;font-weight:'+(isTdy||isSel?'700':'500')+';cursor:pointer;font-family:"DM Sans",sans-serif;-webkit-tap-highlight-color:transparent;transition:all 0.12s;';
+      cell.textContent=day;
+      (function(dateStr) {
+        cell.addEventListener('click', function() {
+          close();
+          showTimeStepForVideo(slot, dateStr);
+        });
+      })(ds);
+      grid.appendChild(cell);
+    }
+    sheet.appendChild(grid);
+
+    var cancel=document.createElement('button');
+    cancel.className='move-sheet-cancel'; cancel.type='button'; cancel.textContent='Cancel';
+    cancel.addEventListener('click', close);
+    sheet.appendChild(cancel);
+  }
+
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (sheet.parentNode)   sheet.parentNode.removeChild(sheet);
+  }
+  overlay.addEventListener('click', close);
+  document.body.appendChild(overlay);
+  document.body.appendChild(sheet);
+  buildCal(slot.getAttribute('data-scheduled-date') || null);
+}
+
+function showTimeStepForVideo(slot, dateStr) {
+  var inputs = slot.querySelectorAll('.field-input');
+  var title  = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Untitled';
+  var parts=dateStr.split('-');
+  var dd=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+  var dateLabel=dd.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+  var overlay=document.createElement('div'); overlay.className='move-overlay';
+  var sheet=document.createElement('div');   sheet.className='act-sheet';
+
+  var ttl=document.createElement('div'); ttl.className='move-sheet-title';
+  ttl.textContent=dateLabel+' — what time?';
   sheet.appendChild(ttl);
-  var scroller = document.createElement('div'); scroller.className = 'time-picker-scroll';
-  for (var h = TIMELINE_START_H; h < TIMELINE_END_H; h++) {
-    for (var m = 0; m < 60; m += 30) {
-      var min = h * 60 + m;
-      var btn = document.createElement('button');
-      btn.className = 'time-pick-btn'; btn.type = 'button';
-      btn.textContent = fmtMin(min);
+
+  var scroller=document.createElement('div'); scroller.className='time-picker-scroll';
+  for (var h=TIMELINE_START_H;h<TIMELINE_END_H;h++) {
+    for (var m=0;m<60;m+=30) {
+      var min=h*60+m;
+      var btn=document.createElement('button');
+      btn.className='time-pick-btn'; btn.type='button';
+      btn.textContent=fmtMin(min);
       (function(mn) {
         btn.addEventListener('click', function() {
           close();
-          slot.setAttribute('data-scheduled-min', mn);
+          slot.setAttribute('data-scheduled-date', dateStr);
+          slot.setAttribute('data-scheduled-min',  mn);
           if (slot._updateSchedBtn) slot._updateSchedBtn();
-          saveState(); renderScheduleView(dayIdx);
+          saveState();
+          if (currentView==='schedule') renderScheduleView(activeDayIdx);
         });
       })(min);
       scroller.appendChild(btn);
     }
   }
   sheet.appendChild(scroller);
-  var cancel = document.createElement('button');
-  cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
+
+  var backBtn=document.createElement('button');
+  backBtn.type='button';
+  backBtn.style.cssText='display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
+  backBtn.textContent='← Back to calendar';
+  backBtn.addEventListener('click', function() { close(); showDatePickerForVideo(slot, activeDayIdx); });
+  sheet.appendChild(backBtn);
+
+  var cancel=document.createElement('button');
+  cancel.className='move-sheet-cancel'; cancel.type='button'; cancel.textContent='Cancel';
   cancel.addEventListener('click', close);
   sheet.appendChild(cancel);
+
   function close() {
     if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
     if (sheet.parentNode)   sheet.parentNode.removeChild(sheet);
