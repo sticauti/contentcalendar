@@ -3220,10 +3220,26 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
     unschedBtn.textContent = '×';
     unschedBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      slot.removeAttribute('data-scheduled-date');
-      slot.removeAttribute('data-scheduled-min');
-      if (slot._updateSchedBtn) slot._updateSchedBtn();
-      saveState(); buildScheduleAgenda();
+      var inputs2 = slot.querySelectorAll('.field-input');
+      var vtitle = (inputs2[0] && inputs2[0].value.trim()) || (inputs2[1] && inputs2[1].value.trim()) || 'this video';
+      showModal({
+        message: 'What would you like to do with "' + vtitle.slice(0,30) + '"?',
+        buttons: [
+          { label: 'Remove from schedule', onClick: function() {
+              slot.removeAttribute('data-scheduled-date');
+              slot.removeAttribute('data-scheduled-min');
+              if (slot._updateSchedBtn) slot._updateSchedBtn();
+              saveState(); buildScheduleAgenda();
+            }
+          },
+          { label: 'Delete video', style: { color: '#c0392b', borderColor: '#e8bfbb' }, onClick: function() {
+              var wrap = slot.closest('.slots-wrap');
+              if (wrap) { wrap.removeChild(slot); saveState(); buildScheduleAgenda(); updateSummary(); }
+            }
+          },
+          { label: 'Cancel' }
+        ]
+      });
     });
     el.appendChild(timeEl); el.appendChild(body);
     el.appendChild(reschedBtn); el.appendChild(unschedBtn);
@@ -3825,6 +3841,62 @@ fbAuth.onAuthStateChanged(function(user) {
     document.getElementById('appPage').style.display = 'none';
   }
 });
+// ── Pull to refresh ───────────────────────────────────────────────────────────
+(function() {
+  var startY = 0, pulling = false, indicator = null;
+  var THRESHOLD = 72;
+
+  function getIndicator() {
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.id = 'ptr-indicator';
+      Object.assign(indicator.style, {
+        position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%) translateY(-60px)',
+        background: 'var(--surface)', border: '1.5px solid var(--border)',
+        borderRadius: '999px', padding: '8px 20px', fontSize: '12px', fontWeight: '700',
+        color: 'var(--text-2)', fontFamily: '"DM Sans",sans-serif',
+        boxShadow: 'var(--shadow-md)', zIndex: 9998,
+        transition: 'transform 0.2s ease', pointerEvents: 'none',
+        letterSpacing: '0.01em'
+      });
+      document.body.appendChild(indicator);
+    }
+    return indicator;
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    if (window.scrollY === 0) { startY = e.touches[0].clientY; pulling = true; }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling) return;
+    var dist = Math.min(e.touches[0].clientY - startY, THRESHOLD + 20);
+    if (dist < 0) { pulling = false; return; }
+    var ind = getIndicator();
+    var progress = Math.min(dist / THRESHOLD, 1);
+    ind.style.transform = 'translateX(-50%) translateY(' + (dist * 0.55 - 10) + 'px)';
+    ind.style.opacity = '' + Math.min(progress * 2, 1);
+    ind.textContent = progress >= 1 ? '↑ Release to refresh' : '↓ Pull to refresh';
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (!pulling) return;
+    var dist = e.changedTouches[0].clientY - startY;
+    pulling = false;
+    var ind = getIndicator();
+    if (dist >= THRESHOLD) {
+      ind.textContent = 'Refreshing…';
+      ind.style.transform = 'translateX(-50%) translateY(14px)';
+      setTimeout(function() { window.location.reload(); }, 300);
+    } else {
+      ind.style.transform = 'translateX(-50%) translateY(-60px)';
+      ind.style.opacity = '0';
+    }
+  }, { passive: true });
+})();
 </script>
+
+<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.0</div>
+
 </body>
 </html>
