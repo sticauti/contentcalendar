@@ -840,104 +840,90 @@ footer {
 /* ─── Schedule view ───────────────────────────────── */
 #scheduleView { margin-top: 14px; }
 
-.sched-day-tabs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.sched-day-tabs-wrap::-webkit-scrollbar { display: none; }
-.sched-day-tabs { display: flex; gap: 5px; padding: 2px 0 8px; }
-.sched-day-tab {
-  flex-shrink: 0; font-size: 11px; font-weight: 700;
-  padding: 0 16px; height: 32px; border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border); background: var(--surface);
-  color: var(--text-3); cursor: pointer; font-family: "DM Sans", sans-serif;
-  letter-spacing: 0.04em; display: flex; align-items: center;
-  -webkit-tap-highlight-color: transparent; transition: all 0.15s;
-  white-space: nowrap; box-shadow: var(--shadow-sm);
+/* ── Schedule Agenda ────────────────────────────────── */
+.sched-agenda { display: flex; flex-direction: column; gap: 28px; }
+.sched-day-group {}
+.sched-day-hdr {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.11em; color: var(--text-3);
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1.5px solid var(--border);
 }
-.sched-day-tab.active { background: var(--text); color: #fff; border-color: var(--text); box-shadow: 0 2px 8px rgba(26,24,20,0.22); }
-
-.sched-outer {
-  height: calc(100vh - 240px); min-height: 400px;
-  overflow-y: scroll; -webkit-overflow-scrolling: touch;
-  background: var(--surface); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); position: relative;
+.sched-day-hdr-today { color: var(--accent); }
+.sched-day-hdr-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0;
 }
-.sched-tl { position: relative; user-select: none; }
-
-.tl-label {
-  position: absolute; left: 8px; width: 40px;
-  font-size: 9px; font-weight: 600; color: var(--text-3);
-  text-align: right; pointer-events: none; line-height: 1;
-  letter-spacing: 0.02em; z-index: 1;
+.sched-dot-today { background: var(--accent); }
+.sched-agenda-item {
+  display: flex; align-items: center; gap: 12px;
+  border-radius: var(--radius-lg); border: 1.5px solid var(--border);
+  padding: 11px 14px; margin-bottom: 7px; position: relative;
+  border-left-width: 4px; box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s; background: var(--surface);
 }
-.tl-line { position: absolute; left: 52px; right: 0; height: 1px; background: rgba(26,24,20,0.07); pointer-events: none; }
-.tl-line-half { background: rgba(26,24,20,0.04); }
-
-.tl-block {
-  position: absolute; border-radius: 8px; border: 1.5px solid;
-  overflow: hidden; cursor: default; transition: box-shadow 0.15s;
-  min-height: 24px; z-index: 3;
+.sched-agenda-item:last-child { margin-bottom: 0; }
+.sched-agenda-item:hover { box-shadow: var(--shadow-md); }
+.sched-item-time {
+  font-size: 11px; font-weight: 700; color: var(--text-3);
+  white-space: nowrap; min-width: 56px; letter-spacing: 0.02em; flex-shrink: 0;
 }
-.tl-block:hover { box-shadow: var(--shadow-md); }
-.tl-block-label {
-  font-size: 11px; font-weight: 600; padding: 5px 26px 4px 8px;
-  display: flex; align-items: center; gap: 5px; line-height: 1.3; flex-wrap: wrap;
+.sched-item-body { flex: 1; min-width: 0; }
+.sched-item-title {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.tl-block-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.tl-block-dur { font-size: 9px; font-weight: 500; opacity: 0.65; display: block; width: 100%; }
-.tl-block-del {
-  position: absolute; top: 3px; right: 3px;
-  background: rgba(0,0,0,0.12); border: none; border-radius: 50%;
-  width: 18px; height: 18px; font-size: 12px; cursor: pointer; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-  color: inherit; opacity: 0.4; transition: opacity 0.15s;
-  -webkit-tap-highlight-color: transparent;
+.sched-item-label {
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
 }
-.tl-block:hover .tl-block-del { opacity: 1; }
-
-.tl-resize-handle {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 12px; cursor: ns-resize;
-  display: flex; align-items: center; justify-content: center; z-index: 4;
+.sched-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.sched-item-meta {
+  font-size: 10px; color: var(--text-3); font-weight: 600;
+  text-transform: uppercase; margin-top: 2px; letter-spacing: 0.06em;
 }
-.tl-resize-handle::after {
-  content: ''; width: 22px; height: 3px; border-radius: 2px;
-  background: rgba(0,0,0,0.18);
+.sched-item-done .sched-item-title { text-decoration: line-through; opacity: 0.5; }
+.sched-item-badge {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 3px 8px; border-radius: 99px; flex-shrink: 0;
 }
-
-.tl-now {
-  position: absolute; left: 48px; right: 0; height: 2px;
-  background: var(--accent); pointer-events: none; z-index: 5;
-}
-.tl-now::before {
-  content: ''; position: absolute; left: -5px; top: -4px;
-  width: 10px; height: 10px; border-radius: 50%; background: var(--accent);
-}
-
-.tl-video-chip {
-  position: absolute; border-radius: var(--radius-sm);
-  background: var(--surface); box-shadow: var(--shadow-md);
-  border: 1.5px solid var(--border);
-  display: flex; align-items: stretch;
-  min-height: 40px; z-index: 4; overflow: hidden;
-}
-.tl-chip-bar { width: 4px; background: var(--accent); flex-shrink: 0; }
-.tl-chip-content { padding: 5px 8px; flex: 1; min-width: 0; }
-.tl-chip-time { font-size: 9px; font-weight: 600; color: var(--text-3); letter-spacing: 0.04em; }
-.tl-chip-title { font-size: 11px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tl-chip-del {
+.sched-badge-posted { background: var(--success-2); color: var(--success); }
+.sched-item-action {
   background: none; border: none; cursor: pointer; color: var(--text-3);
-  font-size: 15px; padding: 4px 8px; display: flex; align-items: center; flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
+  font-size: 16px; padding: 4px 6px; display: flex; align-items: center;
+  flex-shrink: 0; opacity: 0.45; transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent; font-family: "DM Sans", sans-serif;
 }
-.tl-chip-done .tl-chip-bar { background: var(--success); }
-.tl-chip-done .tl-chip-title { text-decoration: line-through; opacity: 0.55; }
+.sched-item-action:hover { opacity: 1; }
+.sched-add-block-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  background: none; border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 7px 12px; cursor: pointer; font-family: "DM Sans", sans-serif;
+  margin-top: 4px; width: 100%; -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.sched-add-block-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sched-empty {
+  text-align: center; padding: 60px 20px; color: var(--text-3);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.sched-empty-icon { font-size: 36px; opacity: 0.25; }
+.sched-empty-text { font-size: 14px; line-height: 1.6; }
+.sched-empty-sub { font-size: 12px; opacity: 0.7; }
 
-.sched-tap-hint {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  pointer-events: none; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+/* ── Activity type picker ─── */
+.act-type-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px;
 }
-.sched-hint-icon { font-size: 32px; opacity: 0.2; }
-.sched-hint-text { font-size: 13px; color: var(--text-3); line-height: 1.6; }
+.act-type-btn {
+  border-radius: var(--radius-sm); border: 1.5px solid; padding: 10px 6px;
+  font-size: 11px; font-weight: 700; cursor: pointer; font-family: "DM Sans", sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  -webkit-tap-highlight-color: transparent; transition: box-shadow 0.12s;
+}
+.act-type-btn:hover { box-shadow: var(--shadow-md); }
 
 .sched-tray {
   margin-top: 10px; background: var(--surface);
@@ -1119,13 +1105,7 @@ footer {
 
 <!-- ── Schedule view ───────────────────────────────── -->
 <div id="scheduleView" style="display:none">
-  <div class="sched-day-tabs-wrap">
-    <div class="sched-day-tabs" id="schedDayTabs"></div>
-  </div>
-  <div class="sched-outer" id="schedOuter">
-    <div class="sched-tl" id="schedTL"></div>
-  </div>
-  <div class="sched-tray" id="schedTray"></div>
+  <div class="sched-agenda" id="schedAgenda"></div>
 </div>
 
 <!-- ── Overview dashboard ──────────────────────── -->
@@ -1344,7 +1324,7 @@ function setView(view) {
   });
   applyViewToColumns();
   if (view === 'monthly') { buildMonthView(); buildOverview(); }
-  else if (view === 'schedule') { buildScheduleDayTabs(); renderScheduleView(activeDayIdx); }
+  else if (view === 'schedule') { buildScheduleAgenda(); }
   else updateSummary();
 }
 
@@ -2127,18 +2107,20 @@ function buildMonthView() {
 
 // ── Overview ──────────────────────────────────────────────────────────────────
 // ── Move-to-day sheet ──────────────────────────────────────────────────────────
-function moveSlotToDay(slot, fromDayIdx, toDayIdx) {
+function moveSlotToDay(slot, fromDayIdx, toDayIdx, scheduledDate, scheduledMin) {
   var inputs = slot.querySelectorAll('.field-input');
   var platSel = slot.querySelector('.plat-select');
   var cbEl = slot.querySelector('.posted-check');
   var videoData = {
-    product:  inputs[0] ? inputs[0].value : '',
-    hook:     inputs[1] ? inputs[1].value : '',
-    notes:    inputs[2] ? inputs[2].value : '',
-    platform: platSel ? platSel.value : 'tt',
-    posted:   cbEl ? cbEl.checked : false,
-    starred:  slot.classList.contains('slot-starred'),
-    type:     slot.getAttribute('data-type') || 'product'
+    product:       inputs[0] ? inputs[0].value : '',
+    hook:          inputs[1] ? inputs[1].value : '',
+    notes:         inputs[2] ? inputs[2].value : '',
+    platform:      platSel ? platSel.value : 'tt',
+    posted:        cbEl ? cbEl.checked : false,
+    starred:       slot.classList.contains('slot-starred'),
+    type:          slot.getAttribute('data-type') || 'product',
+    scheduledDate: scheduledDate != null ? scheduledDate : (slot.getAttribute('data-scheduled-date') || null),
+    scheduledMin:  scheduledMin  != null ? scheduledMin  : (slot.getAttribute('data-scheduled-min') != null ? parseInt(slot.getAttribute('data-scheduled-min')) : null)
   };
   var srcWrap = slot.closest('.slots-wrap');
   srcWrap.removeChild(slot);
@@ -2148,6 +2130,7 @@ function moveSlotToDay(slot, fromDayIdx, toDayIdx) {
     targetWrap.appendChild(makeSlot(toDayIdx, targetWrap.querySelectorAll('.video-slot').length, videoData));
   }
   updateSummary(); saveState();
+  if (currentView === 'schedule') buildScheduleAgenda();
   if (navigator.vibrate) navigator.vibrate(40);
 }
 
@@ -2967,266 +2950,7 @@ document.addEventListener('visibilitychange', function() {
 });
 window.addEventListener('pagehide', pushToCloud);
 
-// ── Schedule view ─────────────────────────────────────────────────────────────
-
-function buildScheduleDayTabs() {
-  var tabs = document.getElementById('schedDayTabs');
-  if (!tabs) return;
-  tabs.innerHTML = '';
-  var dates = computeDayDates(document.getElementById('wk').value.trim());
-  DAYS.forEach(function(_, i) {
-    var btn = document.createElement('button');
-    btn.className = 'sched-day-tab' + (i === activeDayIdx ? ' active' : '');
-    btn.textContent = DAY_SHORT[i] + (dates[i] ? ' ' + dates[i] : '');
-    btn.addEventListener('click', function() {
-      activeDayIdx = i;
-      document.querySelectorAll('.sched-day-tab').forEach(function(t, ti) { t.classList.toggle('active', ti === i); });
-      renderScheduleView(i);
-    });
-    tabs.appendChild(btn);
-  });
-}
-
-function renderScheduleView(dayIdx) {
-  var inner = document.getElementById('schedTL');
-  if (!inner) return;
-  var outer = document.getElementById('schedOuter');
-  inner.innerHTML = '';
-  var totalH = (TIMELINE_END_H - TIMELINE_START_H) * HOUR_H + 32;
-  inner.style.height = totalH + 'px';
-
-  // Hour labels and lines
-  for (var h = TIMELINE_START_H; h <= TIMELINE_END_H; h++) {
-    var y = (h - TIMELINE_START_H) * HOUR_H;
-    if (h < TIMELINE_END_H) {
-      var lbl = document.createElement('div');
-      lbl.className = 'tl-label';
-      lbl.style.top = (y - 7) + 'px';
-      var h12 = h % 12 || 12;
-      lbl.textContent = h12 + (h < 12 ? ' AM' : ' PM');
-      inner.appendChild(lbl);
-    }
-    var line = document.createElement('div');
-    line.className = 'tl-line';
-    line.style.top = y + 'px';
-    inner.appendChild(line);
-    // Half-hour line
-    if (h < TIMELINE_END_H) {
-      var hline = document.createElement('div');
-      hline.className = 'tl-line tl-line-half';
-      hline.style.top = (y + HOUR_H / 2) + 'px';
-      inner.appendChild(hline);
-    }
-  }
-
-  // Activity blocks
-  var blocks = currentBlocks[dayIdx] || [];
-  blocks.forEach(function(block, i) {
-    inner.appendChild(makeBlockEl(block, dayIdx, i));
-  });
-
-  // Scheduled video chips — scan all day columns for slots scheduled on this date
-  var dayDateStr = getDayDateStr(dayIdx);
-  document.querySelectorAll('.video-slot').forEach(function(slot) {
-    var sa = slot.getAttribute('data-scheduled-min');
-    var sd = slot.getAttribute('data-scheduled-date');
-    if (sa !== null && sa !== '' && sd === dayDateStr) {
-      var sm = parseInt(sa);
-      if (!isNaN(sm)) inner.appendChild(makeVideoChipEl(slot, dayIdx, sm));
-    }
-  });
-
-  // Current time indicator
-  var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
-  if (nowMin >= TIMELINE_START_H * 60 && nowMin < TIMELINE_END_H * 60) {
-    var nowLine = document.createElement('div');
-    nowLine.className = 'tl-now';
-    nowLine.style.top = minToY(nowMin) + 'px';
-    inner.appendChild(nowLine);
-  }
-
-  // Empty hint
-  if (!blocks.length) {
-    var hint = document.createElement('div');
-    hint.className = 'sched-tap-hint';
-    hint.innerHTML = '<div class="sched-hint-icon">👆</div><div class="sched-hint-text">Tap anywhere on the timeline<br>to add an activity block</div>';
-    inner.appendChild(hint);
-  }
-
-  // Scroll to current time or 8 AM
-  setTimeout(function() {
-    if (!outer) return;
-    var scrollTo = nowMin >= TIMELINE_START_H * 60 && nowMin < TIMELINE_END_H * 60
-      ? Math.max(0, minToY(nowMin) - 160)
-      : minToY(8 * 60);
-    outer.scrollTop = scrollTo;
-  }, 60);
-
-  renderUnscheduledTray(dayIdx);
-  initScheduleTap(dayIdx);
-}
-
-function makeBlockEl(block, dayIdx, blockIdx) {
-  var act = actById(block.type);
-  var y   = minToY(block.startMin);
-  var h   = Math.max(26, (block.endMin - block.startMin) / 60 * HOUR_H);
-
-  var el = document.createElement('div');
-  el.className = 'tl-block';
-  el.style.cssText = 'top:' + y + 'px;height:' + h + 'px;left:' + TL_LABEL_W + 'px;right:8px;background:' + act.bg + ';border-color:' + act.border;
-
-  var lbl = document.createElement('div');
-  lbl.className = 'tl-block-label';
-  lbl.style.color = act.text;
-  var durStr = (block.endMin - block.startMin) >= 30 ? ('<span class="tl-block-dur">' + fmtMin(block.startMin) + ' – ' + fmtMin(block.endMin) + '</span>') : '';
-  lbl.innerHTML = '<span class="tl-block-dot" style="background:' + act.bar + '"></span>' + act.label + durStr;
-  el.appendChild(lbl);
-
-  var delBtn = document.createElement('button');
-  delBtn.className = 'tl-block-del';
-  delBtn.textContent = '×';
-  delBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    currentBlocks[dayIdx].splice(blockIdx, 1);
-    saveState(); renderScheduleView(dayIdx); updateWeekBarForDay(dayIdx);
-  });
-  el.appendChild(delBtn);
-
-  var handle = document.createElement('div');
-  handle.className = 'tl-resize-handle';
-  initBlockResize(handle, block, dayIdx, el, blockIdx);
-  el.appendChild(handle);
-
-  return el;
-}
-
-function initBlockResize(handle, block, dayIdx, blockEl, blockIdx) {
-  var startY, startEndMin;
-  function onMove(clientY) {
-    var delta = clientY - startY;
-    var deltaMin = Math.round(delta / HOUR_H * 60 / 15) * 15;
-    block.endMin = Math.max(block.startMin + 15, Math.min(TIMELINE_END_H * 60, startEndMin + deltaMin));
-    blockEl.style.height = Math.max(26, (block.endMin - block.startMin) / 60 * HOUR_H) + 'px';
-    var dur = blockEl.querySelector('.tl-block-dur');
-    if (dur) dur.textContent = fmtMin(block.startMin) + ' – ' + fmtMin(block.endMin);
-  }
-  handle.addEventListener('touchstart', function(e) {
-    startY = e.touches[0].clientY; startEndMin = block.endMin;
-    e.stopPropagation(); e.preventDefault();
-  }, { passive: false });
-  handle.addEventListener('touchmove', function(e) {
-    onMove(e.touches[0].clientY); e.preventDefault();
-  }, { passive: false });
-  handle.addEventListener('touchend', function() {
-    saveState(); renderScheduleView(dayIdx); updateWeekBarForDay(dayIdx);
-  });
-  handle.addEventListener('mousedown', function(e) {
-    startY = e.clientY; startEndMin = block.endMin; e.stopPropagation();
-    function onMM(e2) { onMove(e2.clientY); }
-    function onMU() {
-      document.removeEventListener('mousemove', onMM);
-      document.removeEventListener('mouseup', onMU);
-      saveState(); renderScheduleView(dayIdx); updateWeekBarForDay(dayIdx);
-    }
-    document.addEventListener('mousemove', onMM);
-    document.addEventListener('mouseup', onMU);
-  });
-}
-
-function makeVideoChipEl(slot, dayIdx, scheduledMin) {
-  var inputs = slot.querySelectorAll('.field-input');
-  var title  = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Video';
-  var done   = slot.querySelector('.posted-check') && slot.querySelector('.posted-check').checked;
-  var y = minToY(scheduledMin);
-
-  var el = document.createElement('div');
-  el.className = 'tl-video-chip' + (done ? ' tl-chip-done' : '');
-  el.style.cssText = 'top:' + y + 'px;left:' + (TL_LABEL_W + 8) + 'px;right:12px';
-  el.innerHTML =
-    '<div class="tl-chip-bar"></div>' +
-    '<div class="tl-chip-content">' +
-      '<div class="tl-chip-time">' + fmtMin(scheduledMin) + '</div>' +
-      '<div class="tl-chip-title">' + title.replace(/</g,'&lt;') + '</div>' +
-    '</div>' +
-    '<button class="tl-chip-del" type="button">×</button>';
-  el.querySelector('.tl-chip-del').addEventListener('click', function(e) {
-    e.stopPropagation();
-    slot.removeAttribute('data-scheduled-date');
-    slot.removeAttribute('data-scheduled-min');
-    if (slot._updateSchedBtn) slot._updateSchedBtn();
-    saveState(); renderScheduleView(dayIdx);
-  });
-  return el;
-}
-
-function renderUnscheduledTray(dayIdx) {
-  var tray = document.getElementById('schedTray');
-  if (!tray) return;
-  tray.innerHTML = '';
-  var cols = document.querySelectorAll('.day-col');
-  if (!cols[dayIdx]) { tray.style.display = 'none'; return; }
-  var unscheduled = [];
-  cols[dayIdx].querySelectorAll('.video-slot').forEach(function(slot) {
-    var inputs = slot.querySelectorAll('.field-input');
-    var hasContent = inputs[0] && (inputs[0].value.trim() || (inputs[1] && inputs[1].value.trim()));
-    var sd = slot.getAttribute('data-scheduled-date');
-    if (hasContent && (sd === null || sd === '')) unscheduled.push(slot);
-  });
-  if (!unscheduled.length) {
-    tray.style.display = 'none'; return;
-  }
-  tray.style.display = '';
-  var lbl = document.createElement('div');
-  lbl.className = 'sched-tray-label';
-  lbl.textContent = 'Unscheduled — tap to place on timeline';
-  tray.appendChild(lbl);
-  var row = document.createElement('div');
-  row.className = 'sched-tray-row';
-  unscheduled.forEach(function(slot) {
-    var inputs = slot.querySelectorAll('.field-input');
-    var title = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Untitled';
-    var chip = document.createElement('button');
-    chip.className = 'sched-tray-chip';
-    chip.type = 'button';
-    chip.textContent = title;
-    chip.addEventListener('click', function() { showTimePickerForVideo(slot, dayIdx); });
-    row.appendChild(chip);
-  });
-  tray.appendChild(row);
-}
-
-function showActivityPicker(dayIdx, tapMin) {
-  var overlay = document.createElement('div'); overlay.className = 'move-overlay';
-  var sheet   = document.createElement('div'); sheet.className   = 'act-sheet';
-  var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
-  ttl.textContent = 'Add block at ' + fmtMin(tapMin);
-  sheet.appendChild(ttl);
-  var grid = document.createElement('div'); grid.className = 'act-grid';
-  ACTIVITIES.forEach(function(act) {
-    var btn = document.createElement('button');
-    btn.className = 'act-btn'; btn.type = 'button';
-    btn.style.cssText = 'background:' + act.bg + ';border-color:' + act.border + ';color:' + act.text;
-    btn.innerHTML = '<span class="act-dot" style="background:' + act.bar + '"></span>' + act.label;
-    btn.addEventListener('click', function() {
-      close();
-      currentBlocks[dayIdx].push({ type: act.id, startMin: tapMin, endMin: Math.min(TIMELINE_END_H * 60, tapMin + 60) });
-      saveState(); renderScheduleView(dayIdx); updateWeekBarForDay(dayIdx);
-    });
-    grid.appendChild(btn);
-  });
-  sheet.appendChild(grid);
-  var cancel = document.createElement('button');
-  cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
-  cancel.addEventListener('click', close);
-  sheet.appendChild(cancel);
-  function close() {
-    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    if (sheet.parentNode)   sheet.parentNode.removeChild(sheet);
-  }
-  overlay.addEventListener('click', close);
-  document.body.appendChild(overlay);
-  document.body.appendChild(sheet);
-}
+// ── Schedule view — multi-day agenda ─────────────────────────────────────────
 
 function getDayDateStr(dayIdx) {
   var wk = document.getElementById('wk').value.trim();
@@ -3237,6 +2961,271 @@ function getDayDateStr(dayIdx) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
+function buildScheduleAgenda() {
+  var agenda = document.getElementById('schedAgenda');
+  if (!agenda) return;
+  agenda.innerHTML = '';
+
+  var today    = new Date(); today.setHours(0,0,0,0);
+  var weekStr  = document.getElementById('wk').value.trim();
+  var weekStart = weekStr ? new Date(weekStr) : null;
+  if (weekStart && isNaN(weekStart.getTime())) weekStart = null;
+
+  if (!weekStart) {
+    agenda.innerHTML = '<div class="sched-empty"><div class="sched-empty-icon">📅</div><div class="sched-empty-text">No week selected.</div></div>';
+    return;
+  }
+
+  var hasAny = false;
+
+  for (var d = 0; d < 7; d++) {
+    var dayDate = new Date(weekStart); dayDate.setDate(weekStart.getDate() + d); dayDate.setHours(0,0,0,0);
+    var dayDateStr = dayDate.getFullYear() + '-' + String(dayDate.getMonth()+1).padStart(2,'0') + '-' + String(dayDate.getDate()).padStart(2,'0');
+    var isToday = dayDate.getTime() === today.getTime();
+
+    var items = [];
+
+    // Collect activity blocks for this day
+    (currentBlocks[d] || []).forEach(function(block, bi) {
+      items.push({ kind: 'block', block: block, blockIdx: bi, dayIdx: d, sortMin: block.startMin });
+    });
+
+    // Collect scheduled videos whose data-scheduled-date matches this day
+    var col = document.querySelector('.day-col[data-day-idx="' + d + '"]');
+    if (col) {
+      col.querySelectorAll('.video-slot').forEach(function(slot) {
+        var sd = slot.getAttribute('data-scheduled-date');
+        var sa = slot.getAttribute('data-scheduled-min');
+        if (sd === dayDateStr && sa !== null && sa !== '') {
+          var sm = parseInt(sa);
+          if (!isNaN(sm)) items.push({ kind: 'video', slot: slot, dayIdx: d, scheduledMin: sm, sortMin: sm });
+        }
+      });
+    }
+
+    if (!items.length) continue;
+    hasAny = true;
+
+    items.sort(function(a, b) { return a.sortMin - b.sortMin; });
+
+    var group = document.createElement('div');
+    group.className = 'sched-day-group';
+
+    // Day heading
+    var hdr = document.createElement('div');
+    hdr.className = 'sched-day-hdr' + (isToday ? ' sched-day-hdr-today' : '');
+    var dot = document.createElement('span');
+    dot.className = 'sched-day-hdr-dot' + (isToday ? ' sched-dot-today' : '');
+    var lbl = document.createElement('span');
+    lbl.textContent = DAYS[d] + (isToday ? ' · Today' : '') + '   ·   ' +
+      dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    hdr.appendChild(dot); hdr.appendChild(lbl);
+    group.appendChild(hdr);
+
+    // Items
+    items.forEach(function(item) {
+      group.appendChild(item.kind === 'block'
+        ? makeAgendaBlockEl(item.block, item.dayIdx, item.blockIdx)
+        : makeAgendaVideoEl(item.slot, item.dayIdx, item.scheduledMin));
+    });
+
+    // Add block button
+    var addBtn = document.createElement('button');
+    addBtn.className = 'sched-add-block-btn';
+    addBtn.type = 'button';
+    addBtn.innerHTML = '<span style="font-size:14px;line-height:1">＋</span> Add time block';
+    (function(di) {
+      addBtn.addEventListener('click', function() { showAddBlockSheet(di); });
+    })(d);
+    group.appendChild(addBtn);
+
+    agenda.appendChild(group);
+  }
+
+  if (!hasAny) {
+    var empty = document.createElement('div');
+    empty.className = 'sched-empty';
+    empty.innerHTML =
+      '<div class="sched-empty-icon">📅</div>' +
+      '<div class="sched-empty-text">Nothing scheduled this week yet.</div>' +
+      '<div class="sched-empty-sub">Go to Day or Week view, open a video and tap ⏰ Schedule to add it here.</div>';
+    agenda.appendChild(empty);
+  }
+}
+
+function makeAgendaBlockEl(block, dayIdx, blockIdx) {
+  var act = actById(block.type);
+  var el = document.createElement('div');
+  el.className = 'sched-agenda-item';
+  el.style.borderLeftColor = act.bar;
+  el.style.background = act.bg;
+
+  var timeEl = document.createElement('div');
+  timeEl.className = 'sched-item-time';
+  timeEl.style.color = act.text;
+  timeEl.textContent = fmtMin(block.startMin) + (block.endMin ? ' – ' + fmtMin(block.endMin) : '');
+
+  var body = document.createElement('div');
+  body.className = 'sched-item-body';
+  var lbl = document.createElement('div');
+  lbl.className = 'sched-item-label';
+  lbl.style.color = act.text;
+  lbl.innerHTML = '<span class="sched-dot" style="background:' + act.bar + '"></span>' + act.label;
+  body.appendChild(lbl);
+
+  var del = document.createElement('button');
+  del.className = 'sched-item-action';
+  del.type = 'button'; del.textContent = '×';
+  del.style.color = act.text;
+  (function(bi, di) {
+    del.addEventListener('click', function(e) {
+      e.stopPropagation();
+      currentBlocks[di].splice(bi, 1);
+      saveState(); buildScheduleAgenda(); updateWeekBarForDay(di);
+    });
+  })(blockIdx, dayIdx);
+
+  el.appendChild(timeEl); el.appendChild(body); el.appendChild(del);
+  return el;
+}
+
+function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
+  var inputs  = slot.querySelectorAll('.field-input');
+  var title   = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Untitled';
+  var done    = slot.querySelector('.posted-check') && slot.querySelector('.posted-check').checked;
+  var starred = slot.classList.contains('slot-starred');
+  var platSel = slot.querySelector('.plat-select');
+  var platform = platSel ? platSel.value : '';
+
+  var el = document.createElement('div');
+  el.className = 'sched-agenda-item' + (done ? ' sched-item-done' : '');
+  el.style.borderLeftColor = done ? 'var(--success)' : 'var(--accent)';
+
+  var timeEl = document.createElement('div');
+  timeEl.className = 'sched-item-time';
+  timeEl.textContent = fmtMin(scheduledMin);
+
+  var body = document.createElement('div');
+  body.className = 'sched-item-body';
+  var titleEl = document.createElement('div');
+  titleEl.className = 'sched-item-title';
+  titleEl.textContent = (starred ? '⭐ ' : '') + title;
+  body.appendChild(titleEl);
+  if (platform) {
+    var meta = document.createElement('div');
+    meta.className = 'sched-item-meta';
+    meta.textContent = platform === 'tt' ? 'TikTok' : platform === 'ig' ? 'Instagram' : platform === 'yt' ? 'YouTube' : platform.toUpperCase();
+    body.appendChild(meta);
+  }
+
+  if (done) {
+    var badge = document.createElement('span');
+    badge.className = 'sched-item-badge sched-badge-posted';
+    badge.textContent = 'Posted';
+    el.appendChild(timeEl); el.appendChild(body); el.appendChild(badge);
+  } else {
+    var reschedBtn = document.createElement('button');
+    reschedBtn.className = 'sched-item-action';
+    reschedBtn.type = 'button'; reschedBtn.title = 'Reschedule';
+    reschedBtn.textContent = '⏰';
+    reschedBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      showTimePickerForVideo(slot, dayIdx);
+    });
+    var unschedBtn = document.createElement('button');
+    unschedBtn.className = 'sched-item-action';
+    unschedBtn.type = 'button'; unschedBtn.title = 'Remove from schedule';
+    unschedBtn.textContent = '×';
+    unschedBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      slot.removeAttribute('data-scheduled-date');
+      slot.removeAttribute('data-scheduled-min');
+      if (slot._updateSchedBtn) slot._updateSchedBtn();
+      saveState(); buildScheduleAgenda();
+    });
+    el.appendChild(timeEl); el.appendChild(body);
+    el.appendChild(reschedBtn); el.appendChild(unschedBtn);
+  }
+  return el;
+}
+
+function showAddBlockSheet(dayIdx) {
+  var overlay = document.createElement('div'); overlay.className = 'move-overlay';
+  var sheet   = document.createElement('div'); sheet.className   = 'act-sheet';
+  var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
+  ttl.textContent = 'Add time block — ' + DAYS[dayIdx];
+  sheet.appendChild(ttl);
+
+  var selectedType = null;
+  var grid = document.createElement('div'); grid.className = 'act-type-grid';
+  ACTIVITIES.forEach(function(act) {
+    var btn = document.createElement('button');
+    btn.className = 'act-type-btn'; btn.type = 'button';
+    btn.style.cssText = 'background:' + act.bg + ';border-color:' + act.border + ';color:' + act.text;
+    btn.innerHTML = '<span class="sched-dot" style="background:' + act.bar + '"></span>' + act.label;
+    btn.addEventListener('click', function() {
+      selectedType = act.id;
+      grid.querySelectorAll('.act-type-btn').forEach(function(b) { b.style.boxShadow = ''; });
+      btn.style.boxShadow = '0 0 0 2px ' + act.bar;
+      showTimeRangeStep();
+    });
+    grid.appendChild(btn);
+  });
+  sheet.appendChild(grid);
+
+  var cancel = document.createElement('button');
+  cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
+  cancel.addEventListener('click', close);
+  sheet.appendChild(cancel);
+
+  function showTimeRangeStep() {
+    sheet.innerHTML = '';
+    var ttl2 = document.createElement('div'); ttl2.className = 'move-sheet-title';
+    var act = actById(selectedType);
+    ttl2.textContent = act.label + ' — what time?';
+    sheet.appendChild(ttl2);
+
+    var scroller = document.createElement('div'); scroller.className = 'time-picker-scroll';
+    for (var h = TIMELINE_START_H; h < TIMELINE_END_H; h++) {
+      for (var m = 0; m < 60; m += 30) {
+        var min = h * 60 + m;
+        var btn = document.createElement('button');
+        btn.className = 'time-pick-btn'; btn.type = 'button';
+        btn.textContent = fmtMin(min);
+        (function(startMin) {
+          btn.addEventListener('click', function() {
+            close();
+            currentBlocks[dayIdx].push({ type: selectedType, startMin: startMin, endMin: Math.min(TIMELINE_END_H * 60, startMin + 60) });
+            saveState(); buildScheduleAgenda(); updateWeekBarForDay(dayIdx);
+          });
+        })(min);
+        scroller.appendChild(btn);
+      }
+    }
+    sheet.appendChild(scroller);
+
+    var backBtn = document.createElement('button');
+    backBtn.type = 'button';
+    backBtn.style.cssText = 'display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
+    backBtn.textContent = '← Back';
+    backBtn.addEventListener('click', function() { showAddBlockSheet(dayIdx); close(); });
+    sheet.appendChild(backBtn);
+
+    var cancel2 = document.createElement('button');
+    cancel2.className = 'move-sheet-cancel'; cancel2.type = 'button'; cancel2.textContent = 'Cancel';
+    cancel2.addEventListener('click', close);
+    sheet.appendChild(cancel2);
+  }
+
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (sheet.parentNode)   sheet.parentNode.removeChild(sheet);
+  }
+  overlay.addEventListener('click', close);
+  document.body.appendChild(overlay);
+  document.body.appendChild(sheet);
+}
+
 function showTimePickerForVideo(slot, dayIdx) {
   showDatePickerForVideo(slot, dayIdx);
 }
@@ -3245,7 +3234,6 @@ function showDatePickerForVideo(slot, dayIdx) {
   var inputs = slot.querySelectorAll('.field-input');
   var title  = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Untitled';
 
-  // Default displayed month to the current week's day
   var defaultDate = new Date();
   var wk = document.getElementById('wk').value.trim();
   if (wk) {
@@ -3263,7 +3251,6 @@ function showDatePickerForVideo(slot, dayIdx) {
     ttl.textContent = '📅 Schedule: ' + title.slice(0, 22);
     sheet.appendChild(ttl);
 
-    // Month nav
     var nav = document.createElement('div');
     nav.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;';
     var prevBtn = document.createElement('button');
@@ -3278,7 +3265,6 @@ function showDatePickerForVideo(slot, dayIdx) {
     nav.appendChild(prevBtn); nav.appendChild(monthLbl); nav.appendChild(nextBtn);
     sheet.appendChild(nav);
 
-    // DOW row
     var dowRow = document.createElement('div');
     dowRow.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px;';
     ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(function(d) {
@@ -3288,7 +3274,6 @@ function showDatePickerForVideo(slot, dayIdx) {
     });
     sheet.appendChild(dowRow);
 
-    // Day grid
     var grid = document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px;';
     var today = new Date(); today.setHours(0,0,0,0);
@@ -3314,10 +3299,7 @@ function showDatePickerForVideo(slot, dayIdx) {
       cell.style.cssText='min-height:38px;border-radius:9px;border:1.5px solid '+bd+';background:'+bg+';color:'+fg+';font-size:13px;font-weight:'+(isTdy||isSel?'700':'500')+';cursor:pointer;font-family:"DM Sans",sans-serif;-webkit-tap-highlight-color:transparent;transition:all 0.12s;';
       cell.textContent=day;
       (function(dateStr) {
-        cell.addEventListener('click', function() {
-          close();
-          showTimeStepForVideo(slot, dateStr);
-        });
+        cell.addEventListener('click', function() { close(); showTimeStepForVideo(slot, dateStr, dayIdx); });
       })(ds);
       grid.appendChild(cell);
     }
@@ -3339,7 +3321,7 @@ function showDatePickerForVideo(slot, dayIdx) {
   buildCal(slot.getAttribute('data-scheduled-date') || null);
 }
 
-function showTimeStepForVideo(slot, dateStr) {
+function showTimeStepForVideo(slot, dateStr, sourceDayIdx) {
   var inputs = slot.querySelectorAll('.field-input');
   var title  = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Untitled';
   var parts=dateStr.split('-');
@@ -3363,11 +3345,27 @@ function showTimeStepForVideo(slot, dateStr) {
       (function(mn) {
         btn.addEventListener('click', function() {
           close();
-          slot.setAttribute('data-scheduled-date', dateStr);
-          slot.setAttribute('data-scheduled-min',  mn);
-          if (slot._updateSchedBtn) slot._updateSchedBtn();
-          saveState();
-          if (currentView==='schedule') renderScheduleView(activeDayIdx);
+          // Determine if this date is a different day in the current week
+          var wkStr = document.getElementById('wk').value.trim();
+          var wkDate = wkStr ? new Date(wkStr) : null;
+          var targetDayIdx = -1;
+          if (wkDate && !isNaN(wkDate.getTime())) {
+            for (var ti = 0; ti < 7; ti++) {
+              var td = new Date(wkDate); td.setDate(wkDate.getDate() + ti); td.setHours(0,0,0,0);
+              var tds = td.getFullYear() + '-' + String(td.getMonth()+1).padStart(2,'0') + '-' + String(td.getDate()).padStart(2,'0');
+              if (tds === dateStr) { targetDayIdx = ti; break; }
+            }
+          }
+          if (targetDayIdx >= 0 && targetDayIdx !== sourceDayIdx) {
+            // Move slot to the correct day column
+            moveSlotToDay(slot, sourceDayIdx, targetDayIdx, dateStr, mn);
+          } else {
+            slot.setAttribute('data-scheduled-date', dateStr);
+            slot.setAttribute('data-scheduled-min',  mn);
+            if (slot._updateSchedBtn) slot._updateSchedBtn();
+            saveState();
+            if (currentView==='schedule') buildScheduleAgenda();
+          }
         });
       })(min);
       scroller.appendChild(btn);
@@ -3379,7 +3377,7 @@ function showTimeStepForVideo(slot, dateStr) {
   backBtn.type='button';
   backBtn.style.cssText='display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
   backBtn.textContent='← Back to calendar';
-  backBtn.addEventListener('click', function() { close(); showDatePickerForVideo(slot, activeDayIdx); });
+  backBtn.addEventListener('click', function() { close(); showDatePickerForVideo(slot, sourceDayIdx != null ? sourceDayIdx : activeDayIdx); });
   sheet.appendChild(backBtn);
 
   var cancel=document.createElement('button');
@@ -3394,37 +3392,6 @@ function showTimeStepForVideo(slot, dateStr) {
   overlay.addEventListener('click', close);
   document.body.appendChild(overlay);
   document.body.appendChild(sheet);
-}
-
-function initScheduleTap(dayIdx) {
-  var inner = document.getElementById('schedTL');
-  if (!inner || inner._tapInited) return;
-  inner._tapInited = true;
-  var tapY0 = 0, tapX0 = 0;
-  inner.addEventListener('touchstart', function(e) {
-    if (e.target.closest('.tl-block') || e.target.closest('.tl-video-chip') || e.target.closest('.tl-resize-handle')) return;
-    tapY0 = e.touches[0].clientY; tapX0 = e.touches[0].clientX;
-  }, { passive: true });
-  inner.addEventListener('touchend', function(e) {
-    if (e.target.closest('.tl-block') || e.target.closest('.tl-video-chip') || e.target.closest('.tl-resize-handle')) return;
-    if (Math.abs(e.changedTouches[0].clientY - tapY0) > 8 || Math.abs(e.changedTouches[0].clientX - tapX0) > 8) return;
-    var outer = document.getElementById('schedOuter');
-    var rect  = inner.getBoundingClientRect();
-    var y = e.changedTouches[0].clientY - rect.top + (outer ? outer.scrollTop : 0);
-    if (y < 0) return;
-    var tapMin = Math.max(TIMELINE_START_H * 60, Math.min((TIMELINE_END_H - 1) * 60, yToMin(y)));
-    showActivityPicker(activeDayIdx, tapMin);
-  }, { passive: true });
-  inner.addEventListener('click', function(e) {
-    if (e.target.closest('.tl-block') || e.target.closest('.tl-video-chip') || e.target.closest('.tl-resize-handle')) return;
-    if ('ontouchstart' in window) return; // handled by touchend on mobile
-    var outer = document.getElementById('schedOuter');
-    var rect  = inner.getBoundingClientRect();
-    var y = e.clientY - rect.top + (outer ? outer.scrollTop : 0);
-    if (y < 0) return;
-    var tapMin = Math.max(TIMELINE_START_H * 60, Math.min((TIMELINE_END_H - 1) * 60, yToMin(y)));
-    showActivityPicker(activeDayIdx, tapMin);
-  });
 }
 
 function updateWeekBarForDay(dayIdx) {
