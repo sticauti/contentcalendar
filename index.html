@@ -175,24 +175,8 @@ h1 {
   letter-spacing: -0.03em; margin-bottom: 18px;
   padding-bottom: 14px; border-bottom: 2px solid var(--border);
 }
-.sched-drag-handle {
-  width: 22px; flex-shrink: 0; display: flex; align-items: center;
-  justify-content: center; cursor: grab; color: var(--text-3);
-  opacity: 0.25; font-size: 16px; letter-spacing: -1px;
-  -webkit-tap-highlight-color: transparent; margin-right: 2px;
-  transition: opacity 0.15s;
-}
-.sched-drag-handle:hover { opacity: 0.7; }
-.sched-drag-handle:active { cursor: grabbing; opacity: 1; }
-.sched-agenda-item.sched-dragging { opacity: 0.35; }
-.sched-drag-ghost {
-  position: fixed; z-index: 1000; pointer-events: none;
-  background: var(--text); color: #fff; border-radius: 20px;
-  padding: 6px 14px; font-size: 13px; font-weight: 700;
-  font-family: "DM Sans", sans-serif;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  transform: translate(-50%, -50%); letter-spacing: -0.01em;
-}
+.sched-agenda-item { cursor: pointer; }
+.sched-agenda-item:active { opacity: 0.75; }
 .weekinput {
   font-size: 13px; font-weight: 500;
   border: 1.5px solid var(--border);
@@ -1941,6 +1925,7 @@ function buildCalendar(savedState) {
   buildDayTabs();
   applyViewToColumns();
   updateDayDates();
+  if (currentView === 'schedule') buildScheduleAgenda();
 
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function() { document.querySelectorAll('textarea').forEach(autoGrow); });
@@ -3169,10 +3154,6 @@ function makeAgendaBlockEl(block, dayIdx, blockIdx) {
   el.style.borderLeftColor = act.bar;
   el.style.background = act.bg;
 
-  var drag = document.createElement('div');
-  drag.className = 'sched-drag-handle';
-  drag.innerHTML = '&#8942;&#8942;';
-
   var timeEl = document.createElement('div');
   timeEl.className = 'sched-item-time';
   timeEl.style.color = act.text;
@@ -3184,7 +3165,11 @@ function makeAgendaBlockEl(block, dayIdx, blockIdx) {
   lbl.className = 'sched-item-label';
   lbl.style.color = act.text;
   lbl.innerHTML = '<span class="sched-dot" style="background:' + act.bar + '"></span>' + act.label;
-  body.appendChild(lbl);
+  var hint = document.createElement('div');
+  hint.className = 'sched-item-meta';
+  hint.style.color = act.text;
+  hint.textContent = 'Hold to change time';
+  body.appendChild(lbl); body.appendChild(hint);
 
   var del = document.createElement('button');
   del.className = 'sched-item-action';
@@ -3198,22 +3183,17 @@ function makeAgendaBlockEl(block, dayIdx, blockIdx) {
     });
   })(blockIdx, dayIdx);
 
-  el.appendChild(drag); el.appendChild(timeEl); el.appendChild(body); el.appendChild(del);
+  el.appendChild(timeEl); el.appendChild(body); el.appendChild(del);
 
-  initAgendaDrag(drag, el,
-    function() { return block.startMin; },
-    function(newMin) {
+  initLongPress(el, function() {
+    showRetimeSheet(block.startMin, function(newMin) {
       var dur = block.endMin - block.startMin;
       block.startMin = newMin;
       block.endMin = Math.min(TIMELINE_END_H * 60, newMin + dur);
       saveState(); buildScheduleAgenda(); updateWeekBarForDay(dayIdx);
-    },
-    timeEl,
-    function(previewMin) {
-      var dur = block.endMin - block.startMin;
-      timeEl.textContent = fmtMin(previewMin) + ' – ' + fmtMin(Math.min(TIMELINE_END_H * 60, previewMin + dur));
-    }
-  );
+    });
+  });
+
   return el;
 }
 
@@ -3224,19 +3204,14 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
   var starred = slot.classList.contains('slot-starred');
   var platSel = slot.querySelector('.plat-select');
   var platform = platSel ? platSel.value : '';
-  var curMin  = scheduledMin;
 
   var el = document.createElement('div');
   el.className = 'sched-agenda-item' + (done ? ' sched-item-done' : '');
   el.style.borderLeftColor = done ? 'var(--success)' : 'var(--accent)';
 
-  var drag = document.createElement('div');
-  drag.className = 'sched-drag-handle';
-  drag.innerHTML = '&#8942;&#8942;';
-
   var timeEl = document.createElement('div');
   timeEl.className = 'sched-item-time';
-  timeEl.textContent = fmtMin(curMin);
+  timeEl.textContent = fmtMin(scheduledMin);
 
   var body = document.createElement('div');
   body.className = 'sched-item-body';
@@ -3255,7 +3230,7 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
     var badge = document.createElement('span');
     badge.className = 'sched-item-badge sched-badge-posted';
     badge.textContent = 'Posted';
-    el.appendChild(drag); el.appendChild(timeEl); el.appendChild(body); el.appendChild(badge);
+    el.appendChild(timeEl); el.appendChild(body); el.appendChild(badge);
   } else {
     var reschedBtn = document.createElement('button');
     reschedBtn.className = 'sched-item-action';
@@ -3276,89 +3251,89 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
       if (slot._updateSchedBtn) slot._updateSchedBtn();
       saveState(); buildScheduleAgenda();
     });
-    el.appendChild(drag); el.appendChild(timeEl); el.appendChild(body);
+    el.appendChild(timeEl); el.appendChild(body);
     el.appendChild(reschedBtn); el.appendChild(unschedBtn);
 
-    initAgendaDrag(drag, el,
-      function() { return curMin; },
-      function(newMin) {
-        curMin = newMin;
+    initLongPress(el, function() {
+      showRetimeSheet(scheduledMin, function(newMin) {
+        scheduledMin = newMin;
         slot.setAttribute('data-scheduled-min', newMin);
         if (slot._updateSchedBtn) slot._updateSchedBtn();
         saveState(); buildScheduleAgenda();
-      },
-      timeEl,
-      function(previewMin) { timeEl.textContent = fmtMin(previewMin); }
-    );
+      });
+    });
   }
   return el;
 }
 
-function initAgendaDrag(handle, el, getMin, setMin, timeEl, previewFn) {
-  var startY, startMin, ghost, active = false, moved = false;
-  var PX_PER_MIN = 1.2;
-
-  function calcNew(clientY) {
-    var delta = Math.round((clientY - startY) / PX_PER_MIN / 15) * 15;
-    return Math.max(TIMELINE_START_H * 60, Math.min((TIMELINE_END_H - 1) * 60, startMin + delta));
-  }
-  function showGhost(clientY, newMin) {
-    if (!ghost) {
-      ghost = document.createElement('div');
-      ghost.className = 'sched-drag-ghost';
-      document.body.appendChild(ghost);
-    }
-    ghost.textContent = fmtMin(newMin);
-    ghost.style.left  = '50%';
-    ghost.style.top   = clientY + 'px';
-  }
-  function removeGhost() {
-    if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
-    ghost = null;
-  }
-  function onMove(clientY) {
-    if (!active) {
-      if (Math.abs(clientY - startY) < 5) return;
-      active = true;
-      el.classList.add('sched-dragging');
-    }
-    moved = true;
-    var newMin = calcNew(clientY);
-    showGhost(clientY, newMin);
-    if (previewFn) previewFn(newMin);
-    el._dragNewMin = newMin;
-  }
-  function onEnd(clientY) {
-    document.removeEventListener('mousemove', onMM);
-    document.removeEventListener('mouseup',   onMU);
-    if (!active) return;
-    active = false; moved = false;
-    el.classList.remove('sched-dragging');
-    removeGhost();
-    var newMin = el._dragNewMin != null ? el._dragNewMin : startMin;
-    el._dragNewMin = null;
-    setMin(newMin);
-  }
-  function onMM(e) { onMove(e.clientY); }
-  function onMU(e) { onEnd(e.clientY); }
-
-  handle.addEventListener('mousedown', function(e) {
-    e.preventDefault(); e.stopPropagation();
-    startY = e.clientY; startMin = getMin(); active = false; moved = false;
-    document.addEventListener('mousemove', onMM);
-    document.addEventListener('mouseup',   onMU);
-  });
-  handle.addEventListener('touchstart', function(e) {
-    e.stopPropagation();
-    startY = e.touches[0].clientY; startMin = getMin(); active = false; moved = false;
+function initLongPress(el, onLongPress) {
+  var timer = null, moved = false;
+  function cancel() { clearTimeout(timer); timer = null; }
+  el.addEventListener('touchstart', function(e) {
+    if (e.target.closest('button')) return;
+    moved = false;
+    timer = setTimeout(function() {
+      if (!moved) { if (navigator.vibrate) navigator.vibrate(40); onLongPress(); }
+    }, 500);
   }, { passive: true });
-  handle.addEventListener('touchmove', function(e) {
-    onMove(e.touches[0].clientY);
-    if (active) e.preventDefault();
-  }, { passive: false });
-  handle.addEventListener('touchend', function(e) {
-    onEnd(e.changedTouches[0] ? e.changedTouches[0].clientY : startY);
+  el.addEventListener('touchmove',  function() { moved = true; cancel(); }, { passive: true });
+  el.addEventListener('touchend',   cancel);
+  el.addEventListener('touchcancel',cancel);
+  el.addEventListener('mousedown', function(e) {
+    if (e.target.closest('button')) return;
+    moved = false;
+    timer = setTimeout(function() { if (!moved) onLongPress(); }, 600);
   });
+  el.addEventListener('mousemove', function() { moved = true; cancel(); });
+  el.addEventListener('mouseup',   cancel);
+  el.addEventListener('mouseleave',cancel);
+}
+
+function showRetimeSheet(currentMin, onConfirm) {
+  var overlay = document.createElement('div'); overlay.className = 'move-overlay';
+  var sheet   = document.createElement('div'); sheet.className   = 'act-sheet';
+
+  var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
+  ttl.textContent = 'Change time';
+  sheet.appendChild(ttl);
+
+  var scroller = document.createElement('div'); scroller.className = 'time-picker-scroll';
+  for (var h = TIMELINE_START_H; h < TIMELINE_END_H; h++) {
+    for (var m = 0; m < 60; m += 30) {
+      var min = h * 60 + m;
+      var btn = document.createElement('button');
+      btn.className = 'time-pick-btn' + (min === currentMin ? ' active' : '');
+      btn.type = 'button';
+      btn.textContent = fmtMin(min);
+      if (min === currentMin) btn.style.cssText = 'background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;';
+      (function(mn) {
+        btn.addEventListener('click', function() {
+          close(); onConfirm(mn);
+        });
+      })(min);
+      scroller.appendChild(btn);
+    }
+  }
+  sheet.appendChild(scroller);
+
+  // Scroll to current time after mount
+  setTimeout(function() {
+    var active = scroller.querySelector('[style*="var(--accent)"]');
+    if (active) active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, 60);
+
+  var cancel = document.createElement('button');
+  cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
+  cancel.addEventListener('click', close);
+  sheet.appendChild(cancel);
+
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if (sheet.parentNode)   sheet.parentNode.removeChild(sheet);
+  }
+  overlay.addEventListener('click', close);
+  document.body.appendChild(overlay);
+  document.body.appendChild(sheet);
 }
 
 function showAddBlockSheet(dayIdx) {
