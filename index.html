@@ -170,6 +170,29 @@ h1 {
   cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s;
 }
 .sched-add-block-global:hover { background: var(--accent-3); }
+.sched-week-hdr {
+  font-size: 20px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.03em; margin-bottom: 18px;
+  padding-bottom: 14px; border-bottom: 2px solid var(--border);
+}
+.sched-drag-handle {
+  width: 22px; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; cursor: grab; color: var(--text-3);
+  opacity: 0.25; font-size: 16px; letter-spacing: -1px;
+  -webkit-tap-highlight-color: transparent; margin-right: 2px;
+  transition: opacity 0.15s;
+}
+.sched-drag-handle:hover { opacity: 0.7; }
+.sched-drag-handle:active { cursor: grabbing; opacity: 1; }
+.sched-agenda-item.sched-dragging { opacity: 0.35; }
+.sched-drag-ghost {
+  position: fixed; z-index: 1000; pointer-events: none;
+  background: var(--text); color: #fff; border-radius: 20px;
+  padding: 6px 14px; font-size: 13px; font-weight: 700;
+  font-family: "DM Sans", sans-serif;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  transform: translate(-50%, -50%); letter-spacing: -0.01em;
+}
 .weekinput {
   font-size: 13px; font-weight: 500;
   border: 1.5px solid var(--border);
@@ -3046,7 +3069,15 @@ function buildScheduleAgenda() {
     return;
   }
 
-  // Global add-block button always visible at top
+  // Week header
+  var wEnd = new Date(weekStart.getTime() + 6 * 86400000);
+  var weekHdr = document.createElement('div');
+  weekHdr.className = 'sched-week-hdr';
+  weekHdr.textContent = weekStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) +
+    ' – ' + wEnd.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  agenda.appendChild(weekHdr);
+
+  // Global add-block button
   var globalAdd = document.createElement('button');
   globalAdd.type = 'button';
   globalAdd.className = 'sched-add-block-global';
@@ -3138,6 +3169,10 @@ function makeAgendaBlockEl(block, dayIdx, blockIdx) {
   el.style.borderLeftColor = act.bar;
   el.style.background = act.bg;
 
+  var drag = document.createElement('div');
+  drag.className = 'sched-drag-handle';
+  drag.innerHTML = '&#8942;&#8942;';
+
   var timeEl = document.createElement('div');
   timeEl.className = 'sched-item-time';
   timeEl.style.color = act.text;
@@ -3163,7 +3198,22 @@ function makeAgendaBlockEl(block, dayIdx, blockIdx) {
     });
   })(blockIdx, dayIdx);
 
-  el.appendChild(timeEl); el.appendChild(body); el.appendChild(del);
+  el.appendChild(drag); el.appendChild(timeEl); el.appendChild(body); el.appendChild(del);
+
+  initAgendaDrag(drag, el,
+    function() { return block.startMin; },
+    function(newMin) {
+      var dur = block.endMin - block.startMin;
+      block.startMin = newMin;
+      block.endMin = Math.min(TIMELINE_END_H * 60, newMin + dur);
+      saveState(); buildScheduleAgenda(); updateWeekBarForDay(dayIdx);
+    },
+    timeEl,
+    function(previewMin) {
+      var dur = block.endMin - block.startMin;
+      timeEl.textContent = fmtMin(previewMin) + ' – ' + fmtMin(Math.min(TIMELINE_END_H * 60, previewMin + dur));
+    }
+  );
   return el;
 }
 
@@ -3174,14 +3224,19 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
   var starred = slot.classList.contains('slot-starred');
   var platSel = slot.querySelector('.plat-select');
   var platform = platSel ? platSel.value : '';
+  var curMin  = scheduledMin;
 
   var el = document.createElement('div');
   el.className = 'sched-agenda-item' + (done ? ' sched-item-done' : '');
   el.style.borderLeftColor = done ? 'var(--success)' : 'var(--accent)';
 
+  var drag = document.createElement('div');
+  drag.className = 'sched-drag-handle';
+  drag.innerHTML = '&#8942;&#8942;';
+
   var timeEl = document.createElement('div');
   timeEl.className = 'sched-item-time';
-  timeEl.textContent = fmtMin(scheduledMin);
+  timeEl.textContent = fmtMin(curMin);
 
   var body = document.createElement('div');
   body.className = 'sched-item-body';
@@ -3200,7 +3255,7 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
     var badge = document.createElement('span');
     badge.className = 'sched-item-badge sched-badge-posted';
     badge.textContent = 'Posted';
-    el.appendChild(timeEl); el.appendChild(body); el.appendChild(badge);
+    el.appendChild(drag); el.appendChild(timeEl); el.appendChild(body); el.appendChild(badge);
   } else {
     var reschedBtn = document.createElement('button');
     reschedBtn.className = 'sched-item-action';
@@ -3221,10 +3276,89 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
       if (slot._updateSchedBtn) slot._updateSchedBtn();
       saveState(); buildScheduleAgenda();
     });
-    el.appendChild(timeEl); el.appendChild(body);
+    el.appendChild(drag); el.appendChild(timeEl); el.appendChild(body);
     el.appendChild(reschedBtn); el.appendChild(unschedBtn);
+
+    initAgendaDrag(drag, el,
+      function() { return curMin; },
+      function(newMin) {
+        curMin = newMin;
+        slot.setAttribute('data-scheduled-min', newMin);
+        if (slot._updateSchedBtn) slot._updateSchedBtn();
+        saveState(); buildScheduleAgenda();
+      },
+      timeEl,
+      function(previewMin) { timeEl.textContent = fmtMin(previewMin); }
+    );
   }
   return el;
+}
+
+function initAgendaDrag(handle, el, getMin, setMin, timeEl, previewFn) {
+  var startY, startMin, ghost, active = false, moved = false;
+  var PX_PER_MIN = 1.2;
+
+  function calcNew(clientY) {
+    var delta = Math.round((clientY - startY) / PX_PER_MIN / 15) * 15;
+    return Math.max(TIMELINE_START_H * 60, Math.min((TIMELINE_END_H - 1) * 60, startMin + delta));
+  }
+  function showGhost(clientY, newMin) {
+    if (!ghost) {
+      ghost = document.createElement('div');
+      ghost.className = 'sched-drag-ghost';
+      document.body.appendChild(ghost);
+    }
+    ghost.textContent = fmtMin(newMin);
+    ghost.style.left  = '50%';
+    ghost.style.top   = clientY + 'px';
+  }
+  function removeGhost() {
+    if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    ghost = null;
+  }
+  function onMove(clientY) {
+    if (!active) {
+      if (Math.abs(clientY - startY) < 5) return;
+      active = true;
+      el.classList.add('sched-dragging');
+    }
+    moved = true;
+    var newMin = calcNew(clientY);
+    showGhost(clientY, newMin);
+    if (previewFn) previewFn(newMin);
+    el._dragNewMin = newMin;
+  }
+  function onEnd(clientY) {
+    document.removeEventListener('mousemove', onMM);
+    document.removeEventListener('mouseup',   onMU);
+    if (!active) return;
+    active = false; moved = false;
+    el.classList.remove('sched-dragging');
+    removeGhost();
+    var newMin = el._dragNewMin != null ? el._dragNewMin : startMin;
+    el._dragNewMin = null;
+    setMin(newMin);
+  }
+  function onMM(e) { onMove(e.clientY); }
+  function onMU(e) { onEnd(e.clientY); }
+
+  handle.addEventListener('mousedown', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    startY = e.clientY; startMin = getMin(); active = false; moved = false;
+    document.addEventListener('mousemove', onMM);
+    document.addEventListener('mouseup',   onMU);
+  });
+  handle.addEventListener('touchstart', function(e) {
+    e.stopPropagation();
+    startY = e.touches[0].clientY; startMin = getMin(); active = false; moved = false;
+  }, { passive: true });
+  handle.addEventListener('touchmove', function(e) {
+    onMove(e.touches[0].clientY);
+    if (active) e.preventDefault();
+  }, { passive: false });
+  handle.addEventListener('touchend', function(e) {
+    onEnd(e.changedTouches[0] ? e.changedTouches[0].clientY : startY);
+  });
 }
 
 function showAddBlockSheet(dayIdx) {
@@ -3556,79 +3690,103 @@ function showMonthYearPicker(triggerBtn) {
 
 // ── Schedule view: add block with date picker first ──────────────────────────
 function showAddBlockWithDateSheet() {
-  var wk = document.getElementById('wk').value.trim();
-  var weekStart = wk ? new Date(wk) : null;
-  if (weekStart && isNaN(weekStart.getTime())) weekStart = null;
+  var wkStr = document.getElementById('wk').value.trim();
+  var baseWeekStart = wkStr ? new Date(wkStr) : null;
+  if (baseWeekStart && isNaN(baseWeekStart.getTime())) baseWeekStart = null;
 
   var overlay = document.createElement('div'); overlay.className = 'move-overlay';
   var sheet   = document.createElement('div'); sheet.className   = 'act-sheet';
 
+  var pickerOffset   = 0; // weeks from current
   var selectedDayIdx = null;
   var selectedType   = null;
 
+  function pickerWeekStart() {
+    if (!baseWeekStart) return null;
+    return new Date(baseWeekStart.getTime() + pickerOffset * 7 * 86400000);
+  }
+  function backBtn(fn) {
+    var b = document.createElement('button'); b.type = 'button';
+    b.style.cssText = 'display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
+    b.textContent = '← Back'; b.addEventListener('click', fn); return b;
+  }
+  function cancelBtn() {
+    var b = document.createElement('button'); b.className = 'move-sheet-cancel'; b.type = 'button'; b.textContent = 'Cancel';
+    b.addEventListener('click', close); return b;
+  }
+
   function showDayStep() {
     sheet.innerHTML = '';
+    var ws = pickerWeekStart();
+
     var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
-    ttl.textContent = 'Add time block — choose day';
+    ttl.textContent = 'Choose a day';
     sheet.appendChild(ttl);
 
+    // Week navigation row
+    var nav = document.createElement('div');
+    nav.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:12px;';
+    var prevW = document.createElement('button'); prevW.type = 'button'; prevW.className = 'month-nav-btn'; prevW.textContent = '←';
+    prevW.addEventListener('click', function() { pickerOffset--; showDayStep(); });
+    var nextW = document.createElement('button'); nextW.type = 'button'; nextW.className = 'month-nav-btn'; nextW.textContent = '→';
+    nextW.addEventListener('click', function() { pickerOffset++; showDayStep(); });
+    var wkLbl = document.createElement('span');
+    wkLbl.style.cssText = 'flex:1;text-align:center;font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:0.02em;text-transform:uppercase;';
+    wkLbl.textContent = pickerOffset === 0 ? 'This week'
+                      : pickerOffset === 1  ? 'Next week'
+                      : pickerOffset === -1 ? 'Last week'
+                      : ws ? ws.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' week' : '';
+    nav.appendChild(prevW); nav.appendChild(wkLbl); nav.appendChild(nextW);
+    sheet.appendChild(nav);
+
+    // Day pills
     var dayGrid = document.createElement('div');
     dayGrid.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:16px;';
     var today = new Date(); today.setHours(0,0,0,0);
     for (var i = 0; i < 7; i++) {
-      var dayDate = weekStart ? new Date(weekStart.getTime() + i * 86400000) : null;
-      if (dayDate) dayDate.setHours(0,0,0,0);
-      var isToday = dayDate && dayDate.getTime() === today.getTime();
+      var dd = ws ? new Date(ws.getTime() + i * 86400000) : null;
+      if (dd) dd.setHours(0,0,0,0);
+      var isToday = dd && dd.getTime() === today.getTime();
       var cell = document.createElement('button'); cell.type = 'button';
-      var isSelected = selectedDayIdx === i;
       cell.style.cssText = 'padding:10px 4px;border-radius:10px;border:1.5px solid ' +
-        (isSelected ? 'var(--accent)' : isToday ? 'var(--accent-3)' : 'var(--border)') +
-        ';background:' + (isSelected ? 'var(--accent)' : isToday ? 'var(--accent-2)' : 'var(--surface-sub)') +
-        ';color:' + (isSelected ? '#fff' : isToday ? 'var(--accent)' : 'var(--text)') +
-        ';font-size:11px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;';
+        (isToday ? 'var(--accent-3)' : 'var(--border)') +
+        ';background:' + (isToday ? 'var(--accent-2)' : 'var(--surface-sub)') +
+        ';color:' + (isToday ? 'var(--accent)' : 'var(--text)') +
+        ';font-size:11px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;' +
+        'display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;transition:all 0.12s;';
       cell.innerHTML = '<span>' + DAY_SHORT[i] + '</span>' +
-        (dayDate ? '<span style="font-size:10px;font-weight:500;opacity:0.75">' + dayDate.getDate() + '</span>' : '');
+        (dd ? '<span style="font-size:10px;font-weight:500;opacity:0.75">' + dd.getDate() + '</span>' : '');
+      cell.addEventListener('mouseover', function() { this.style.borderColor = 'var(--accent)'; this.style.background = 'var(--accent-2)'; });
+      cell.addEventListener('mouseout',  function() {
+        this.style.borderColor = isToday ? 'var(--accent-3)' : 'var(--border)';
+        this.style.background  = isToday ? 'var(--accent-2)' : 'var(--surface-sub)';
+      });
       (function(idx) {
         cell.addEventListener('click', function() { selectedDayIdx = idx; showTypeStep(); });
       })(i);
       dayGrid.appendChild(cell);
     }
     sheet.appendChild(dayGrid);
-
-    var cancel = document.createElement('button');
-    cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
-    cancel.addEventListener('click', close);
-    sheet.appendChild(cancel);
+    sheet.appendChild(cancelBtn());
   }
 
   function showTypeStep() {
     sheet.innerHTML = '';
     var ttl = document.createElement('div'); ttl.className = 'move-sheet-title';
-    ttl.textContent = 'Add time block — ' + DAYS[selectedDayIdx];
+    ttl.textContent = 'Block type — ' + DAYS[selectedDayIdx];
     sheet.appendChild(ttl);
 
     var grid = document.createElement('div'); grid.className = 'act-type-grid';
     ACTIVITIES.forEach(function(act) {
-      var btn = document.createElement('button');
-      btn.className = 'act-type-btn'; btn.type = 'button';
+      var btn = document.createElement('button'); btn.className = 'act-type-btn'; btn.type = 'button';
       btn.style.cssText = 'background:' + act.bg + ';border-color:' + act.border + ';color:' + act.text;
       btn.innerHTML = '<span class="sched-dot" style="background:' + act.bar + '"></span>' + act.label;
       btn.addEventListener('click', function() { selectedType = act.id; showTimeStep(); });
       grid.appendChild(btn);
     });
     sheet.appendChild(grid);
-
-    var backBtn = document.createElement('button');
-    backBtn.type = 'button';
-    backBtn.style.cssText = 'display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
-    backBtn.textContent = '← Back';
-    backBtn.addEventListener('click', showDayStep);
-    sheet.appendChild(backBtn);
-
-    var cancel = document.createElement('button');
-    cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
-    cancel.addEventListener('click', close);
-    sheet.appendChild(cancel);
+    sheet.appendChild(backBtn(showDayStep));
+    sheet.appendChild(cancelBtn());
   }
 
   function showTimeStep() {
@@ -3642,32 +3800,30 @@ function showAddBlockWithDateSheet() {
     for (var h = TIMELINE_START_H; h < TIMELINE_END_H; h++) {
       for (var m = 0; m < 60; m += 30) {
         var min = h * 60 + m;
-        var btn = document.createElement('button');
-        btn.className = 'time-pick-btn'; btn.type = 'button';
+        var btn = document.createElement('button'); btn.className = 'time-pick-btn'; btn.type = 'button';
         btn.textContent = fmtMin(min);
-        (function(startMin) {
+        (function(startMin, offset, di) {
           btn.addEventListener('click', function() {
             close();
-            currentBlocks[selectedDayIdx].push({ type: selectedType, startMin: startMin, endMin: Math.min(TIMELINE_END_H * 60, startMin + 60) });
-            saveState(); buildScheduleAgenda(); updateWeekBarForDay(selectedDayIdx);
+            if (offset === 0) {
+              currentBlocks[di].push({ type: selectedType, startMin: startMin, endMin: Math.min(TIMELINE_END_H * 60, startMin + 60) });
+              saveState(); buildScheduleAgenda(); updateWeekBarForDay(di);
+            } else {
+              // Navigate to the target week, then add the block
+              var targetWS = new Date(baseWeekStart.getTime() + offset * 7 * 86400000);
+              var targetStr = targetWS.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              navigateToWeek(targetStr, null, di);
+              currentBlocks[di].push({ type: selectedType, startMin: startMin, endMin: Math.min(TIMELINE_END_H * 60, startMin + 60) });
+              saveState(); buildScheduleAgenda(); updateWeekBarForDay(di);
+            }
           });
-        })(min);
+        })(min, pickerOffset, selectedDayIdx);
         scroller.appendChild(btn);
       }
     }
     sheet.appendChild(scroller);
-
-    var backBtn = document.createElement('button');
-    backBtn.type = 'button';
-    backBtn.style.cssText = 'display:block;width:100%;padding:11px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:8px;';
-    backBtn.textContent = '← Back';
-    backBtn.addEventListener('click', showTypeStep);
-    sheet.appendChild(backBtn);
-
-    var cancel = document.createElement('button');
-    cancel.className = 'move-sheet-cancel'; cancel.type = 'button'; cancel.textContent = 'Cancel';
-    cancel.addEventListener('click', close);
-    sheet.appendChild(cancel);
+    sheet.appendChild(backBtn(showTypeStep));
+    sheet.appendChild(cancelBtn());
   }
 
   function close() {
