@@ -1194,11 +1194,7 @@ footer {
   Syncs automatically to your account across all devices.
 </div>
 
-<div class="download-wrap">
-  <button class="download-btn" id="downloadBtn">Save My Calendar</button>
-  <p class="download-hint">Exports your full week as a JPEG image.</p>
-  <p class="download-msg" id="downloadMsg"></p>
-</div>
+<p class="download-msg" id="downloadMsg"></p>
 
 <footer>
   <p class="footer-main">Made for Create With Amber — plan it, post it, own it.</p>
@@ -2831,33 +2827,6 @@ function fallbackDownload(blob, filename, msgEl) {
   }
 }
 
-document.getElementById('downloadBtn').addEventListener('click', function() {
-  var btn = this, msgEl = document.getElementById('downloadMsg');
-  btn.textContent = 'Rendering…'; btn.disabled = true; msgEl.style.display = 'none';
-  requestAnimationFrame(function() {
-    try {
-      var canvas = drawCalendarImage();
-      var wk = document.getElementById('wk').value.trim();
-      var filename = 'content-calendar' + (wk ? '-' + wk.replace(/[^a-z0-9]/gi, '-') : '') + '.jpg';
-      canvas.toBlob(function(blob) {
-        if (!blob) { btn.textContent = 'Save My Calendar'; btn.disabled = false; showModal({ message: 'Could not save. Please try again or take a screenshot.' }); return; }
-        var shareFile = new File([blob], filename, { type: 'image/jpeg' });
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-          navigator.share({ files: [shareFile], title: 'Content Calendar' })
-            .then(function() { msgEl.textContent = 'Calendar shared!'; msgEl.style.display = 'block'; setTimeout(function() { msgEl.style.display = 'none'; }, 4000); })
-            .catch(function(err) { if (err.name !== 'AbortError') fallbackDownload(blob, filename, msgEl); })
-            .finally(function() { btn.textContent = 'Save My Calendar'; btn.disabled = false; });
-        } else {
-          fallbackDownload(blob, filename, msgEl);
-          btn.textContent = 'Save My Calendar'; btn.disabled = false;
-        }
-      }, 'image/jpeg', 0.92);
-    } catch(err) {
-      btn.textContent = 'Save My Calendar'; btn.disabled = false;
-      showModal({ message: 'Could not save. Please try again or take a screenshot.' });
-    }
-  });
-});
 
 // ── Firebase ──────────────────────────────────────────────────────────────────
 var firebaseConfig = {
@@ -3185,6 +3154,9 @@ function makeAgendaBlockEl(block, dayIdx, blockIdx) {
 
   el.appendChild(timeEl); el.appendChild(body); el.appendChild(del);
 
+  body.style.cursor = 'pointer';
+  body.addEventListener('click', function() { navigateScheduleItemToDay(dayIdx); });
+
   initLongPress(el, function() {
     showRetimeSheet(block.startMin, function(newMin) {
       var dur = block.endMin - block.startMin;
@@ -3230,6 +3202,8 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
     var badge = document.createElement('span');
     badge.className = 'sched-item-badge sched-badge-posted';
     badge.textContent = 'Posted';
+    body.style.cursor = 'pointer';
+    body.addEventListener('click', function() { navigateScheduleItemToDay(dayIdx); });
     el.appendChild(timeEl); el.appendChild(body); el.appendChild(badge);
   } else {
     var reschedBtn = document.createElement('button');
@@ -3254,6 +3228,9 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
     el.appendChild(timeEl); el.appendChild(body);
     el.appendChild(reschedBtn); el.appendChild(unschedBtn);
 
+    body.style.cursor = 'pointer';
+    body.addEventListener('click', function() { navigateScheduleItemToDay(dayIdx); });
+
     initLongPress(el, function() {
       showRetimeSheet(scheduledMin, function(newMin) {
         scheduledMin = newMin;
@@ -3264,6 +3241,18 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
     });
   }
   return el;
+}
+
+function navigateScheduleItemToDay(dayIdx) {
+  activeDayIdx = dayIdx;
+  currentView = 'daily';
+  applyViewToColumns();
+  updateSummary();
+  // scroll to the day tab
+  var tabs = document.querySelectorAll('.day-tab');
+  if (tabs[dayIdx]) tabs[dayIdx].click();
+  // scroll page to top so the timeline is visible
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function initLongPress(el, onLongPress) {
