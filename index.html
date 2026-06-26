@@ -3524,52 +3524,30 @@ function showAddEventSheet(opts) {
   ttl.textContent = editBlock ? 'Edit Event' : 'New Event';
   sheet.appendChild(ttl);
 
-  // ── Day picker ──────────────────────────────────────
-  var wkStr2 = document.getElementById('wk').value.trim();
-  var wkStart2 = wkStr2 ? new Date(wkStr2) : null;
-  if (!wkStart2 || isNaN(wkStart2.getTime())) {
-    wkStart2 = new Date(); wkStart2.setHours(0,0,0,0);
-    var dow = (wkStart2.getDay() + 6) % 7; // Monday = 0
-    wkStart2.setDate(wkStart2.getDate() - dow);
-  }
-
-  var dateLbl = document.createElement('div');
-  dateLbl.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:10px;text-align:center;letter-spacing:0.01em;';
-  function updateDateLbl() {
-    dateLbl.textContent = selectedDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  }
-  updateDateLbl();
+  // ── Date picker (native — opens iOS calendar drum on tap) ───────────────────
+  var dateLbl = document.createElement('label');
+  dateLbl.style.cssText = 'display:block;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;';
+  dateLbl.textContent = 'Date';
   sheet.appendChild(dateLbl);
 
-  var dayPickerRow = document.createElement('div');
-  dayPickerRow.style.cssText = 'display:flex;gap:4px;margin-bottom:16px;';
-  var todayD = new Date(); todayD.setHours(0,0,0,0);
-  function renderDayPicker() {
-    dayPickerRow.innerHTML = '';
-    for (var i = 0; i < 7; i++) {
-      var dd = new Date(wkStart2.getTime() + i*86400000); dd.setHours(0,0,0,0);
-      var isSel = dd.getTime() === selectedDate.getTime();
-      var isT   = dd.getTime() === todayD.getTime();
-      var btn = document.createElement('button'); btn.type = 'button';
-      btn.style.cssText = 'flex:1;padding:6px 2px;border-radius:9px;border:1.5px solid ' +
-        (isSel?'var(--accent)':isT?'var(--accent-3)':'var(--border)') + ';background:' +
-        (isSel?'var(--accent)':isT?'var(--accent-2)':'var(--surface-sub)') + ';color:' +
-        (isSel?'#fff':isT?'var(--accent)':'var(--text)') +
-        ';cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;-webkit-tap-highlight-color:transparent;transition:all 0.12s;';
-      btn.innerHTML = '<span style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;">' + DAY_SHORT[i] + '</span>' +
-        '<span style="font-size:14px;font-weight:700;">' + dd.getDate() + '</span>';
-      (function(dayDate, di) {
-        btn.addEventListener('click', function() {
-          selectedDate = new Date(dayDate); selectedDate.setHours(0,0,0,0);
-          selectedDayIdx = di;
-          updateDateLbl(); renderDayPicker();
-        });
-      })(dd, i);
-      dayPickerRow.appendChild(btn);
+  var dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.value = toDateStr(selectedDate);
+  dateInput.style.cssText = 'display:block;width:100%;padding:11px 14px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:15px;font-weight:600;font-family:"DM Sans",sans-serif;color:var(--text);box-sizing:border-box;margin-bottom:16px;-webkit-appearance:auto;';
+  dateInput.addEventListener('change', function() {
+    if (!dateInput.value) return;
+    var parts = dateInput.value.split('-');
+    selectedDate = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    selectedDate.setHours(0,0,0,0);
+    // figure out dayIdx relative to current week if applicable
+    var wkStr3 = document.getElementById('wk').value.trim();
+    var wkD3 = wkStr3 ? new Date(wkStr3) : null;
+    if (wkD3 && !isNaN(wkD3.getTime())) {
+      var diff = Math.round((selectedDate - wkD3) / 86400000);
+      selectedDayIdx = (diff >= 0 && diff < 7) ? diff : activeDayIdx;
     }
-  }
-  renderDayPicker();
-  sheet.appendChild(dayPickerRow);
+  });
+  sheet.appendChild(dateInput);
 
   // ── Type toggle ─────────────────────────────────────
   var typeRow = document.createElement('div'); typeRow.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
@@ -4525,7 +4503,7 @@ fbAuth.onAuthStateChanged(function(user) {
 })();
 </script>
 
-<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.2</div>
+<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.3</div>
 
 </body>
 </html>
