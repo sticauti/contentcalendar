@@ -3621,18 +3621,22 @@ function showAddEventSheet(opts) {
       fieldsWrap.appendChild(platLabel); fieldsWrap.appendChild(platSelEl);
       fieldsWrap._platSel = platSelEl;
 
-      // Product / Hook / Notes fields
+      // Product name — only shown for Product type
+      var isProductType = (fieldsWrap._videoType || 'product') === 'product';
       var tf = makeAddField('Product name','text','e.g. Revlon Lip Oil');
+      if (fieldsWrap._titleVal) tf.input.value = fieldsWrap._titleVal;
+      tf.input.addEventListener('input', function() { fieldsWrap._titleVal = tf.input.value; });
+      if (isProductType) fieldsWrap.appendChild(tf.wrap);
+      titleInput = tf.input;
+      // Hook / Notes — always shown
       var hf = makeAddField('Hook idea','text','e.g. "You need to try this…"');
       var nf = makeAddTextarea('Notes','Any extra notes…');
-      if (fieldsWrap._titleVal) tf.input.value = fieldsWrap._titleVal;
       if (fieldsWrap._hookVal)  hf.input.value = fieldsWrap._hookVal;
       if (fieldsWrap._notesVal) nf.input.value = fieldsWrap._notesVal;
-      tf.input.addEventListener('input', function() { fieldsWrap._titleVal = tf.input.value; });
       hf.input.addEventListener('input', function() { fieldsWrap._hookVal  = hf.input.value; });
       nf.input.addEventListener('input', function() { fieldsWrap._notesVal = nf.input.value; });
-      fieldsWrap.appendChild(tf.wrap); fieldsWrap.appendChild(hf.wrap); fieldsWrap.appendChild(nf.wrap);
-      titleInput = tf.input; hookInput = hf.input; fieldsWrap._notesFld = nf.input;
+      fieldsWrap.appendChild(hf.wrap); fieldsWrap.appendChild(nf.wrap);
+      hookInput = hf.input; fieldsWrap._notesFld = nf.input;
 
       // Brand deal toggle
       var bdRow = document.createElement('div');
@@ -4584,7 +4588,7 @@ fbAuth.onAuthStateChanged(function(user) {
 })();
 </script>
 
-<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.4</div>
+<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.5</div>
 
 </body>
 </html>
