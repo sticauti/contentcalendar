@@ -170,11 +170,6 @@ h1 {
   cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s;
 }
 .sched-add-block-global:hover { background: var(--accent-3); }
-.sched-week-hdr {
-  font-size: 20px; font-weight: 700; color: var(--text);
-  letter-spacing: -0.03em; margin-bottom: 18px;
-  padding-bottom: 14px; border-bottom: 2px solid var(--border);
-}
 .sched-agenda-item { cursor: pointer; }
 .sched-agenda-item:active { opacity: 0.75; }
 .weekinput {
@@ -550,14 +545,6 @@ footer {
   background: var(--surface); border-radius: var(--radius-lg);
   padding: 14px 20px; margin-bottom: 12px; box-shadow: var(--shadow-md);
 }
-.month-nav-btn {
-  font-size: 13px; font-weight: 600; color: var(--text-2);
-  background: var(--surface-sub); border: 1.5px solid var(--border);
-  border-radius: var(--radius-md); padding: 7px 16px;
-  cursor: pointer; font-family: "DM Sans", sans-serif;
-  transition: all 0.15s;
-}
-.month-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
 .month-nav-label { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
 .month-dow-row {
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 6px;
@@ -1255,9 +1242,9 @@ footer {
 <!-- ── Month view ─────────────────────────────── -->
 <div class="month-view" id="monthView">
   <div class="month-nav">
-    <button class="month-nav-btn" onclick="changeMonth(-1)">← Prev</button>
+    <button class="cal-nav-arrow" onclick="changeMonth(-1)">‹</button>
     <span class="month-nav-label" id="monthLabel">June 2026</span>
-    <button class="month-nav-btn" onclick="changeMonth(1)">Next →</button>
+    <button class="cal-nav-arrow" onclick="changeMonth(1)">›</button>
   </div>
   <div class="month-dow-row">
     <div class="month-dow">Mon</div><div class="month-dow">Tue</div>
@@ -1327,7 +1314,7 @@ var activeDayIdx = 0;
 var currentView  = 'weekly';
 var currentBlocks = [[],[],[],[],[],[],[]];
 
-var TIMELINE_START_H = 5;
+var TIMELINE_START_H = 0;
 var TIMELINE_END_H   = 24;
 var HOUR_H           = 64;
 var TL_LABEL_W       = 52;
@@ -3221,7 +3208,7 @@ function buildCalListView(container) {
     });
     var ab = document.createElement('button');
     ab.className = 'sched-add-block-btn'; ab.type = 'button';
-    ab.innerHTML = '<span style="font-size:14px;line-height:1">＋</span> Add time block';
+    ab.innerHTML = '<span style="font-size:14px;line-height:1">＋</span> Add event';
     (function(di, dd) { ab.addEventListener('click', function() { showAddEventSheet({ dayIdx:di, date:dd }); }); })(d, dayDate);
     group.appendChild(ab);
     container.appendChild(group);
@@ -3668,6 +3655,14 @@ function showAddEventSheet(opts) {
     timeRow.appendChild(sf.wrap); timeRow.appendChild(ef.wrap);
     fieldsWrap.appendChild(timeRow);
     startInput = sf.input; endInput = ef.input;
+    var endUserModified = false;
+    endInput.addEventListener('change', function() { endUserModified = true; });
+    startInput.addEventListener('change', function() {
+      if (!endUserModified) {
+        var newSm = timeStrToMin(startInput.value);
+        endInput.value = minToTimeStr(Math.min(TIMELINE_END_H * 60 - 1, newSm + 30));
+      }
+    });
     allDayChk.addEventListener('change', function() { timeRow.style.display = allDayChk.checked ? 'none' : ''; });
   }
 
@@ -4268,13 +4263,13 @@ function showDatePickerForVideo(slot, dayIdx) {
     var nav = document.createElement('div');
     nav.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;';
     var prevBtn = document.createElement('button');
-    prevBtn.type='button'; prevBtn.className='month-nav-btn'; prevBtn.textContent='←';
+    prevBtn.type='button'; prevBtn.className='cal-nav-arrow'; prevBtn.textContent='‹';
     prevBtn.addEventListener('click', function() { pickerMonth.setMonth(pickerMonth.getMonth()-1); buildCal(currentSel); });
     var monthLbl = document.createElement('span');
     monthLbl.style.cssText='font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.02em;flex:1;text-align:center;';
     monthLbl.textContent = pickerMonth.toLocaleDateString('en-US', { month:'long', year:'numeric' });
     var nextBtn = document.createElement('button');
-    nextBtn.type='button'; nextBtn.className='month-nav-btn'; nextBtn.textContent='→';
+    nextBtn.type='button'; nextBtn.className='cal-nav-arrow'; nextBtn.textContent='›';
     nextBtn.addEventListener('click', function() { pickerMonth.setMonth(pickerMonth.getMonth()+1); buildCal(currentSel); });
     nav.appendChild(prevBtn); nav.appendChild(monthLbl); nav.appendChild(nextBtn);
     sheet.appendChild(nav);
@@ -4588,7 +4583,7 @@ fbAuth.onAuthStateChanged(function(user) {
 })();
 </script>
 
-<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.5</div>
+<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.6</div>
 
 </body>
 </html>
