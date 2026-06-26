@@ -3591,10 +3591,60 @@ function showAddEventSheet(opts) {
       });
       fieldsWrap.appendChild(grid);
     } else {
-      var tf = makeAddField('Product / Title','text','e.g. Revlon Lip Oil');
-      var hf = makeAddField('Hook (optional)','text','e.g. Testing viral TikTok...');
-      fieldsWrap.appendChild(tf.wrap); fieldsWrap.appendChild(hf.wrap);
-      titleInput = tf.input; hookInput = hf.input;
+      // Video type toggle
+      var vtRow = document.createElement('div'); vtRow.style.cssText = 'display:flex;gap:6px;margin-bottom:12px;';
+      var vtLabel = document.createElement('div');
+      vtLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;';
+      vtLabel.textContent = 'Video type';
+      fieldsWrap.appendChild(vtLabel);
+      ['Product','Regular'].forEach(function(t) {
+        var vb = document.createElement('button'); vb.type = 'button'; vb.dataset.vtype = t.toLowerCase();
+        var sel = (fieldsWrap._videoType||'product') === t.toLowerCase();
+        vb.style.cssText = 'flex:1;padding:8px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;border:1.5px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'var(--accent)':'var(--surface-sub)')+';color:'+(sel?'#fff':'var(--text-2)')+';transition:all 0.12s;';
+        vb.textContent = t;
+        vb.addEventListener('click', function() { fieldsWrap._videoType = t.toLowerCase(); renderFields(); });
+        vtRow.appendChild(vb);
+      });
+      fieldsWrap.appendChild(vtRow);
+
+      // Platform
+      var platLabel = document.createElement('div');
+      platLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;';
+      platLabel.textContent = 'Platform';
+      var platSelEl = document.createElement('select');
+      platSelEl.style.cssText = 'display:block;width:100%;padding:10px 12px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:14px;font-family:"DM Sans",sans-serif;color:var(--text);box-sizing:border-box;margin-bottom:12px;-webkit-appearance:auto;';
+      [['','Platform'],['tt','TikTok'],['ig','Instagram'],['yt','YouTube'],['fb','Facebook']].forEach(function(o) {
+        var opt = document.createElement('option'); opt.value=o[0]; opt.textContent=o[1]; platSelEl.appendChild(opt);
+      });
+      if (fieldsWrap._platform) platSelEl.value = fieldsWrap._platform;
+      platSelEl.addEventListener('change', function() { fieldsWrap._platform = platSelEl.value; });
+      fieldsWrap.appendChild(platLabel); fieldsWrap.appendChild(platSelEl);
+      fieldsWrap._platSel = platSelEl;
+
+      // Product / Hook / Notes fields
+      var tf = makeAddField('Product name','text','e.g. Revlon Lip Oil');
+      var hf = makeAddField('Hook idea','text','e.g. "You need to try this…"');
+      var nf = makeAddTextarea('Notes','Any extra notes…');
+      if (fieldsWrap._titleVal) tf.input.value = fieldsWrap._titleVal;
+      if (fieldsWrap._hookVal)  hf.input.value = fieldsWrap._hookVal;
+      if (fieldsWrap._notesVal) nf.input.value = fieldsWrap._notesVal;
+      tf.input.addEventListener('input', function() { fieldsWrap._titleVal = tf.input.value; });
+      hf.input.addEventListener('input', function() { fieldsWrap._hookVal  = hf.input.value; });
+      nf.input.addEventListener('input', function() { fieldsWrap._notesVal = nf.input.value; });
+      fieldsWrap.appendChild(tf.wrap); fieldsWrap.appendChild(hf.wrap); fieldsWrap.appendChild(nf.wrap);
+      titleInput = tf.input; hookInput = hf.input; fieldsWrap._notesFld = nf.input;
+
+      // Brand deal toggle
+      var bdRow = document.createElement('div');
+      bdRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0 4px;border-top:1px solid var(--border);margin-bottom:4px;';
+      var bdLbl = document.createElement('span'); bdLbl.style.cssText = 'font-size:14px;font-weight:600;color:var(--text);'; bdLbl.textContent = '★ Brand Deal';
+      var bdChk = document.createElement('input'); bdChk.type = 'checkbox';
+      bdChk.style.cssText = 'width:40px;height:24px;cursor:pointer;accent-color:var(--star,#e6a817);';
+      bdChk.checked = !!fieldsWrap._brandDeal;
+      bdChk.addEventListener('change', function() { fieldsWrap._brandDeal = bdChk.checked; });
+      bdRow.appendChild(bdLbl); bdRow.appendChild(bdChk);
+      fieldsWrap.appendChild(bdRow);
+      fieldsWrap._bdChk = bdChk;
     }
 
     // All-day toggle
@@ -3649,10 +3699,20 @@ function showAddEventSheet(opts) {
       var wrap2 = col2 ? col2.querySelector('.slots-wrap') : null;
       if (!wrap2) { close(); return; }
       var ns = makeSlot(selectedDayIdx, wrap2.querySelectorAll('.video-slot').length);
-      wrap2.appendChild(ns); // append first so _updateSchedBtn is fully wired
+      wrap2.appendChild(ns);
+      // Fill all fields
       var ni = ns.querySelectorAll('.field-input');
       if (titleInput && ni[0]) ni[0].value = titleInput.value;
       if (hookInput  && ni[1]) ni[1].value = hookInput.value;
+      if (fieldsWrap._notesFld && ni[2]) ni[2].value = fieldsWrap._notesFld.value;
+      // Platform
+      var nplatSel = ns.querySelector('.plat-select');
+      if (nplatSel && fieldsWrap._platform) { nplatSel.value = fieldsWrap._platform; nplatSel.dispatchEvent(new Event('change')); }
+      // Brand deal
+      if (fieldsWrap._brandDeal) { var sb = ns.querySelector('.brand-deal-btn'); if (sb) sb.click(); }
+      // Video type
+      if (fieldsWrap._videoType === 'regular') { var tvBtns = ns.querySelectorAll('.type-btn'); if (tvBtns[0]) tvBtns[0].click(); }
+      // Schedule
       var ds = toDateStr(selectedDate);
       ns.setAttribute('data-scheduled-date', ds);
       ns.setAttribute('data-scheduled-min',  sm);
@@ -3687,6 +3747,16 @@ function makeAddField(label, type, placeholder) {
   return { wrap:wrap, input:input };
 }
 
+function makeAddTextarea(label, placeholder) {
+  var wrap = document.createElement('div'); wrap.style.marginBottom = '12px';
+  var lbl = document.createElement('label');
+  lbl.style.cssText = 'display:block;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;';
+  lbl.textContent = label;
+  var input = document.createElement('textarea'); input.rows = 2; input.placeholder = placeholder||'';
+  input.style.cssText = 'display:block;width:100%;padding:10px 12px;border-radius:var(--radius-md);border:1.5px solid var(--border);background:var(--surface-sub);font-size:14px;font-family:"DM Sans",sans-serif;color:var(--text);box-sizing:border-box;resize:none;';
+  wrap.appendChild(lbl); wrap.appendChild(input);
+  return { wrap:wrap, input:input };
+}
 function makeTimeField2(label, value) {
   var wrap = document.createElement('div'); wrap.style.cssText = 'flex:1;';
   var lbl = document.createElement('label');
@@ -3699,133 +3769,149 @@ function makeTimeField2(label, value) {
 }
 
 // ── Event Summary Popup ───────────────────────────────────────────────────────
+function toggleVideoPosted(slot) {
+  var cb = slot.querySelector('.posted-check');
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  togglePosted(cb);
+  var cc = slot.querySelector('.compact-check');
+  if (cc) cc.classList.toggle('cc-done', cb.checked);
+  updateSummary(); saveState();
+  if (navigator.vibrate) navigator.vibrate(40);
+}
+
 function showEventSummarySheet(ev, dayIdx, date) {
   var overlay = document.createElement('div'); overlay.className = 'move-overlay';
   overlay.style.background = 'rgba(0,0,0,0.2)';
   var sheet = document.createElement('div'); sheet.className = 'act-sheet';
   sheet.style.cssText += ';padding:0;overflow:hidden;';
 
-  // ── Colored header band ──────────────────────────────
-  var headerBg, headerFg, headerBar, headerTitle, headerSubtitle;
-  if (ev.kind === 'block') {
-    var act = actById(ev.block.type);
-    headerBg = act.bg; headerFg = act.text; headerBar = act.bar;
-    headerTitle = act.label;
-    headerSubtitle = fmtMin(ev.startMin) + ' – ' + fmtMin(ev.endMin);
-  } else {
-    var inputs = ev.slot.querySelectorAll('.field-input');
-    headerBg = 'var(--accent-2)'; headerFg = 'var(--accent)'; headerBar = 'var(--accent)';
-    headerTitle = (inputs[0]&&inputs[0].value.trim()) || (inputs[1]&&inputs[1].value.trim()) || 'Video';
-    var hook = (inputs[1]&&inputs[1].value.trim()) || '';
-    headerSubtitle = fmtMin(ev.startMin) + (ev.endMin > ev.startMin+1 ? ' – ' + fmtMin(ev.endMin) : '');
-  }
+  function buildSheet() {
+    sheet.innerHTML = '';
 
-  var band = document.createElement('div');
-  band.style.cssText = 'background:'+headerBg+';border-left:5px solid '+headerBar+';padding:18px 20px 16px;position:relative;';
+    // ── Header band ───────────────────────────────────
+    var headerBg, headerFg, headerBar, headerTitle, headerSubtitle, hook = '', isPosted = false, isBrandDeal = false;
+    if (ev.kind === 'block') {
+      var act = actById(ev.block.type);
+      headerBg = act.bg; headerFg = act.text; headerBar = act.bar;
+      headerTitle = act.label;
+      headerSubtitle = fmtMin(ev.startMin) + ' – ' + fmtMin(ev.endMin);
+    } else {
+      var inputs = ev.slot.querySelectorAll('.field-input');
+      isPosted = ev.slot.querySelector('.posted-check') ? ev.slot.querySelector('.posted-check').checked : false;
+      isBrandDeal = ev.slot.classList.contains('slot-starred');
+      if (isPosted) { headerBg = 'var(--success-2)'; headerFg = 'var(--success)'; headerBar = 'var(--success)'; }
+      else          { headerBg = 'var(--accent-2)';  headerFg = 'var(--accent)';  headerBar = 'var(--accent)'; }
+      headerTitle = (inputs[0]&&inputs[0].value.trim()) || (inputs[1]&&inputs[1].value.trim()) || 'Video';
+      hook = (inputs[1]&&inputs[1].value.trim()) || '';
+      headerSubtitle = fmtMin(ev.startMin) + (ev.endMin > ev.startMin+1 ? ' – ' + fmtMin(ev.endMin) : '');
+    }
 
-  // × close button top-right
-  var xBtn = document.createElement('button');
-  xBtn.type = 'button';
-  xBtn.style.cssText = 'position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;' +
-    'color:'+headerFg+';opacity:0.6;cursor:pointer;font-family:"DM Sans",sans-serif;line-height:1;padding:4px;';
-  xBtn.textContent = '×';
-  xBtn.addEventListener('click', close);
+    var band = document.createElement('div');
+    band.style.cssText = 'background:'+headerBg+';border-left:5px solid '+headerBar+';padding:18px 20px 16px;position:relative;';
 
-  var titleEl = document.createElement('div');
-  titleEl.style.cssText = 'font-size:17px;font-weight:800;color:'+headerFg+';letter-spacing:-0.02em;padding-right:28px;margin-bottom:4px;';
-  titleEl.textContent = (ev.kind === 'video' ? '📹 ' : '') + headerTitle;
+    var xBtn = document.createElement('button'); xBtn.type = 'button';
+    xBtn.style.cssText = 'position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;color:'+headerFg+';opacity:0.6;cursor:pointer;font-family:"DM Sans",sans-serif;line-height:1;padding:4px;';
+    xBtn.textContent = '×'; xBtn.addEventListener('click', close);
 
-  var timeEl = document.createElement('div');
-  timeEl.style.cssText = 'font-size:13px;font-weight:600;color:'+headerFg+';opacity:0.8;';
-  timeEl.textContent = headerSubtitle;
+    var titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-size:17px;font-weight:800;color:'+headerFg+';letter-spacing:-0.02em;padding-right:28px;margin-bottom:4px;' +
+      (isPosted ? 'text-decoration:line-through;opacity:0.7;' : '');
+    titleEl.textContent = (ev.kind==='video' ? (isPosted?'✅ ':'📹 ') : '') + headerTitle;
 
-  var dateEl = document.createElement('div');
-  dateEl.style.cssText = 'font-size:11px;font-weight:600;color:'+headerFg+';opacity:0.6;margin-top:3px;text-transform:uppercase;letter-spacing:0.05em;';
-  dateEl.textContent = date.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+    var timeEl = document.createElement('div');
+    timeEl.style.cssText = 'font-size:13px;font-weight:600;color:'+headerFg+';opacity:0.8;';
+    timeEl.textContent = headerSubtitle;
 
-  band.appendChild(xBtn); band.appendChild(titleEl); band.appendChild(timeEl); band.appendChild(dateEl);
+    var dateEl = document.createElement('div');
+    dateEl.style.cssText = 'font-size:11px;font-weight:600;color:'+headerFg+';opacity:0.6;margin-top:3px;text-transform:uppercase;letter-spacing:0.05em;';
+    dateEl.textContent = date.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
 
-  // extra subtitle for videos (hook text)
-  if (ev.kind === 'video' && hook) {
-    var hookEl = document.createElement('div');
-    hookEl.style.cssText = 'font-size:12px;color:'+headerFg+';opacity:0.7;margin-top:4px;font-style:italic;';
-    hookEl.textContent = '"' + hook + '"';
-    band.appendChild(hookEl);
-  }
-  sheet.appendChild(band);
+    band.appendChild(xBtn); band.appendChild(titleEl); band.appendChild(timeEl); band.appendChild(dateEl);
 
-  // ── Action buttons ───────────────────────────────────
-  var actions = document.createElement('div');
-  actions.style.cssText = 'padding:16px 20px 24px;display:flex;flex-direction:column;gap:10px;';
+    if (ev.kind === 'video') {
+      if (isBrandDeal) {
+        var bdTag = document.createElement('span');
+        bdTag.style.cssText = 'display:inline-block;margin-top:6px;font-size:10px;font-weight:700;background:var(--star);color:#fff;border-radius:99px;padding:2px 8px;letter-spacing:0.04em;';
+        bdTag.textContent = '★ Brand Deal'; band.appendChild(bdTag);
+      }
+      if (hook && !isBrandDeal) {
+        var hookEl = document.createElement('div');
+        hookEl.style.cssText = 'font-size:12px;color:'+headerFg+';opacity:0.7;margin-top:4px;font-style:italic;';
+        hookEl.textContent = '"' + hook + '"'; band.appendChild(hookEl);
+      }
+      if (isPosted) {
+        var postedTag = document.createElement('div');
+        postedTag.style.cssText = 'margin-top:8px;font-size:11px;font-weight:800;color:var(--success);text-transform:uppercase;letter-spacing:0.08em;';
+        postedTag.textContent = '✓ Posted'; band.appendChild(postedTag);
+      }
+    }
+    sheet.appendChild(band);
 
-  function makeActionBtn(label, bg, fg, onClick) {
-    var b = document.createElement('button'); b.type = 'button';
-    b.style.cssText = 'display:block;width:100%;padding:13px 16px;border-radius:var(--radius-md);' +
-      'font-size:14px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;' +
-      'text-align:left;border:1.5px solid var(--border);background:'+bg+';color:'+fg+';';
-    b.textContent = label; b.addEventListener('click', onClick); return b;
-  }
+    // ── Action buttons ─────────────────────────────────
+    var actions = document.createElement('div');
+    actions.style.cssText = 'padding:16px 20px 24px;display:flex;flex-direction:column;gap:10px;';
 
-  if (ev.kind === 'block') {
-    // Edit: open add-event sheet in edit mode
-    actions.appendChild(makeActionBtn('✏️  Edit event', 'var(--surface-sub)', 'var(--text)', function() {
-      close();
-      showAddEventSheet({ date:date, dayIdx:dayIdx, editBlock:{ block:ev.block, blockIdx:ev.blockIdx, dayIdx:dayIdx } });
-    }));
-    // Navigate to day view
-    actions.appendChild(makeActionBtn('📅  Go to Day view', 'var(--surface-sub)', 'var(--text)', function() {
-      close(); navigateScheduleItemToDay(dayIdx);
-    }));
-    // Delete
-    actions.appendChild(makeActionBtn('🗑️  Delete block', 'var(--surface-sub)', '#c0392b', function() {
-      close();
-      showModal({
-        message: 'Delete this ' + actById(ev.block.type).label + ' block?',
-        buttons: [
-          { label: 'Delete', style:{color:'#c0392b',borderColor:'#e8bfbb'}, onClick:function() {
-            currentBlocks[dayIdx].splice(ev.blockIdx, 1);
-            saveState(); buildScheduleView(); updateWeekBarForDay(dayIdx);
+    function makeActionBtn(label, bg, fg, border, onClick) {
+      var b = document.createElement('button'); b.type = 'button';
+      b.style.cssText = 'display:block;width:100%;padding:13px 16px;border-radius:var(--radius-md);' +
+        'font-size:14px;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;' +
+        'text-align:left;border:1.5px solid '+(border||'var(--border)')+';background:'+bg+';color:'+fg+';';
+      b.textContent = label; b.addEventListener('click', onClick); return b;
+    }
+
+    if (ev.kind === 'block') {
+      actions.appendChild(makeActionBtn('✏️  Edit event', 'var(--surface-sub)', 'var(--text)', null, function() {
+        close(); showAddEventSheet({ date:date, dayIdx:dayIdx, editBlock:{ block:ev.block, blockIdx:ev.blockIdx, dayIdx:dayIdx } });
+      }));
+      actions.appendChild(makeActionBtn('📅  Go to Day view', 'var(--surface-sub)', 'var(--text)', null, function() {
+        close(); navigateScheduleItemToDay(dayIdx);
+      }));
+      actions.appendChild(makeActionBtn('🗑️  Delete block', 'var(--surface-sub)', '#c0392b', '#e8bfbb', function() {
+        close();
+        showModal({ message:'Delete this ' + actById(ev.block.type).label + ' block?', buttons:[
+          { label:'Delete', style:{color:'#c0392b',borderColor:'#e8bfbb'}, onClick:function() {
+            currentBlocks[dayIdx].splice(ev.blockIdx,1); saveState(); buildScheduleView(); updateWeekBarForDay(dayIdx);
           }},
-          { label: 'Cancel' }
-        ]
-      });
-    }));
-  } else {
-    // Reschedule time
-    actions.appendChild(makeActionBtn('⏰  Change time', 'var(--surface-sub)', 'var(--text)', function() {
-      close(); showTimePickerForVideo(ev.slot, dayIdx);
-    }));
-    // Navigate to day view
-    actions.appendChild(makeActionBtn('📅  Go to Day view', 'var(--surface-sub)', 'var(--text)', function() {
-      close(); navigateScheduleItemToDay(dayIdx);
-    }));
-    // Remove from schedule / delete
-    actions.appendChild(makeActionBtn('🗑️  Remove / Delete', 'var(--surface-sub)', '#c0392b', function() {
-      close();
-      var inputs2 = ev.slot.querySelectorAll('.field-input');
-      var vtitle = (inputs2[0]&&inputs2[0].value.trim())||(inputs2[1]&&inputs2[1].value.trim())||'this video';
-      showModal({
-        message: 'What would you like to do with "' + vtitle.slice(0,28) + '"?',
-        buttons: [
-          { label: 'Remove from schedule', onClick:function() {
-            ev.slot.removeAttribute('data-scheduled-date');
-            ev.slot.removeAttribute('data-scheduled-min');
-            ev.slot.removeAttribute('data-scheduled-end-min');
+          { label:'Cancel' }
+        ]});
+      }));
+    } else {
+      // Mark as posted / unpost — prominent top button
+      var postLabel = isPosted ? '↩  Mark as not posted' : '✅  Mark as posted';
+      var postBg    = isPosted ? 'var(--surface-sub)'    : 'var(--success-2)';
+      var postFg    = isPosted ? 'var(--text-2)'         : 'var(--success)';
+      var postBd    = isPosted ? 'var(--border)'         : 'rgba(31,148,103,0.3)';
+      actions.appendChild(makeActionBtn(postLabel, postBg, postFg, postBd, function() {
+        toggleVideoPosted(ev.slot); buildScheduleView(); buildSheet();
+      }));
+      actions.appendChild(makeActionBtn('⏰  Change time', 'var(--surface-sub)', 'var(--text)', null, function() {
+        close(); showTimePickerForVideo(ev.slot, dayIdx);
+      }));
+      actions.appendChild(makeActionBtn('📅  Go to Day view', 'var(--surface-sub)', 'var(--text)', null, function() {
+        close(); navigateScheduleItemToDay(dayIdx);
+      }));
+      actions.appendChild(makeActionBtn('🗑️  Remove / Delete', 'var(--surface-sub)', '#c0392b', '#e8bfbb', function() {
+        close();
+        var inputs2 = ev.slot.querySelectorAll('.field-input');
+        var vtitle = (inputs2[0]&&inputs2[0].value.trim())||(inputs2[1]&&inputs2[1].value.trim())||'this video';
+        showModal({ message:'What would you like to do with "'+vtitle.slice(0,28)+'"?', buttons:[
+          { label:'Remove from schedule', onClick:function() {
+            ev.slot.removeAttribute('data-scheduled-date'); ev.slot.removeAttribute('data-scheduled-min'); ev.slot.removeAttribute('data-scheduled-end-min');
             if (ev.slot._updateSchedBtn) ev.slot._updateSchedBtn();
             saveState(); buildScheduleView();
           }},
-          { label: 'Delete video', style:{color:'#c0392b',borderColor:'#e8bfbb'}, onClick:function() {
-            var wrap = ev.slot.closest('.slots-wrap');
-            if (wrap) wrap.removeChild(ev.slot);
-            saveState(); buildScheduleView(); updateSummary();
+          { label:'Delete video', style:{color:'#c0392b',borderColor:'#e8bfbb'}, onClick:function() {
+            var wrap=ev.slot.closest('.slots-wrap'); if(wrap)wrap.removeChild(ev.slot); saveState(); buildScheduleView(); updateSummary();
           }},
-          { label: 'Cancel' }
-        ]
-      });
-    }));
+          { label:'Cancel' }
+        ]});
+      }));
+    }
+    sheet.appendChild(actions);
   }
 
-  sheet.appendChild(actions);
+  buildSheet();
 
   function close() {
     if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
@@ -3900,16 +3986,17 @@ function makeAgendaBlockEl(block, dayIdx, blockIdx) {
 }
 
 function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
-  var inputs  = slot.querySelectorAll('.field-input');
-  var title   = (inputs[0] && inputs[0].value.trim()) || (inputs[1] && inputs[1].value.trim()) || 'Untitled';
-  var done    = slot.querySelector('.posted-check') && slot.querySelector('.posted-check').checked;
-  var starred = slot.classList.contains('slot-starred');
-  var platSel = slot.querySelector('.plat-select');
+  var inputs   = slot.querySelectorAll('.field-input');
+  var title    = (inputs[0]&&inputs[0].value.trim())||(inputs[1]&&inputs[1].value.trim())||'Untitled';
+  var done     = !!(slot.querySelector('.posted-check') && slot.querySelector('.posted-check').checked);
+  var starred  = slot.classList.contains('slot-starred');
+  var platSel  = slot.querySelector('.plat-select');
   var platform = platSel ? platSel.value : '';
 
   var el = document.createElement('div');
   el.className = 'sched-agenda-item' + (done ? ' sched-item-done' : '');
-  el.style.borderLeftColor = done ? 'var(--success)' : 'var(--accent)';
+  el.style.borderLeftColor = done ? 'var(--success)' : (starred ? 'var(--star)' : 'var(--accent)');
+  if (done) el.style.background = 'var(--success-2)';
 
   var timeEl = document.createElement('div');
   timeEl.className = 'sched-item-time';
@@ -3917,72 +4004,66 @@ function makeAgendaVideoEl(slot, dayIdx, scheduledMin) {
 
   var body = document.createElement('div');
   body.className = 'sched-item-body';
+  body.style.cursor = 'pointer';
+  body.addEventListener('click', function() { navigateScheduleItemToDay(dayIdx); });
+
   var titleEl = document.createElement('div');
   titleEl.className = 'sched-item-title';
   titleEl.textContent = (starred ? '⭐ ' : '') + title;
   body.appendChild(titleEl);
-  if (platform) {
-    var meta = document.createElement('div');
-    meta.className = 'sched-item-meta';
-    meta.textContent = platform === 'tt' ? 'TikTok' : platform === 'ig' ? 'Instagram' : platform === 'yt' ? 'YouTube' : platform.toUpperCase();
-    body.appendChild(meta);
-  }
 
-  if (done) {
-    var badge = document.createElement('span');
-    badge.className = 'sched-item-badge sched-badge-posted';
-    badge.textContent = 'Posted';
-    body.style.cursor = 'pointer';
-    body.addEventListener('click', function() { navigateScheduleItemToDay(dayIdx); });
-    el.appendChild(timeEl); el.appendChild(body); el.appendChild(badge);
-  } else {
+  var metaRow = document.createElement('div');
+  metaRow.className = 'sched-item-meta';
+  var metaParts = [];
+  if (platform) metaParts.push(platform==='tt'?'TikTok':platform==='ig'?'Instagram':platform==='yt'?'YouTube':platform.toUpperCase());
+  if (done) metaParts.push('✓ Posted');
+  if (metaParts.length) { metaRow.textContent = metaParts.join(' · '); body.appendChild(metaRow); }
+
+  el.appendChild(timeEl); el.appendChild(body);
+
+  // Quick-complete toggle button (always visible)
+  var checkBtn = document.createElement('button');
+  checkBtn.className = 'sched-item-action';
+  checkBtn.type = 'button';
+  checkBtn.title = done ? 'Mark as not posted' : 'Mark as posted';
+  checkBtn.style.cssText = 'color:' + (done ? 'var(--success)' : 'var(--text-3)') + ';font-size:18px;opacity:' + (done?'1':'0.45') + ';';
+  checkBtn.textContent = '✓';
+  checkBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleVideoPosted(slot); buildScheduleView();
+  });
+  el.appendChild(checkBtn);
+
+  if (!done) {
     var reschedBtn = document.createElement('button');
-    reschedBtn.className = 'sched-item-action';
-    reschedBtn.type = 'button'; reschedBtn.title = 'Reschedule';
+    reschedBtn.className = 'sched-item-action'; reschedBtn.type = 'button'; reschedBtn.title = 'Reschedule';
     reschedBtn.textContent = '⏰';
-    reschedBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      showTimePickerForVideo(slot, dayIdx);
-    });
+    reschedBtn.addEventListener('click', function(e) { e.stopPropagation(); showTimePickerForVideo(slot, dayIdx); });
+
     var unschedBtn = document.createElement('button');
-    unschedBtn.className = 'sched-item-action';
-    unschedBtn.type = 'button'; unschedBtn.title = 'Remove from schedule';
+    unschedBtn.className = 'sched-item-action'; unschedBtn.type = 'button'; unschedBtn.title = 'Remove from schedule';
     unschedBtn.textContent = '×';
     unschedBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       var inputs2 = slot.querySelectorAll('.field-input');
-      var vtitle = (inputs2[0] && inputs2[0].value.trim()) || (inputs2[1] && inputs2[1].value.trim()) || 'this video';
-      showModal({
-        message: 'What would you like to do with "' + vtitle.slice(0,30) + '"?',
-        buttons: [
-          { label: 'Remove from schedule', onClick: function() {
-              slot.removeAttribute('data-scheduled-date');
-              slot.removeAttribute('data-scheduled-min');
-              if (slot._updateSchedBtn) slot._updateSchedBtn();
-              saveState(); buildScheduleAgenda();
-            }
-          },
-          { label: 'Delete video', style: { color: '#c0392b', borderColor: '#e8bfbb' }, onClick: function() {
-              var wrap = slot.closest('.slots-wrap');
-              if (wrap) { wrap.removeChild(slot); saveState(); buildScheduleAgenda(); updateSummary(); }
-            }
-          },
-          { label: 'Cancel' }
-        ]
-      });
+      var vtitle = (inputs2[0]&&inputs2[0].value.trim())||(inputs2[1]&&inputs2[1].value.trim())||'this video';
+      showModal({ message:'What would you like to do with "'+vtitle.slice(0,30)+'"?', buttons:[
+        { label:'Remove from schedule', onClick:function() {
+            slot.removeAttribute('data-scheduled-date'); slot.removeAttribute('data-scheduled-min');
+            if (slot._updateSchedBtn) slot._updateSchedBtn(); saveState(); buildScheduleAgenda();
+        }},
+        { label:'Delete video', style:{color:'#c0392b',borderColor:'#e8bfbb'}, onClick:function() {
+            var wrap=slot.closest('.slots-wrap'); if(wrap){wrap.removeChild(slot);saveState();buildScheduleAgenda();updateSummary();}
+        }},
+        { label:'Cancel' }
+      ]});
     });
-    el.appendChild(timeEl); el.appendChild(body);
     el.appendChild(reschedBtn); el.appendChild(unschedBtn);
-
-    body.style.cursor = 'pointer';
-    body.addEventListener('click', function() { navigateScheduleItemToDay(dayIdx); });
 
     initLongPress(el, function() {
       showRetimeSheet(scheduledMin, function(newMin) {
-        scheduledMin = newMin;
-        slot.setAttribute('data-scheduled-min', newMin);
-        if (slot._updateSchedBtn) slot._updateSchedBtn();
-        saveState(); buildScheduleAgenda();
+        scheduledMin=newMin; slot.setAttribute('data-scheduled-min',newMin);
+        if (slot._updateSchedBtn) slot._updateSchedBtn(); saveState(); buildScheduleAgenda();
       });
     });
   }
@@ -4503,7 +4584,7 @@ fbAuth.onAuthStateChanged(function(user) {
 })();
 </script>
 
-<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.3</div>
+<div id="app-version" style="text-align:center;padding:18px 0 10px;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.04em;font-family:'DM Sans',sans-serif;">beta version 1.0.4</div>
 
 </body>
 </html>
